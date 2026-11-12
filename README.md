@@ -24,6 +24,10 @@
 | [docs/ai-use.md](docs/ai-use.md) | Примітка про використання ШІ (вимога курсу) |
 | [AGENTS.md](AGENTS.md), [docs/codex-task.md](docs/codex-task.md) | Правила і завдання для ШІ-агента (Codex), 9 фаз |
 | [regulation/](regulation/) | Нормативка: перелік НПА, конспекти |
+| [research/voices.md](research/voices.md) | Фаза 2: 44 публічні голоси; новіші окремо від історичного додатка |
+| [research/pain-map.md](research/pain-map.md) | Частоти болів, межі доказів A-1…A-4, рекомендація на затвердження |
+| [research/voices-method.md](research/voices-method.md) | Відбір, доступ, повтори, виключення й відтворювана перевірка |
+| [docs/reviews/phase-2.md](docs/reviews/phase-2.md) | Скептичне рев’ю фази 2 та виправлення |
 | [research/survey/](research/survey/) | Опитування військових: питання і знеособлені відповіді |
 | [research/interviews/](research/interviews/) | Гайд інтерв'ю і знеособлені нотатки |
 | [prototype/](prototype/) | Прототип (vibe coding, крок II) |
