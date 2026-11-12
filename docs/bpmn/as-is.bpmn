@@ -1,0 +1,916 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="Definitions_AsIs" targetNamespace="https://github.com/obodnazar/mil600-wounded-case/bpmn" exporter="MIL600 навчальний AS IS" exporterVersion="phase-4">
+  <bpmn:collaboration id="Collaboration_AsIs">
+    <bpmn:participant id="Participant_AsIs" name="Навчальний AS IS • сценарій, не регламент" processRef="Process_AsIs" />
+  </bpmn:collaboration>
+  <bpmn:process id="Process_AsIs" name="Поранення → документи → ВЛК → окремі виплати" isExecutable="false">
+    <bpmn:documentation>Версія 2026-11-13. Обмежений сценарій на основі фази 1; емпірична фаза 2 та нормативна фаза 3 відкладені рішенням Назара. Джерела D1–D3, припущення H1–H5 і таймери — у ../03-as-is.md. Єдиний пул — спрощення міжорганізаційного процесу. Не є автоматизацією чи правовою інструкцією.</bpmn:documentation>
+    <bpmn:laneSet id="LaneSet_AsIs">
+      <bpmn:lane id="Lane_Patient" name="Поранений">
+        <bpmn:flowNodeRef>Task_Notify</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Collect</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_Family</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_Merge</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_RequestFix</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_DocOwner</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_OGD</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_NoOGD</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_OGDPackage</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_Family" name="Родина">
+        <bpmn:flowNodeRef>Task_Family</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_Medic" name="Медик / стабпункт">
+        <bpmn:flowNodeRef>Start_Injury</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Primary</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_Parallel</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_Hospital" name="Лікувальний заклад">
+        <bpmn:flowNodeRef>Task_Admission</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Treatment</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_MedDocs</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_Transfer</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_FixMedical</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>EventSubProcess_Long</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_Unit" name="Частина: командир / штаб / супровід">
+        <bpmn:flowNodeRef>Task_Certificate</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Timer_Certificate</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_CertInquiry</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_Inquiry</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Referral</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_FixUnit</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Service</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_Service</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_VLK" name="ВЛК">
+        <bpmn:flowNodeRef>Task_Check</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_Complete</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_Wording</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Remarks</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Examination</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Decision</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_After</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_Finance" name="Фінслужба: опрацювання виплат">
+        <bpmn:flowNodeRef>SubProcess_Reward</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_Reward</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_FinCheck</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_FinComplete</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>SubProcess_OGD</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_OGD</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="Start_Injury" name="Поранення">
+      <bpmn:outgoing>F_Start</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:task id="Task_Primary" name="Надати допомогу; оформити ПМК / еПМК">
+      <bpmn:documentation>D1: МОУ, 2026-06-02; перевірено 2026-11-13. Опис джерела та межі — ../03-as-is.md. D3: МОУ, 2025-12-26; перевірено 2026-11-13. Частка охоплення еПМК невідома. Картку оформлює медична роль; командиру це не приписано.</bpmn:documentation>
+      <bpmn:incoming>F_Start</bpmn:incoming>
+      <bpmn:outgoing>F_Primary</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:parallelGateway id="Gateway_Parallel" name="">
+      <bpmn:incoming>F_Primary</bpmn:incoming>
+      <bpmn:outgoing>F_Care</bpmn:outgoing>
+      <bpmn:outgoing>F_Unit</bpmn:outgoing>
+    </bpmn:parallelGateway>
+    <bpmn:task id="Task_Admission" name="Прийняти в заклад; зафіксувати початок лікування">
+      <bpmn:documentation>D1: МОУ, 2026-06-02; перевірено 2026-11-13. Опис джерела та межі — ../03-as-is.md. Фіксація початку потрібна для пояснення таймера; не нова ІТ-функція.</bpmn:documentation>
+      <bpmn:incoming>F_Care</bpmn:incoming>
+      <bpmn:incoming>F_TransferBack</bpmn:incoming>
+      <bpmn:outgoing>F_Admission</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="Task_Treatment" name="Надати лікування">
+      <bpmn:documentation>D2: МОУ, 2026-10-23; перевірено 2026-11-13. Роз’яснення, не завершена звірка НПА.</bpmn:documentation>
+      <bpmn:incoming>F_Admission</bpmn:incoming>
+      <bpmn:outgoing>F_Treatment</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="Task_MedDocs" name="Оформити медичні документи епізоду">
+      <bpmn:documentation>D1: МОУ, 2026-06-02; перевірено 2026-11-13. Опис джерела та межі — ../03-as-is.md. Перелік і носій залежать від епізоду; не всі документи лише паперові.</bpmn:documentation>
+      <bpmn:incoming>F_Treatment</bpmn:incoming>
+      <bpmn:outgoing>F_Docs</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="Gateway_Transfer" name="Переведення в інший заклад?" default="F_TransferNo">
+      <bpmn:incoming>F_Docs</bpmn:incoming>
+      <bpmn:outgoing>F_TransferYes</bpmn:outgoing>
+      <bpmn:outgoing>F_TransferNo</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:task id="Task_Notify" name="Уточнити передачу відомостей про переведення*">
+      <bpmn:documentation>Модельне припущення: ручна координація в обраному сценарії. Не статистика й не універсальна практика; перевірити у фазі 2. H1: канал і відповідального перевірити. Не стверджуємо автоматичне СЗЧ за неповідомлення.</bpmn:documentation>
+      <bpmn:incoming>F_TransferYes</bpmn:incoming>
+      <bpmn:outgoing>F_TransferBack</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="Task_Certificate" name="Оформити наказ і довідку про обставини травми">
+      <bpmn:documentation>D1: МОУ, 2026-06-02; перевірено 2026-11-13. Опис джерела та межі — ../03-as-is.md. Для сценарію поранення від дій противника. Не встановлює причинний зв’язок замість ВЛК.</bpmn:documentation>
+      <bpmn:incoming>F_Unit</bpmn:incoming>
+      <bpmn:outgoing>F_CertReward</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:boundaryEvent id="Timer_Certificate" name="Строк довідки: [TBD]*" cancelActivity="false" attachedToRef="Task_Certificate">
+      <bpmn:documentation>D2: МОУ, 2026-10-23; перевірено 2026-11-13. Роз’яснення, не завершена звірка НПА. certificate_due_at — не задана дата. Початок відліку, одиниці, застосовність і винятки — фаза 3. Не означає автоматичну відмову.</bpmn:documentation>
+      <bpmn:outgoing>F_CertLate</bpmn:outgoing>
+      <bpmn:timerEventDefinition id="TimerDefinition_Certificate">
+        <bpmn:timeDate xsi:type="bpmn:tFormalExpression">certificate_due_at</bpmn:timeDate>
+      </bpmn:timerEventDefinition>
+    </bpmn:boundaryEvent>
+    <bpmn:task id="Task_CertInquiry" name="Супровід: уточнити статус довідки*">
+      <bpmn:documentation>D1: МОУ, 2026-06-02; перевірено 2026-11-13. Опис джерела та межі — ../03-as-is.md. H5: модельний варіант контролю строку службою супроводу; не доведена універсальна практика. Участь родини не обов’язкова.</bpmn:documentation>
+      <bpmn:incoming>F_CertLate</bpmn:incoming>
+      <bpmn:outgoing>F_InquiryEnd</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:endEvent id="End_Inquiry" name="Статус довідки уточнено">
+      <bpmn:incoming>F_InquiryEnd</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:subProcess id="SubProcess_Reward" name="Окремо опрацювати додаткову винагороду під час лікування*">
+      <bpmn:documentation>D1: МОУ, 2026-06-02; перевірено 2026-11-13. Опис джерела та межі — ../03-as-is.md. Згорнутий підпроцес: підстави, медичні підтвердження, накази, перевірка та виплата за наявності права. Він не очікує завершення основної ВЛК. Внутрішні кроки — фаза 3.</bpmn:documentation>
+      <bpmn:incoming>F_CertReward</bpmn:incoming>
+      <bpmn:outgoing>F_RewardEnd</bpmn:outgoing>
+    </bpmn:subProcess>
+    <bpmn:endEvent id="End_Reward" name="Гілку винагороди опрацьовано">
+      <bpmn:incoming>F_RewardEnd</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:task id="Task_Collect" name="Зібрати наявні документи; уточнити відсутні*">
+      <bpmn:documentation>D1: МОУ, 2026-06-02; перевірено 2026-11-13. Опис джерела та межі — ../03-as-is.md. Модельне припущення: ручна координація в обраному сценарії. Не статистика й не універсальна практика; перевірити у фазі 2. H3: навантаження та частка ручного збирання ще невідомі.</bpmn:documentation>
+      <bpmn:incoming>F_TransferNo</bpmn:incoming>
+      <bpmn:incoming>F_MedRepair</bpmn:incoming>
+      <bpmn:incoming>F_UnitRepair</bpmn:incoming>
+      <bpmn:outgoing>F_Collect</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="Gateway_Family" name="Потрібна допомога родини?*" default="F_FamilyNo">
+      <bpmn:documentation>Модельне припущення: ручна координація в обраному сценарії. Не статистика й не універсальна практика; перевірити у фазі 2.</bpmn:documentation>
+      <bpmn:incoming>F_Collect</bpmn:incoming>
+      <bpmn:outgoing>F_FamilyYes</bpmn:outgoing>
+      <bpmn:outgoing>F_FamilyNo</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:task id="Task_Family" name="Допомогти з координацією та копіями*">
+      <bpmn:documentation>Модельне припущення: ручна координація в обраному сценарії. Не статистика й не універсальна практика; перевірити у фазі 2. Не формалізоване представництво; згода й межі доступу не припускаються автоматично.</bpmn:documentation>
+      <bpmn:incoming>F_FamilyYes</bpmn:incoming>
+      <bpmn:outgoing>F_FamilyDone</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="Gateway_Merge" name="">
+      <bpmn:incoming>F_FamilyNo</bpmn:incoming>
+      <bpmn:incoming>F_FamilyDone</bpmn:incoming>
+      <bpmn:outgoing>F_Referral</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:task id="Task_Referral" name="Скоординувати направлення на ВЛК*">
+      <bpmn:documentation>D1: МОУ, 2026-06-02; перевірено 2026-11-13. Опис джерела та межі — ../03-as-is.md. H4: доріжка показує координацію частиною, не її виключне право видавати направлення; уповноважений суб’єкт залежить від випадку, перевірити у фазі 3. Особисту явку в частину не вимагаємо.</bpmn:documentation>
+      <bpmn:incoming>F_Referral</bpmn:incoming>
+      <bpmn:outgoing>F_Check</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="Task_Check" name="Перевірити наявність документів">
+      <bpmn:documentation>D1: МОУ, 2026-06-02; перевірено 2026-11-13. Опис джерела та межі — ../03-as-is.md.</bpmn:documentation>
+      <bpmn:incoming>F_Check</bpmn:incoming>
+      <bpmn:outgoing>F_Complete</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="Gateway_Complete" name="Пакет повний?" default="F_CompleteNo">
+      <bpmn:documentation>D1: МОУ, 2026-06-02; перевірено 2026-11-13. Опис джерела та межі — ../03-as-is.md.</bpmn:documentation>
+      <bpmn:incoming>F_Complete</bpmn:incoming>
+      <bpmn:outgoing>F_CompleteYes</bpmn:outgoing>
+      <bpmn:outgoing>F_CompleteNo</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:exclusiveGateway id="Gateway_Wording" name="Дані й формулювання узгоджені?" default="F_WordingNo">
+      <bpmn:documentation>D1: МОУ, 2026-06-02; перевірено 2026-11-13. Опис джерела та межі — ../03-as-is.md. Перевірка відповідності фактам і документам. Немає шлюзу «правильна фраза → автоматична виплата».</bpmn:documentation>
+      <bpmn:incoming>F_CompleteYes</bpmn:incoming>
+      <bpmn:outgoing>F_WordingYes</bpmn:outgoing>
+      <bpmn:outgoing>F_WordingNo</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:task id="Task_Remarks" name="Зафіксувати, що треба доповнити / виправити">
+      <bpmn:documentation>D1: МОУ, 2026-06-02; перевірено 2026-11-13. Опис джерела та межі — ../03-as-is.md.</bpmn:documentation>
+      <bpmn:incoming>F_CompleteNo</bpmn:incoming>
+      <bpmn:incoming>F_WordingNo</bpmn:incoming>
+      <bpmn:outgoing>F_Return</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="Task_RequestFix" name="Запросити доповнення / виправлення*">
+      <bpmn:documentation>D1: МОУ, 2026-06-02; перевірено 2026-11-13. Опис джерела та межі — ../03-as-is.md. Модельне припущення: ручна координація в обраному сценарії. Не статистика й не універсальна практика; перевірити у фазі 2. H3: поранений як координатор у вибраному сценарії, а не нормативний обов’язок самостійно контролювати оформлення.</bpmn:documentation>
+      <bpmn:incoming>F_Return</bpmn:incoming>
+      <bpmn:outgoing>F_FixOwner</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="Gateway_DocOwner" name="Який документ виправляємо?" default="F_UnitOwner">
+      <bpmn:documentation>Модельне розгалуження за автором документа. За кількох помилок цикл повторюється; не означає, що лише одна помилка можлива.</bpmn:documentation>
+      <bpmn:incoming>F_FixOwner</bpmn:incoming>
+      <bpmn:outgoing>F_MedOwner</bpmn:outgoing>
+      <bpmn:outgoing>F_UnitOwner</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:task id="Task_FixMedical" name="Доповнити / виправити медичний документ">
+      <bpmn:documentation>D1: МОУ, 2026-06-02; перевірено 2026-11-13. Опис джерела та межі — ../03-as-is.md.</bpmn:documentation>
+      <bpmn:incoming>F_MedOwner</bpmn:incoming>
+      <bpmn:outgoing>F_MedRepair</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="Task_FixUnit" name="Доповнити / виправити документ частини">
+      <bpmn:documentation>D1: МОУ, 2026-06-02; перевірено 2026-11-13. Опис джерела та межі — ../03-as-is.md.</bpmn:documentation>
+      <bpmn:incoming>F_UnitOwner</bpmn:incoming>
+      <bpmn:outgoing>F_UnitRepair</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="Task_Examination" name="Провести огляд; встановити причинний зв’язок">
+      <bpmn:documentation>D1: МОУ, 2026-06-02; перевірено 2026-11-13. Опис джерела та межі — ../03-as-is.md. Причинний зв’язок встановлює ВЛК; не командир і не алгоритм.</bpmn:documentation>
+      <bpmn:incoming>F_WordingYes</bpmn:incoming>
+      <bpmn:outgoing>F_Examination</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="Task_Decision" name="Оформити постанову ВЛК">
+      <bpmn:documentation>D1: МОУ, 2026-06-02; перевірено 2026-11-13. Опис джерела та межі — ../03-as-is.md.</bpmn:documentation>
+      <bpmn:incoming>F_Examination</bpmn:incoming>
+      <bpmn:outgoing>F_Decision</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:parallelGateway id="Gateway_After" name="">
+      <bpmn:incoming>F_Decision</bpmn:incoming>
+      <bpmn:outgoing>F_Service</bpmn:outgoing>
+      <bpmn:outgoing>F_OGDRoute</bpmn:outgoing>
+    </bpmn:parallelGateway>
+    <bpmn:task id="Task_Service" name="Виконати належні дії за постановою*">
+      <bpmn:documentation>H5: межа моделі. Відпустка, подальше лікування, служба чи інше рішення залежать від постанови; нормативні маршрути не розгорнуто до фази 3.</bpmn:documentation>
+      <bpmn:incoming>F_Service</bpmn:incoming>
+      <bpmn:outgoing>F_ServiceEnd</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:endEvent id="End_Service" name="Подальший маршрут визначено">
+      <bpmn:incoming>F_ServiceEnd</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:exclusiveGateway id="Gateway_OGD" name="Подавати на ОГД?*" default="F_OGDNo">
+      <bpmn:documentation>D1: МОУ, 2026-06-02; перевірено 2026-11-13. Опис джерела та межі — ../03-as-is.md. Це окремий маршрут; не кожне поранення означає ОГД. Право та категорію встановлюють за відповідними підставами, фаза 3.</bpmn:documentation>
+      <bpmn:incoming>F_OGDRoute</bpmn:incoming>
+      <bpmn:outgoing>F_OGDYes</bpmn:outgoing>
+      <bpmn:outgoing>F_OGDNo</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="End_NoOGD" name="ОГД не подається в цьому сценарії">
+      <bpmn:incoming>F_OGDNo</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:task id="Task_OGDPackage" name="Підготувати окремий пакет ОГД; ЕКОПФО за потреби*">
+      <bpmn:documentation>D1: МОУ, 2026-06-02; перевірено 2026-11-13. Опис джерела та межі — ../03-as-is.md. ЕКОПФО — окреме оцінювання, не дія ВЛК. У схемі показано отримання належних результатів для пакета, не саме оцінювання. ОГД при інвалідності не є єдиним видом ОГД.</bpmn:documentation>
+      <bpmn:incoming>F_OGDYes</bpmn:incoming>
+      <bpmn:incoming>F_FinRepair</bpmn:incoming>
+      <bpmn:outgoing>F_OGDSubmit</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="Task_FinCheck" name="Перевірити пакет для подальшого подання*">
+      <bpmn:documentation>D1: МОУ, 2026-06-02; перевірено 2026-11-13. Опис джерела та межі — ../03-as-is.md. H5: фінслужба — узагальнена роль опрацювання/супроводу; не приписуємо їй повноваження органу призначення ОГД.</bpmn:documentation>
+      <bpmn:incoming>F_OGDSubmit</bpmn:incoming>
+      <bpmn:outgoing>F_FinCheck</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="Gateway_FinComplete" name="Потрібне доопрацювання?" default="F_FinReady">
+      <bpmn:documentation>D1: МОУ, 2026-06-02; перевірено 2026-11-13. Опис джерела та межі — ../03-as-is.md.</bpmn:documentation>
+      <bpmn:incoming>F_FinCheck</bpmn:incoming>
+      <bpmn:outgoing>F_FinRepair</bpmn:outgoing>
+      <bpmn:outgoing>F_FinReady</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:subProcess id="SubProcess_OGD" name="Передати на призначення ОГД; виконати рішення*">
+      <bpmn:documentation>H5: згорнутий зовнішній маршрут до уповноваженого органу. Можливі призначення й виплата або мотивована відмова; порядок, оскарження й повноваження — фаза 3. Фінслужба не ухвалює рішення замість цього органу.</bpmn:documentation>
+      <bpmn:incoming>F_FinReady</bpmn:incoming>
+      <bpmn:outgoing>F_OGDEnd</bpmn:outgoing>
+    </bpmn:subProcess>
+    <bpmn:endEvent id="End_OGD" name="Результат щодо ОГД отримано">
+      <bpmn:incoming>F_OGDEnd</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:subProcess id="EventSubProcess_Long" name="Контроль огляду для тривалого лікування*" triggeredByEvent="true">
+      <bpmn:documentation>D2: МОУ, 2026-10-23; перевірено 2026-11-13. Роз’яснення, не завершена звірка НПА. Контрольна дата long_treatment_review_at задається до граничного строку огляду. Верхня межа за роз’ясненням — 4 календарні місяці від початку лікування; це не 120 діб від поранення. Дата та винятки потребують фази 3. Подієвий підпроцес не перезапускається при переведенні.</bpmn:documentation>
+      <bpmn:startEvent id="Timer_Long" name="Контрольна дата ≤ 4 міс.*" isInterrupting="false">
+        <bpmn:outgoing>F_LongCheck</bpmn:outgoing>
+        <bpmn:timerEventDefinition id="TimerDefinition_Long">
+          <bpmn:timeDate xsi:type="bpmn:tFormalExpression">long_treatment_review_at</bpmn:timeDate>
+        </bpmn:timerEventDefinition>
+      </bpmn:startEvent>
+      <bpmn:exclusiveGateway id="Gateway_LongActive" name="Лікування триває?" default="F_LongNo">
+        <bpmn:incoming>F_LongCheck</bpmn:incoming>
+        <bpmn:outgoing>F_LongYes</bpmn:outgoing>
+        <bpmn:outgoing>F_LongNo</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:task id="Task_LongReview" name="Організувати огляд ВЛК щодо потреби у тривалому лікуванні*">
+        <bpmn:documentation>D2: МОУ, 2026-10-23; перевірено 2026-11-13. Роз’яснення, не завершена звірка НПА. Не припиняє лікування чи виплати автоматично. Організаційні повноваження — фаза 3.</bpmn:documentation>
+        <bpmn:incoming>F_LongYes</bpmn:incoming>
+        <bpmn:outgoing>F_LongDone</bpmn:outgoing>
+      </bpmn:task>
+      <bpmn:endEvent id="End_LongReview" name="Огляд опрацьовано">
+        <bpmn:incoming>F_LongDone</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:endEvent id="End_LongNotNeeded" name="Не потрібен у цьому маршруті">
+        <bpmn:incoming>F_LongNo</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:sequenceFlow id="F_LongCheck" sourceRef="Timer_Long" targetRef="Gateway_LongActive" />
+      <bpmn:sequenceFlow id="F_LongYes" name="Так" sourceRef="Gateway_LongActive" targetRef="Task_LongReview">
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">treatment_still_active</bpmn:conditionExpression>
+      </bpmn:sequenceFlow>
+      <bpmn:sequenceFlow id="F_LongNo" name="Ні" sourceRef="Gateway_LongActive" targetRef="End_LongNotNeeded" />
+      <bpmn:sequenceFlow id="F_LongDone" sourceRef="Task_LongReview" targetRef="End_LongReview" />
+    </bpmn:subProcess>
+    <bpmn:sequenceFlow id="F_Start" sourceRef="Start_Injury" targetRef="Task_Primary" />
+    <bpmn:sequenceFlow id="F_Primary" sourceRef="Task_Primary" targetRef="Gateway_Parallel" />
+    <bpmn:sequenceFlow id="F_Care" sourceRef="Gateway_Parallel" targetRef="Task_Admission" />
+    <bpmn:sequenceFlow id="F_Unit" sourceRef="Gateway_Parallel" targetRef="Task_Certificate" />
+    <bpmn:sequenceFlow id="F_Admission" sourceRef="Task_Admission" targetRef="Task_Treatment" />
+    <bpmn:sequenceFlow id="F_Treatment" sourceRef="Task_Treatment" targetRef="Task_MedDocs" />
+    <bpmn:sequenceFlow id="F_Docs" sourceRef="Task_MedDocs" targetRef="Gateway_Transfer" />
+    <bpmn:sequenceFlow id="F_TransferYes" name="Так" sourceRef="Gateway_Transfer" targetRef="Task_Notify">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">transfer_required</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="F_TransferBack" sourceRef="Task_Notify" targetRef="Task_Admission" />
+    <bpmn:sequenceFlow id="F_TransferNo" name="Ні" sourceRef="Gateway_Transfer" targetRef="Task_Collect" />
+    <bpmn:sequenceFlow id="F_CertReward" sourceRef="Task_Certificate" targetRef="SubProcess_Reward" />
+    <bpmn:sequenceFlow id="F_RewardEnd" sourceRef="SubProcess_Reward" targetRef="End_Reward" />
+    <bpmn:sequenceFlow id="F_CertLate" sourceRef="Timer_Certificate" targetRef="Task_CertInquiry" />
+    <bpmn:sequenceFlow id="F_InquiryEnd" sourceRef="Task_CertInquiry" targetRef="End_Inquiry" />
+    <bpmn:sequenceFlow id="F_Collect" sourceRef="Task_Collect" targetRef="Gateway_Family" />
+    <bpmn:sequenceFlow id="F_FamilyYes" name="Так" sourceRef="Gateway_Family" targetRef="Task_Family">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">family_help_requested</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="F_FamilyNo" name="Ні" sourceRef="Gateway_Family" targetRef="Gateway_Merge" />
+    <bpmn:sequenceFlow id="F_FamilyDone" sourceRef="Task_Family" targetRef="Gateway_Merge" />
+    <bpmn:sequenceFlow id="F_Referral" sourceRef="Gateway_Merge" targetRef="Task_Referral" />
+    <bpmn:sequenceFlow id="F_Check" sourceRef="Task_Referral" targetRef="Task_Check" />
+    <bpmn:sequenceFlow id="F_Complete" sourceRef="Task_Check" targetRef="Gateway_Complete" />
+    <bpmn:sequenceFlow id="F_CompleteYes" name="Так" sourceRef="Gateway_Complete" targetRef="Gateway_Wording">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">package_complete</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="F_CompleteNo" name="Ні" sourceRef="Gateway_Complete" targetRef="Task_Remarks" />
+    <bpmn:sequenceFlow id="F_WordingYes" name="Так" sourceRef="Gateway_Wording" targetRef="Task_Examination">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">documents_consistent</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="F_WordingNo" name="Ні" sourceRef="Gateway_Wording" targetRef="Task_Remarks" />
+    <bpmn:sequenceFlow id="F_Return" sourceRef="Task_Remarks" targetRef="Task_RequestFix" />
+    <bpmn:sequenceFlow id="F_FixOwner" sourceRef="Task_RequestFix" targetRef="Gateway_DocOwner" />
+    <bpmn:sequenceFlow id="F_MedOwner" name="Медичний" sourceRef="Gateway_DocOwner" targetRef="Task_FixMedical">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">document_owner_medical</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="F_UnitOwner" name="Частини" sourceRef="Gateway_DocOwner" targetRef="Task_FixUnit" />
+    <bpmn:sequenceFlow id="F_MedRepair" sourceRef="Task_FixMedical" targetRef="Task_Collect" />
+    <bpmn:sequenceFlow id="F_UnitRepair" sourceRef="Task_FixUnit" targetRef="Task_Collect" />
+    <bpmn:sequenceFlow id="F_Examination" sourceRef="Task_Examination" targetRef="Task_Decision" />
+    <bpmn:sequenceFlow id="F_Decision" sourceRef="Task_Decision" targetRef="Gateway_After" />
+    <bpmn:sequenceFlow id="F_Service" sourceRef="Gateway_After" targetRef="Task_Service" />
+    <bpmn:sequenceFlow id="F_ServiceEnd" sourceRef="Task_Service" targetRef="End_Service" />
+    <bpmn:sequenceFlow id="F_OGDRoute" sourceRef="Gateway_After" targetRef="Gateway_OGD" />
+    <bpmn:sequenceFlow id="F_OGDYes" name="Так" sourceRef="Gateway_OGD" targetRef="Task_OGDPackage">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">ogd_application_planned</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="F_OGDNo" name="Ні" sourceRef="Gateway_OGD" targetRef="End_NoOGD" />
+    <bpmn:sequenceFlow id="F_OGDSubmit" sourceRef="Task_OGDPackage" targetRef="Task_FinCheck" />
+    <bpmn:sequenceFlow id="F_FinCheck" sourceRef="Task_FinCheck" targetRef="Gateway_FinComplete" />
+    <bpmn:sequenceFlow id="F_FinRepair" name="Так" sourceRef="Gateway_FinComplete" targetRef="Task_OGDPackage">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">ogd_package_needs_rework</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="F_FinReady" name="Ні" sourceRef="Gateway_FinComplete" targetRef="SubProcess_OGD" />
+    <bpmn:sequenceFlow id="F_OGDEnd" sourceRef="SubProcess_OGD" targetRef="End_OGD" />
+    <bpmn:textAnnotation id="Note_Title">
+      <bpmn:text>AS IS • 2026-11-13 • для кроку I (15.11)
+Фази 2 і 3 попереду: * = припущення / нормативна деталь для перевірки. Навчальний сценарій, не універсальний маршрут.</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:textAnnotation id="Note_Sources">
+      <bpmn:text>Джерела та межі: ../03-as-is.md (D1–D3), перевірено 2026-11-13.
+Таймери не переривають лікування і не означають втрату виплат. Немає автоматизованого «кейсу» AS IS.</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:textAnnotation id="Note_Cert">
+      <bpmn:text>Довідка: строк [TBD] до фази 3.
+Родина — лише допомога з координацією, не автоматичний
+представник.</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:textAnnotation id="Note_Care">
+      <bpmn:text>Переведення повторює епізод лікування.
+Дата початку для контролю тривалого лікування зберігається; тут не скидається.</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:textAnnotation id="Note_Reward">
+      <bpmn:text>Додаткова винагорода ≠ ОГД.
+Підпроцес має власні медичні й адміністративні підстави; фінальна ВЛК не є загальним бар’єром.</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:textAnnotation id="Note_Long">
+      <bpmn:text>* Контрольна дата визначається
+завчасно: огляд щодо тривалого
+лікування — до 4 календарних
+місяців від початку лікування (D2).
+НПА та винятки — фаза 3. Не «120
+діб від поранення».</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:textAnnotation id="Note_Bounds">
+      <bpmn:text>* Направлення, подальші дії та ОГД — укрупнено.
+Уповноважені суб’єкти, умови та оскарження — фаза 3. Фінслужба не замінює орган призначення ОГД.</bpmn:text>
+    </bpmn:textAnnotation>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="Diagram_AsIs">
+    <bpmndi:BPMNPlane id="Plane_AsIs" bpmnElement="Collaboration_AsIs">
+      <bpmndi:BPMNShape id="DI_Participant_AsIs" bpmnElement="Participant_AsIs" isHorizontal="true">
+        <dc:Bounds x="40" y="80" width="4670" height="2020" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Lane_Finance" bpmnElement="Lane_Finance" isHorizontal="true">
+        <dc:Bounds x="70" y="1750" width="4640" height="350" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Lane_VLK" bpmnElement="Lane_VLK" isHorizontal="true">
+        <dc:Bounds x="70" y="1430" width="4640" height="320" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Lane_Unit" bpmnElement="Lane_Unit" isHorizontal="true">
+        <dc:Bounds x="70" y="1130" width="4640" height="300" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Lane_Hospital" bpmnElement="Lane_Hospital" isHorizontal="true">
+        <dc:Bounds x="70" y="750" width="4640" height="380" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Lane_Medic" bpmnElement="Lane_Medic" isHorizontal="true">
+        <dc:Bounds x="70" y="550" width="4640" height="200" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Lane_Family" bpmnElement="Lane_Family" isHorizontal="true">
+        <dc:Bounds x="70" y="350" width="4640" height="200" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Lane_Patient" bpmnElement="Lane_Patient" isHorizontal="true">
+        <dc:Bounds x="70" y="80" width="4640" height="270" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Start_Injury" bpmnElement="Start_Injury">
+        <dc:Bounds x="190" y="627" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="120" y="675" width="190" height="55" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Task_Primary" bpmnElement="Task_Primary">
+        <dc:Bounds x="300" y="600" width="180" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Gateway_Parallel" bpmnElement="Gateway_Parallel">
+        <dc:Bounds x="550" y="620" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Task_Admission" bpmnElement="Task_Admission">
+        <dc:Bounds x="710" y="880" width="180" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Task_Treatment" bpmnElement="Task_Treatment">
+        <dc:Bounds x="970" y="880" width="180" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Task_MedDocs" bpmnElement="Task_MedDocs">
+        <dc:Bounds x="1230" y="880" width="180" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Gateway_Transfer" bpmnElement="Gateway_Transfer" isMarkerVisible="true">
+        <dc:Bounds x="1500" y="900" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1430" y="962" width="190" height="55" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Task_Notify" bpmnElement="Task_Notify">
+        <dc:Bounds x="1435" y="180" width="180" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Task_Certificate" bpmnElement="Task_Certificate">
+        <dc:Bounds x="710" y="1230" width="180" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Task_CertInquiry" bpmnElement="Task_CertInquiry">
+        <dc:Bounds x="1030" y="1330" width="220" height="75" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_End_Inquiry" bpmnElement="End_Inquiry">
+        <dc:Bounds x="1370" y="1350" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1300" y="1398" width="190" height="55" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_SubProcess_Reward" bpmnElement="SubProcess_Reward" isExpanded="false">
+        <dc:Bounds x="1030" y="1850" width="220" height="110" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_End_Reward" bpmnElement="End_Reward">
+        <dc:Bounds x="1370" y="1887" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1300" y="1935" width="190" height="55" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Task_Collect" bpmnElement="Task_Collect">
+        <dc:Bounds x="1750" y="180" width="180" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Gateway_Family" bpmnElement="Gateway_Family" isMarkerVisible="true">
+        <dc:Bounds x="2000" y="200" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1935" y="135" width="180" height="55" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Task_Family" bpmnElement="Task_Family">
+        <dc:Bounds x="2010" y="405" width="180" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Gateway_Merge" bpmnElement="Gateway_Merge" isMarkerVisible="true">
+        <dc:Bounds x="2280" y="200" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Task_Referral" bpmnElement="Task_Referral">
+        <dc:Bounds x="2310" y="1230" width="180" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Task_Check" bpmnElement="Task_Check">
+        <dc:Bounds x="2310" y="1510" width="180" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Gateway_Complete" bpmnElement="Gateway_Complete" isMarkerVisible="true">
+        <dc:Bounds x="2570" y="1530" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2510" y="1465" width="170" height="55" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Gateway_Wording" bpmnElement="Gateway_Wording" isMarkerVisible="true">
+        <dc:Bounds x="2880" y="1530" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2820" y="1465" width="170" height="55" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Task_Remarks" bpmnElement="Task_Remarks">
+        <dc:Bounds x="2650" y="1640" width="200" height="70" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Task_RequestFix" bpmnElement="Task_RequestFix">
+        <dc:Bounds x="2650" y="180" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Gateway_DocOwner" bpmnElement="Gateway_DocOwner" isMarkerVisible="true">
+        <dc:Bounds x="2990" y="200" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2925" y="135" width="180" height="55" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Task_FixMedical" bpmnElement="Task_FixMedical">
+        <dc:Bounds x="2970" y="880" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Task_FixUnit" bpmnElement="Task_FixUnit">
+        <dc:Bounds x="2970" y="1230" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Task_Examination" bpmnElement="Task_Examination">
+        <dc:Bounds x="3110" y="1510" width="190" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Task_Decision" bpmnElement="Task_Decision">
+        <dc:Bounds x="3370" y="1510" width="180" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Gateway_After" bpmnElement="Gateway_After">
+        <dc:Bounds x="3620" y="1530" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Task_Service" bpmnElement="Task_Service">
+        <dc:Bounds x="3700" y="1230" width="200" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_End_Service" bpmnElement="End_Service">
+        <dc:Bounds x="4020" y="1257" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3950" y="1305" width="190" height="55" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Gateway_OGD" bpmnElement="Gateway_OGD" isMarkerVisible="true">
+        <dc:Bounds x="3630" y="200" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3555" y="135" width="200" height="55" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_End_NoOGD" bpmnElement="End_NoOGD">
+        <dc:Bounds x="3660" y="292" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3700" y="290" width="190" height="48" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Task_OGDPackage" bpmnElement="Task_OGDPackage">
+        <dc:Bounds x="3870" y="180" width="220" height="100" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Task_FinCheck" bpmnElement="Task_FinCheck">
+        <dc:Bounds x="3870" y="1830" width="220" height="100" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Gateway_FinComplete" bpmnElement="Gateway_FinComplete" isMarkerVisible="true">
+        <dc:Bounds x="4160" y="1860" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4095" y="1920" width="180" height="55" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_SubProcess_OGD" bpmnElement="SubProcess_OGD" isExpanded="false">
+        <dc:Bounds x="4300" y="1840" width="230" height="110" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_End_OGD" bpmnElement="End_OGD">
+        <dc:Bounds x="4600" y="1877" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4530" y="1925" width="190" height="55" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_EventSubProcess_Long" bpmnElement="EventSubProcess_Long" isExpanded="true">
+        <dc:Bounds x="3350" y="800" width="1240" height="290" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Timer_Long" bpmnElement="Timer_Long">
+        <dc:Bounds x="3420" y="910" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3340" y="952" width="210" height="45" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Gateway_LongActive" bpmnElement="Gateway_LongActive" isMarkerVisible="true">
+        <dc:Bounds x="3640" y="903" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3570" y="858" width="180" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Task_LongReview" bpmnElement="Task_LongReview">
+        <dc:Bounds x="3850" y="880" width="230" height="100" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_End_LongReview" bpmnElement="End_LongReview">
+        <dc:Bounds x="4220" y="912" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4150" y="960" width="190" height="55" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_End_LongNotNeeded" bpmnElement="End_LongNotNeeded">
+        <dc:Bounds x="3650" y="1020" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3690" y="1015" width="200" height="50" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="DI_F_LongCheck" bpmnElement="F_LongCheck">
+        <di:waypoint x="3456" y="928" />
+        <di:waypoint x="3640" y="928" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_LongYes" bpmnElement="F_LongYes">
+        <di:waypoint x="3690" y="928" />
+        <di:waypoint x="3850" y="928" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3750" y="900" width="50" height="25" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_LongNo" bpmnElement="F_LongNo">
+        <di:waypoint x="3665" y="953" />
+        <di:waypoint x="3665" y="1000" />
+        <di:waypoint x="3668" y="1000" />
+        <di:waypoint x="3668" y="1020" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3675" y="978" width="40" height="25" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_LongDone" bpmnElement="F_LongDone">
+        <di:waypoint x="4080" y="930" />
+        <di:waypoint x="4150" y="930" />
+        <di:waypoint x="4220" y="930" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="DI_Note_Title" bpmnElement="Note_Title">
+        <dc:Bounds x="120" y="0" width="1870" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Note_Sources" bpmnElement="Note_Sources">
+        <dc:Bounds x="2440" y="0" width="2050" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Note_Cert" bpmnElement="Note_Cert">
+        <dc:Bounds x="170" y="380" width="450" height="130" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Note_Care" bpmnElement="Note_Care">
+        <dc:Bounds x="970" y="1010" width="630" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Note_Reward" bpmnElement="Note_Reward">
+        <dc:Bounds x="1570" y="1850" width="680" height="120" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Note_Long" bpmnElement="Note_Long">
+        <dc:Bounds x="4320" y="910" width="245" height="150" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Note_Bounds" bpmnElement="Note_Bounds">
+        <dc:Bounds x="3330" y="1940" width="760" height="120" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Timer_Certificate" bpmnElement="Timer_Certificate">
+        <dc:Bounds x="850" y="1302" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="630" y="1345" width="195" height="55" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="DI_F_Start" bpmnElement="F_Start">
+        <di:waypoint x="226" y="645" />
+        <di:waypoint x="300" y="645" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_Primary" bpmnElement="F_Primary">
+        <di:waypoint x="480" y="645" />
+        <di:waypoint x="550" y="645" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_Care" bpmnElement="F_Care">
+        <di:waypoint x="600" y="645" />
+        <di:waypoint x="650" y="645" />
+        <di:waypoint x="650" y="925" />
+        <di:waypoint x="710" y="925" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_Unit" bpmnElement="F_Unit">
+        <di:waypoint x="575" y="670" />
+        <di:waypoint x="575" y="1275" />
+        <di:waypoint x="710" y="1275" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_Admission" bpmnElement="F_Admission">
+        <di:waypoint x="890" y="925" />
+        <di:waypoint x="970" y="925" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_Treatment" bpmnElement="F_Treatment">
+        <di:waypoint x="1150" y="925" />
+        <di:waypoint x="1230" y="925" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_Docs" bpmnElement="F_Docs">
+        <di:waypoint x="1410" y="925" />
+        <di:waypoint x="1500" y="925" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_TransferYes" bpmnElement="F_TransferYes">
+        <di:waypoint x="1525" y="900" />
+        <di:waypoint x="1525" y="270" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1535" y="580" width="55" height="25" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_TransferBack" bpmnElement="F_TransferBack">
+        <di:waypoint x="1435" y="225" />
+        <di:waypoint x="1370" y="225" />
+        <di:waypoint x="1370" y="790" />
+        <di:waypoint x="800" y="790" />
+        <di:waypoint x="800" y="880" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_TransferNo" bpmnElement="F_TransferNo">
+        <di:waypoint x="1550" y="925" />
+        <di:waypoint x="1650" y="925" />
+        <di:waypoint x="1650" y="225" />
+        <di:waypoint x="1750" y="225" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1660" y="580" width="50" height="25" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_CertReward" bpmnElement="F_CertReward">
+        <di:waypoint x="890" y="1275" />
+        <di:waypoint x="940" y="1275" />
+        <di:waypoint x="940" y="1905" />
+        <di:waypoint x="1030" y="1905" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_RewardEnd" bpmnElement="F_RewardEnd">
+        <di:waypoint x="1250" y="1905" />
+        <di:waypoint x="1370" y="1905" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_CertLate" bpmnElement="F_CertLate">
+        <di:waypoint x="868" y="1338" />
+        <di:waypoint x="868" y="1368" />
+        <di:waypoint x="1030" y="1368" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_InquiryEnd" bpmnElement="F_InquiryEnd">
+        <di:waypoint x="1250" y="1368" />
+        <di:waypoint x="1370" y="1368" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_Collect" bpmnElement="F_Collect">
+        <di:waypoint x="1930" y="225" />
+        <di:waypoint x="2000" y="225" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_FamilyYes" bpmnElement="F_FamilyYes">
+        <di:waypoint x="2025" y="250" />
+        <di:waypoint x="2025" y="330" />
+        <di:waypoint x="2100" y="330" />
+        <di:waypoint x="2100" y="405" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2030" y="340" width="50" height="25" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_FamilyNo" bpmnElement="F_FamilyNo">
+        <di:waypoint x="2050" y="225" />
+        <di:waypoint x="2280" y="225" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2150" y="200" width="50" height="25" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_FamilyDone" bpmnElement="F_FamilyDone">
+        <di:waypoint x="2190" y="450" />
+        <di:waypoint x="2305" y="450" />
+        <di:waypoint x="2305" y="250" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_Referral" bpmnElement="F_Referral">
+        <di:waypoint x="2330" y="225" />
+        <di:waypoint x="2400" y="225" />
+        <di:waypoint x="2400" y="1230" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_Check" bpmnElement="F_Check">
+        <di:waypoint x="2400" y="1320" />
+        <di:waypoint x="2400" y="1510" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_Complete" bpmnElement="F_Complete">
+        <di:waypoint x="2490" y="1555" />
+        <di:waypoint x="2570" y="1555" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_CompleteYes" bpmnElement="F_CompleteYes">
+        <di:waypoint x="2620" y="1555" />
+        <di:waypoint x="2880" y="1555" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2660" y="1528" width="50" height="25" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_CompleteNo" bpmnElement="F_CompleteNo">
+        <di:waypoint x="2595" y="1580" />
+        <di:waypoint x="2595" y="1675" />
+        <di:waypoint x="2650" y="1675" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2600" y="1597" width="45" height="25" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_WordingYes" bpmnElement="F_WordingYes">
+        <di:waypoint x="2930" y="1555" />
+        <di:waypoint x="3110" y="1555" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3005" y="1528" width="50" height="25" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_WordingNo" bpmnElement="F_WordingNo">
+        <di:waypoint x="2905" y="1580" />
+        <di:waypoint x="2905" y="1675" />
+        <di:waypoint x="2850" y="1675" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2910" y="1597" width="45" height="25" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_Return" bpmnElement="F_Return">
+        <di:waypoint x="2750" y="1640" />
+        <di:waypoint x="2750" y="270" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_FixOwner" bpmnElement="F_FixOwner">
+        <di:waypoint x="2850" y="225" />
+        <di:waypoint x="2990" y="225" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_MedOwner" bpmnElement="F_MedOwner">
+        <di:waypoint x="3015" y="250" />
+        <di:waypoint x="3015" y="800" />
+        <di:waypoint x="3070" y="800" />
+        <di:waypoint x="3070" y="880" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3025" y="560" width="100" height="25" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_UnitOwner" bpmnElement="F_UnitOwner">
+        <di:waypoint x="3040" y="225" />
+        <di:waypoint x="3220" y="225" />
+        <di:waypoint x="3220" y="1275" />
+        <di:waypoint x="3170" y="1275" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3230" y="560" width="90" height="25" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_MedRepair" bpmnElement="F_MedRepair">
+        <di:waypoint x="2970" y="925" />
+        <di:waypoint x="2880" y="925" />
+        <di:waypoint x="2880" y="770" />
+        <di:waypoint x="1690" y="770" />
+        <di:waypoint x="1690" y="195" />
+        <di:waypoint x="1750" y="195" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_UnitRepair" bpmnElement="F_UnitRepair">
+        <di:waypoint x="2970" y="1275" />
+        <di:waypoint x="2820" y="1275" />
+        <di:waypoint x="2820" y="1160" />
+        <di:waypoint x="1720" y="1160" />
+        <di:waypoint x="1720" y="255" />
+        <di:waypoint x="1750" y="255" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_Examination" bpmnElement="F_Examination">
+        <di:waypoint x="3300" y="1555" />
+        <di:waypoint x="3370" y="1555" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_Decision" bpmnElement="F_Decision">
+        <di:waypoint x="3550" y="1555" />
+        <di:waypoint x="3620" y="1555" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_Service" bpmnElement="F_Service">
+        <di:waypoint x="3645" y="1530" />
+        <di:waypoint x="3645" y="1275" />
+        <di:waypoint x="3700" y="1275" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_ServiceEnd" bpmnElement="F_ServiceEnd">
+        <di:waypoint x="3900" y="1275" />
+        <di:waypoint x="4020" y="1275" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_OGDRoute" bpmnElement="F_OGDRoute">
+        <di:waypoint x="3670" y="1555" />
+        <di:waypoint x="4100" y="1555" />
+        <di:waypoint x="4100" y="1170" />
+        <di:waypoint x="3310" y="1170" />
+        <di:waypoint x="3310" y="360" />
+        <di:waypoint x="3550" y="360" />
+        <di:waypoint x="3550" y="225" />
+        <di:waypoint x="3630" y="225" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_OGDYes" bpmnElement="F_OGDYes">
+        <di:waypoint x="3680" y="225" />
+        <di:waypoint x="3780" y="225" />
+        <di:waypoint x="3780" y="130" />
+        <di:waypoint x="3980" y="130" />
+        <di:waypoint x="3980" y="180" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3850" y="105" width="50" height="25" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_OGDNo" bpmnElement="F_OGDNo">
+        <di:waypoint x="3655" y="250" />
+        <di:waypoint x="3655" y="310" />
+        <di:waypoint x="3660" y="310" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3610" y="268" width="40" height="25" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_OGDSubmit" bpmnElement="F_OGDSubmit">
+        <di:waypoint x="4090" y="260" />
+        <di:waypoint x="4670" y="260" />
+        <di:waypoint x="4670" y="1775" />
+        <di:waypoint x="3980" y="1775" />
+        <di:waypoint x="3980" y="1830" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_FinCheck" bpmnElement="F_FinCheck">
+        <di:waypoint x="4090" y="1880" />
+        <di:waypoint x="4130" y="1880" />
+        <di:waypoint x="4130" y="1885" />
+        <di:waypoint x="4160" y="1885" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_FinRepair" bpmnElement="F_FinRepair">
+        <di:waypoint x="4185" y="1860" />
+        <di:waypoint x="4185" y="1800" />
+        <di:waypoint x="4640" y="1800" />
+        <di:waypoint x="4640" y="330" />
+        <di:waypoint x="4185" y="330" />
+        <di:waypoint x="4185" y="230" />
+        <di:waypoint x="4090" y="230" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4590" y="1400" width="50" height="25" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_FinReady" bpmnElement="F_FinReady">
+        <di:waypoint x="4210" y="1885" />
+        <di:waypoint x="4300" y="1885" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4240" y="1857" width="50" height="25" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_OGDEnd" bpmnElement="F_OGDEnd">
+        <di:waypoint x="4530" y="1895" />
+        <di:waypoint x="4560" y="1895" />
+        <di:waypoint x="4600" y="1895" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+  <bpmndi:BPMNDiagram>
+    <bpmndi:BPMNPlane bpmnElement="SubProcess_Reward" />
+  </bpmndi:BPMNDiagram>
+  <bpmndi:BPMNDiagram>
+    <bpmndi:BPMNPlane bpmnElement="SubProcess_OGD" />
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
