@@ -20,6 +20,7 @@
 | [docs/03-as-is.md](docs/03-as-is.md) | AS IS процес для BPMN (крок I) |
 | [docs/04-feature-concept.md](docs/04-feature-concept.md) | Концепція функціоналу, джерела даних, архітектура (крок II) |
 | [docs/ai-use.md](docs/ai-use.md) | Примітка про використання ШІ (вимога курсу) |
+| [AGENTS.md](AGENTS.md), [docs/codex-task.md](docs/codex-task.md) | Правила і завдання для ШІ-агента (Codex), 9 фаз |
 | [regulation/](regulation/) | Нормативка: перелік НПА, конспекти |
 | [research/survey/](research/survey/) | Опитування військових: питання і знеособлені відповіді |
 | [research/interviews/](research/interviews/) | Гайд інтерв'ю і знеособлені нотатки |
