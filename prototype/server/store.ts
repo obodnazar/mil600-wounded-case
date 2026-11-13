@@ -2,7 +2,7 @@ import {DatabaseSync, type SQLInputValue} from 'node:sqlite';
 import {readFileSync, readdirSync, mkdirSync, chmodSync} from 'node:fs';
 import {dirname} from 'node:path';
 import {createHash,randomUUID} from 'node:crypto';
-import {applyEvent,ReviewRequired,requirements,sources,insert,command,task,type Command} from './domain.js';
+import {applyEvent,ReviewRequired,requirements,sources,insert,command,task,resolveCertificateReview,type Command} from './domain.js';
 import {kyivDate} from './calendar.js';
 import {snapshot,cohort} from './metrics.js';
 import {extendView} from './views.js';
@@ -135,7 +135,9 @@ export class Store {
     });
   }
   refreshDeadlines(now:number):void {
-    this.transaction(()=>{for(const d of this.rows("SELECT id,case_id,calculation_revision FROM deadline WHERE anchor_status='confirmed' AND applicability_state='applicable' AND due_date<?",kyivDate(new Date(now).toISOString()))){
+    this.transaction(()=>{
+      for(const c of this.rows("SELECT DISTINCT case_id FROM document_ref WHERE kind='trauma_certificate' AND active=1 AND state IN ('issued','corrected') AND provenance='source_reference'"))resolveCertificateReview(this,String(c.case_id));
+      for(const d of this.rows("SELECT id,case_id,calculation_revision FROM deadline WHERE anchor_status='confirmed' AND applicability_state='applicable' AND due_date<? AND NOT (rule_version_id='demo-rule-certificate' AND EXISTS(SELECT 1 FROM document_ref r WHERE r.case_id=deadline.case_id AND r.kind='trauma_certificate' AND r.active=1 AND r.state IN ('issued','corrected') AND r.provenance='source_reference'))",kyivDate(new Date(now).toISOString()))){
       const trigger='demo-deadline:'+String(d.id)+':'+String(d.calculation_revision);
       if(this.row('SELECT id FROM task WHERE case_id=? AND trigger_ref=?',d.case_id??null,trigger))continue;
       task(this,String(d.case_id),'review_deadline','support',trigger);this.audit('event_validate','allowed','demo-calendar',String(d.id),now,'worker');

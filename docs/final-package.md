@@ -20,7 +20,7 @@
 - [Валідація цифр / baseline / ненадіслані запити](../research/validation.md), [голоси / дати](../research/voices.md), [метод](../research/voices-method.md), [карта болів](../research/pain-map.md). Масштаб і головну причину затримок не доведено. C2 — підгіпотеза; C6 поза продуктом.
 - [N01–N21 з датами](../regulation/README.md), [статуси функцій L01–L21](../regulation/legality-matrix.md), [ввід медиками / прогалини](architecture/medics-data-entry.md). Основний тригер — еПМК з МІС ЗСУ; адміністративний запит лише резерв.
 - [Наскрізне трасування](final-traceability.md): F01–F10 / AC01–AC10 → BR / S / BO → конкретні вузли обох BPMN → НПА / ADR → код і тести. [Ризики R01–R22](final-risk-disposition.md) відокремлюють перевірене в демо від обов’язкових умов production.
-- [Фінальне рев’ю](reviews/final.md), [рев’ю фази 9](reviews/phase-9.md), [машиночитаний зріз зовнішніх джерел](reviews/final-source-access.json). Успішний HTTP не означає звірку тексту норми.
+- [Повторний аудит і виправлення runtime](reviews/recheck-2026-11-13.md), [фінальне рев’ю](reviews/final.md), [рев’ю фази 9](reviews/phase-9.md), [машиночитаний зріз зовнішніх джерел](reviews/final-source-access.json). Успішний HTTP не означає звірку тексту норми.
 
 ## Як відтворити
 

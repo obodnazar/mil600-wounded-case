@@ -78,7 +78,7 @@ npx playwright install chromium
 npm run test:e2e
 ```
 
-Фактично на 2026-11-13: **57** Node-тестів (ядро / HTTP / SQLite / D1 / AC), **12** Playwright; lint / build проходять, audit **0**. CI додає CodeQL і gitleaks; актуальний результат кожного head — у PR. Для локального Chrome задайте `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH`; для captures — `UPDATE_SCREENSHOTS=true npm run test:e2e`. E2E ізольований від demo.sqlite й перевіряє прискорений сценарій; робочі ліміти / рестарт dedupe / nonce / audit rollback перевірено окремими HTTP-тестами.
+Після [повторного аудиту](../docs/reviews/recheck-2026-11-13.md) на 2026-11-13: **62** Node-тестів (ядро / HTTP / SQLite / D1 / AC), **12** Playwright; lint / build проходять, audit **0**. CI додає CodeQL і gitleaks; актуальний результат кожного head — у PR. Для локального Chrome задайте `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH`; для captures — `UPDATE_SCREENSHOTS=true npm run test:e2e`. E2E ізольований від demo.sqlite й перевіряє прискорений сценарій; робочі ліміти / рестарт dedupe / nonce / audit rollback перевірено окремими HTTP-тестами.
 
 [Gateway](server/app.ts) однаковий для `/api/integration/events` і fixed dev fixtures: HMAC / schema / source policy → durable transaction inbox / CaseEvent / Task / audit / outbox. Worker підтверджує тільки локальне повідомлення проєкції; немає справжнього push чи зовнішньої доставки. Старий harness фази 7 має `validated_only`, це окремий тестовий adapter. Append-only тригери не ізолюють БД від власника файлу.
 
