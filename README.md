@@ -21,7 +21,7 @@
 | [docs/02-brd.md](docs/02-brd.md) | BRD (крок I) |
 | [docs/03-as-is.md](docs/03-as-is.md) | AS IS процес для BPMN (крок I) |
 | [docs/bpmn/](docs/bpmn/) | BPMN AS IS і TO BE: XML з DI, SVG, перевірки й межі моделей |
-| [docs/decisions.md](docs/decisions.md) | Затвердження фаз 1, 4, 2, 3, 5, 6; TO BE перед фазою 7 |
+| [docs/decisions.md](docs/decisions.md) | Затвердження фаз 1, 4, 2, 3, 5, 6 і TO BE; фаза 7 на затвердженні |
 | [docs/04-feature-concept.md](docs/04-feature-concept.md) | Концепція функціоналу, джерела даних, архітектура (крок II) |
 | [docs/05-product-concept.md](docs/05-product-concept.md) | Фаза 5: цінність ролей, персони з доказами, сценарії, MVP / беклог MoSCoW, приймання, метрики й трасування |
 | [docs/reviews/phase-5.md](docs/reviews/phase-5.md) | Скептичне рев’ю концепції та виправлення перед PR |
@@ -29,6 +29,8 @@
 | [docs/reviews/phase-6.md](docs/reviews/phase-6.md) | Рев’ю архітектури й виправлення |
 | [docs/06-to-be.md](docs/06-to-be.md) | TO BE для кроку II: огляд, деталі, AS IS → TO BE, F / AC і межі |
 | [docs/reviews/phase-9-to-be.md](docs/reviews/phase-9-to-be.md) | Рев’ю лише дострокового пакета BPMN, не всієї фази 9 |
+| [docs/security/](docs/security/) | Фаза 7: загрози, OPSEC, ризики, ASVS / нормативка та перевірюване ядро захисту |
+| [docs/reviews/phase-7.md](docs/reviews/phase-7.md) | Рев’ю фази 7 і докази / межі |
 | [docs/ai-use.md](docs/ai-use.md) | Примітка про використання ШІ (вимога курсу) |
 | [AGENTS.md](AGENTS.md), [docs/codex-task.md](docs/codex-task.md) | Правила і завдання для ШІ-агента (Codex), 9 фаз |
 | [regulation/](regulation/) | Фаза 3: 21 перевірений акт і конспекти з редакціями |
