@@ -1,6 +1,6 @@
 # Фаза 8а — перші екрани для затвердження
 
-**2026-11-13 · на затвердженні.** Фаза 7 прийнята Назаром, варіант А; [PR #8](https://github.com/obodnazar/mil600-wounded-case/pull/8) злитий за окремим дозволом. База — `7912d21f2137a036ebb419c3e4dcf9d48231c8b5`. [Запуск і скриншоти](../prototype/README.md), [ADR 0008](architecture/adr/0008-demo-stack-and-physical-schema.md), [рев’ю](reviews/phase-8a.md).
+**2026-11-13 · затверджено, варіант А.** Нижче історичне приймання перших екранів; поточна готовність — [затверджена 8б](prototype-8b.md). Фаза 7 прийнята Назаром, варіант А; [PR #8](https://github.com/obodnazar/mil600-wounded-case/pull/8) злитий за окремим дозволом. База — `7912d21f2137a036ebb419c3e4dcf9d48231c8b5`. [Запуск і скриншоти](../prototype/README.md), [ADR 0008](architecture/adr/0008-demo-stack-and-physical-schema.md), [рев’ю](reviews/phase-8a.md).
 
 ## Що показуємо
 

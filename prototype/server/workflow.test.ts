@@ -153,3 +153,41 @@ test('8б AC05: повернений пакет уточнюється ново�
  for(const id of ['vlk-received','vlk-returned'])await f.accepted(id);assert.equal(f.store.row("SELECT state FROM route_packet WHERE case_id='demo-case-01' AND route='vlk'")?.state,'returned');await f.accepted('vlk-resubmitted');assert.equal(f.store.row("SELECT revision FROM route_packet WHERE case_id='demo-case-01' AND route='vlk'")?.revision,'v2');
  const e=fixture('vlk-decision');e.payload.service_code='clarification_needed';await f.accepted(e);assert.equal((await (await f.send('service-executed')).json() as {status:string}).status,'pending_review');
 }));
+
+test('Фінальний аудит: розбір випадку не приховує іншу незакриту прогалину',async()=>use(async f=>{
+ await f.accepted('primary');await f.accepted('gap');await f.send('uncertain');await f.login('support');
+ const review=String(f.store.row("SELECT id FROM review_item WHERE reason_code='missing_incident'")?.id);
+ assert.equal((await f.command('resolve_review','demo-case-01',review)).status,200);
+ assert.equal(f.store.caseView('demo-case-01',true).freshnessState,'stale');
+ await f.accepted('gap-recovered');assert.equal(f.store.caseView('demo-case-01',true).freshnessState,'fresh');
+}));
+test('Фінальний аудит: новіше уточнення ВЛК не дозволяє виконання за старою постановою',async()=>use(async f=>{
+ await f.accepted('vlk-received');await f.accepted('vlk-decision');
+ const revised=fixture('vlk-decision');revised.event_id='demo-vlk-clarification-v2';revised.source_version='v2';revised.supersedes_version='v1';revised.payload.document_version='v2';revised.payload.service_code='clarification_needed';await f.accepted(revised);
+ assert.equal((await (await f.send('service-executed')).json() as {status:string}).status,'pending_review');
+ assert.equal(f.store.row("SELECT COUNT(*) n FROM case_event WHERE event_type='service.action_confirmed'")?.n,0);
+ const finalDecision=fixture('vlk-decision');finalDecision.event_id='demo-vlk-final-v3';finalDecision.source_version='v3';finalDecision.supersedes_version='v2';finalDecision.payload.document_version='v3';await f.accepted(finalDecision);
+ assert.equal(f.store.row("SELECT COUNT(*) n FROM task WHERE case_id='demo-case-01' AND kind='next_service_action' AND status='open'")?.n,1);
+ assert.equal(f.store.row("SELECT COUNT(*) n FROM task WHERE case_id='demo-case-01' AND trigger_ref LIKE 'demo-vlk-decision-clarify:%' AND status='open'")?.n,0);
+ const execution=fixture('service-executed');execution.event_id='demo-execute-current-decision';execution.source_stream=execution.event_id;await f.accepted(execution);
+ assert.equal(f.store.row("SELECT COUNT(*) n FROM task WHERE case_id='demo-case-01' AND kind='next_service_action' AND status='open'")?.n,0);
+}));
+test('Фінальний аудит: після видачі довідки немає відкритого нагадування про її невидачу',async()=>use(async f=>{
+ for(const id of ['primary','patient-receipt','certificate-prepared'])await f.accepted(id);
+ f.store.refreshDeadlines(Date.parse('2026-11-20T12:00:00Z'));
+ const overdue=()=>Number(f.store.row("SELECT COUNT(*) n FROM task t JOIN deadline d ON t.case_id=d.case_id WHERE d.case_id='demo-case-01' AND d.rule_version_id='demo-rule-certificate' AND t.kind='review_deadline' AND t.trigger_ref LIKE 'demo-deadline:'||d.id||':%' AND t.status='open'")?.n);
+ assert.equal(overdue(),1);await f.login('commander');await f.command('issue_certificate');await f.accepted('certificate-issued');
+ assert.equal(overdue(),0);f.store.refreshDeadlines(Date.parse('2026-11-21T12:00:00Z'));assert.equal(overdue(),0);
+}));
+test('Фінальний аудит: суперечлива квитанція не пересуває підтверджену дату отримання',async()=>use(async f=>{
+ await f.accepted('primary');await f.accepted('patient-receipt');
+ const changed=fixture('patient-receipt');changed.event_id='demo-changed-receipt';changed.source_stream=changed.event_id;changed.payload.received_at='2026-11-12T12:00:00Z';
+ assert.equal((await (await f.send(changed)).json() as {status:string}).status,'pending_review');
+ assert.equal(f.store.caseView('demo-case-01',true).deadline.due,'2026-11-15');
+}));
+test('Фінальний аудит: нова версія еПМК не починає підтверджений строк заново',async()=>use(async f=>{
+ await f.accepted('primary');await f.accepted('patient-receipt');
+ const primary=fixture('primary');primary.event_id='demo-primary-v2';primary.source_version='v2';primary.supersedes_version='v1';primary.payload.document_version='v2';await f.accepted(primary);
+ const receipt=fixture('patient-receipt');receipt.event_id='demo-receipt-v2';receipt.source_stream=receipt.event_id;receipt.payload.document_version='v2';receipt.payload.received_at='2026-11-12T12:00:00Z';await f.accepted(receipt);
+ assert.equal(f.store.caseView('demo-case-01',true).deadline.due,'2026-11-15');
+}));

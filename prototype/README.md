@@ -1,6 +1,6 @@
 # Кейс поранення — навчальний прототип
 
-**2026-11-13 · фаза 8б на затвердженні.** Працюють чотири панелі, наскрізний D1 і обов’язкові винятки S1–S9 у синтетичних межах. [F / AC та докази](../docs/prototype-8b.md) · [рев’ю](../docs/reviews/phase-8b.md) · [ADR 0008](../docs/architecture/adr/0008-demo-stack-and-physical-schema.md) · [ADR 0009](../docs/architecture/adr/0009-demo-workflow-and-frozen-analytics.md).
+**2026-11-13 · фазу 8б затверджено, варіант А.** Працюють чотири панелі, наскрізний D1 і обов’язкові винятки S1–S9 у синтетичних межах. [F / AC та докази](../docs/prototype-8b.md) · [рев’ю](../docs/reviews/phase-8b.md) · [ADR 0008](../docs/architecture/adr/0008-demo-stack-and-physical-schema.md) · [ADR 0009](../docs/architecture/adr/0009-demo-workflow-and-frozen-analytics.md).
 
 На кожній панелі: **«Навчальний прототип KSE. Не офіційний сервіс Міноборони. Дані вигадані»**. Немає справжніх медичних даних, паролів, upload, офіційної символіки чи реального зовнішнього обміну.
 
@@ -78,7 +78,7 @@ npx playwright install chromium
 npm run test:e2e
 ```
 
-Фактично на 2026-11-13: **57** Node-тестів (ядро / HTTP / SQLite / D1 / AC), **12** Playwright; lint / build проходять, audit **0**. CI додає CodeQL і gitleaks; актуальний результат кожного head — у PR. Для локального Chrome задайте `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH`; для captures — `UPDATE_SCREENSHOTS=true npm run test:e2e`. E2E ізольований від demo.sqlite й перевіряє прискорений сценарій; робочі ліміти / рестарт dedupe / nonce / audit rollback перевірено окремими HTTP-тестами.
+Після [повторного аудиту](../docs/reviews/recheck-2026-11-13.md) на 2026-11-13: **62** Node-тестів (ядро / HTTP / SQLite / D1 / AC), **12** Playwright; lint / build проходять, audit **0**. CI додає CodeQL і gitleaks; актуальний результат кожного head — у PR. Для локального Chrome задайте `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH`; для captures — `UPDATE_SCREENSHOTS=true npm run test:e2e`. E2E ізольований від demo.sqlite й перевіряє прискорений сценарій; робочі ліміти / рестарт dedupe / nonce / audit rollback перевірено окремими HTTP-тестами.
 
 [Gateway](server/app.ts) однаковий для `/api/integration/events` і fixed dev fixtures: HMAC / schema / source policy → durable transaction inbox / CaseEvent / Task / audit / outbox. Worker підтверджує тільки локальне повідомлення проєкції; немає справжнього push чи зовнішньої доставки. Старий harness фази 7 має `validated_only`, це окремий тестовий adapter. Append-only тригери не ізолюють БД від власника файлу.
 
@@ -99,4 +99,4 @@ Captures локального app від **2026-11-13**, desktop 1440×1050 (п�
 
 Усе вигадане. Немає реальних інтеграцій / підписів / виплат / відправки звернень, production / SSO / TLS / шифрування / захисного допуску чи повного ASVS L2. Рядки державних медсистем / діагнози / файли / контакти не приймаються. Мінімальні маршрутні переліки демонструють правила й версії, а не універсальну юридичну комплектність для кожного випадку. Аналітика навмисно відділена від живого D1, baseline [TBD]. Людських користувацьких тестів не було.
 
-Після PR 8б — **СТОП**. Решта фази 9, одна сторінка пітчу й deployment тут не виконуються. Для продовження потрібне **«Затверджую фазу 8б»** та рішення / правки команди.
+Фаза 8б затверджена Назаром, варіант А; PR #10 злитий за окремим дозволом. [Фінальний пакет фази 9](../docs/final-package.md) на затвердженні; [репетиція показу](../docs/demo-script.md). Після PR фази 9 — **СТОП**. Deployment / реальні дані потребують окремого доручення й погоджень.

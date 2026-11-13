@@ -45,6 +45,12 @@ function certificateClock(s:Store,c:string,ce:string):void {
  deadline(s,c,'demo-rule-certificate',confirmed?received:null,confirmed?calendarDays(received,5):null,applies==='applicable'&&!received&&recorded?calendarDays(recorded,5):null,confirmed?'confirmed':applies==='applicable'&&recorded?'estimated':'unknown',applies,ce);
  if(!confirmed&&applies!=='not_applicable')task(s,c,'confirm_receipt_date','support','demo-certificate-anchor:'+c);
 }
+export function refreshFreshness(s:Store,caseId:string):void {
+ s.run("UPDATE wound_case SET freshness_state=CASE WHEN EXISTS(SELECT 1 FROM review_item WHERE case_id=? AND state='open') THEN 'conflict' WHEN EXISTS(SELECT 1 FROM task WHERE case_id=wound_case.id AND status='open' AND (kind='reconcile_missing_event' OR trigger_ref LIKE 'demo-finance-unknown:%')) THEN 'stale' ELSE 'fresh' END WHERE id=?",caseId,caseId);
+}
+export function resolveCertificateReview(s:Store,caseId:string):void {
+ s.run("UPDATE task SET status='resolved',resolution_code='certificate_issue_confirmed' WHERE case_id=? AND kind='review_deadline' AND EXISTS(SELECT 1 FROM deadline d WHERE d.case_id=task.case_id AND d.rule_version_id='demo-rule-certificate' AND task.trigger_ref LIKE 'demo-deadline:'||d.id||':%') AND EXISTS(SELECT 1 FROM document_ref d WHERE d.case_id=task.case_id AND d.kind='trauma_certificate' AND d.active=1 AND d.state IN ('issued','corrected') AND d.provenance='source_reference')",caseId);
+}
 export function applyEvent(s:Store,e:EventEnvelope,inbox:string,now:number,confirmedCase?:string):string {
  const at=new Date(now).toISOString(),p=e.payload;
  const link=s.row("SELECT subject_id FROM identity_link WHERE source_namespace=? AND source_subject_token=? AND verification_state='verified' AND valid_from<=? AND (valid_to IS NULL OR valid_to>?)",e.source_system,e.subject_ref,at,at);
@@ -105,7 +111,7 @@ export function applyEvent(s:Store,e:EventEnvelope,inbox:string,now:number,confi
    s.run("UPDATE document_ref SET active=0,state='withdrawn' WHERE id=?",old.id??null);task(s,caseId,'clarify_author','support','demo-withdrawn:'+String(old.id));
   }else doc(s,caseId,e.source_system,ref,version,kind,e.event_type==='document.prepared'?'prepared':e.event_type==='document.issued'?'issued':'corrected',previous);
   if(e.event_type==='document.prepared'&&kind==='trauma_certificate'){s.run("UPDATE task SET status='resolved',resolution_code='source_prepared' WHERE case_id=? AND kind='prepare_certificate'",caseId);task(s,caseId,'issue_certificate','commander','demo-cert-issue:'+caseId);}
-  if(e.event_type==='document.issued'){s.run("UPDATE task SET status='resolved',resolution_code='source_confirmation' WHERE case_id=? AND kind='await_source_confirmation' AND trigger_ref IN (SELECT command_id FROM case_event WHERE case_id=? AND event_type='command.issue_certificate')",caseId,caseId);s.run("UPDATE document_ref SET active=0 WHERE case_id=? AND source_record_ref=? AND source_system='demo-mis' AND state='prepared'",caseId,ref);s.run("UPDATE task SET status='resolved',resolution_code='source_issued' WHERE case_id=? AND kind='issue_certificate'",caseId);task(s,caseId,'await_recipient_receipt','support','demo-cert-receipt:'+caseId);}
+  if(e.event_type==='document.issued'){s.run("UPDATE task SET status='resolved',resolution_code='source_confirmation' WHERE case_id=? AND kind='await_source_confirmation' AND trigger_ref IN (SELECT command_id FROM case_event WHERE case_id=? AND event_type='command.issue_certificate')",caseId,caseId);s.run("UPDATE document_ref SET active=0 WHERE case_id=? AND source_record_ref=? AND source_system='demo-mis' AND state='prepared'",caseId,ref);s.run("UPDATE task SET status='resolved',resolution_code='source_issued' WHERE case_id=? AND kind='issue_certificate'",caseId);task(s,caseId,'await_recipient_receipt','support','demo-cert-receipt:'+caseId);resolveCertificateReview(s,caseId);}
  }else if(e.event_type==='document.sent'){
   const d=s.row("SELECT id FROM document_ref WHERE case_id=? AND source_system=? AND source_record_ref=? AND document_version=? AND active=1 AND state IN ('issued','corrected')",caseId,e.source_system,str(p,'document_ref'),str(p,'document_version'));
   if(!d||!['demo-vlk','demo-finance','demo-part'].includes(str(p,'recipient_ref')))throw new ReviewRequired('dispatch_document_or_recipient_unknown');
@@ -115,11 +121,13 @@ export function applyEvent(s:Store,e:EventEnvelope,inbox:string,now:number,confi
   const d=docs[0];if(d?.kind==='trauma_certificate'&&!['issued','corrected'].includes(String(d.state)))throw new ReviewRequired('receipt_before_issue');if(!d)throw new ReviewRequired('receipt_unknown_version');
   if(p.recipient_kind==='servicemember'&&p.recipient_ref!==c.subject_id)throw new ReviewRequired('receipt_wrong_person');
   if(p.recipient_kind!=='servicemember'&&p.recipient_ref!==({vlk:'demo-vlk',finance:'demo-finance',part:'demo-part'} as Record<string,string>)[str(p,'recipient_kind')])throw new ReviewRequired('receipt_wrong_recipient');
+  const previousReceipt=s.row('SELECT received_at FROM delivery WHERE document_ref_id=? AND recipient_ref=? AND received_at IS NOT NULL',d.id??null,str(p,'recipient_ref'));
+  if(previousReceipt&&Date.parse(String(previousReceipt.received_at))!==Date.parse(str(p,'received_at')))throw new ReviewRequired('receipt_date_conflict');
   s.run(`INSERT INTO delivery(id,document_ref_id,recipient_ref,delivery_kind,sent_at,received_at,receipt_ref,state) VALUES (?,?,?,'electronic',NULL,?,?,'received')
    ON CONFLICT(document_ref_id,recipient_ref,delivery_kind) DO UPDATE SET received_at=excluded.received_at,receipt_ref=excluded.receipt_ref,state='received'`,uid(),d.id??null,str(p,'recipient_ref'),str(p,'received_at'),str(p,'evidence_ref'));
   if(p.recipient_kind==='vlk')s.run("UPDATE task SET status='resolved',resolution_code='receipt_confirmed' WHERE case_id=? AND kind='await_recipient_receipt'",caseId);
   if(p.recipient_kind==='servicemember'&&(d.kind==='primary_medical_card'||(d.kind==='hospital_stay_certificate'&&!s.row("SELECT id FROM document_ref WHERE case_id=? AND kind='primary_medical_card' AND active=1",caseId)))){
-   s.run('UPDATE wound_case SET patient_received_at=? WHERE id=?',str(p,'received_at'),caseId);certificateClock(s,caseId,ce);s.run("UPDATE task SET status='resolved',resolution_code='receipt_confirmed' WHERE case_id=? AND kind='confirm_receipt_date'",caseId);
+   s.run('UPDATE wound_case SET patient_received_at=COALESCE(patient_received_at,?) WHERE id=?',str(p,'received_at'),caseId);certificateClock(s,caseId,ce);s.run("UPDATE task SET status='resolved',resolution_code='receipt_confirmed' WHERE case_id=? AND kind='confirm_receipt_date'",caseId);
   }
  }else if(e.event_type==='referral.issued'){
   if(p.issuer_ref!=='demo-commander'||!s.row("SELECT id FROM case_event WHERE case_id=? AND event_type='command.refer_vlk'",caseId))throw new ReviewRequired('referral_needs_command');
@@ -139,10 +147,12 @@ export function applyEvent(s:Store,e:EventEnvelope,inbox:string,now:number,confi
  }else if(e.event_type==='vlk.decision_recorded'){
   if(!s.row("SELECT packet_ref FROM route_packet WHERE case_id=? AND route='vlk' AND state='received'",caseId))throw new ReviewRequired('decision_without_packet_receipt');
   doc(s,caseId,e.source_system,str(p,'document_ref'),str(p,'document_version'),'vlk_decision','recorded');
-  if(p.service_code==='clarification_needed')task(s,caseId,'clarify_author','support','demo-vlk-decision-clarify:'+e.event_id);else{
-  s.run("UPDATE wound_case SET lifecycle_state='service_action' WHERE id=?",caseId);task(s,caseId,'next_service_action','commander','demo-service-action:'+caseId);}
+  if(p.service_code==='clarification_needed'){s.run("UPDATE task SET status='resolved',resolution_code='superseded_by_clarification' WHERE case_id=? AND kind='next_service_action' AND status='open'",caseId);s.run("UPDATE wound_case SET lifecycle_state='vlk' WHERE id=?",caseId);task(s,caseId,'clarify_author','support','demo-vlk-decision-clarify:'+e.event_id);}else{
+  s.run("UPDATE task SET status='resolved',resolution_code='current_decision_confirmed' WHERE case_id=? AND kind='clarify_author' AND trigger_ref LIKE 'demo-vlk-decision-clarify:%' AND status='open'",caseId);
+  s.run("UPDATE wound_case SET lifecycle_state='service_action' WHERE id=?",caseId);task(s,caseId,'next_service_action','commander','demo-service-action:'+ce);}
  }else if(e.event_type==='service.action_confirmed'){
-  if(!s.row("SELECT id FROM case_event WHERE case_id=? AND event_type='vlk.decision_recorded' AND json_extract(minimal_payload,'$.service_code')='next_service_action' ORDER BY rowid DESC LIMIT 1",caseId))throw new ReviewRequired('service_without_decision');
+  const latestDecision=s.row("SELECT minimal_payload FROM case_event WHERE case_id=? AND event_type='vlk.decision_recorded' ORDER BY rowid DESC LIMIT 1",caseId);
+  if(!latestDecision||JSON.parse(String(latestDecision.minimal_payload)).service_code!=='next_service_action')throw new ReviewRequired('service_without_current_decision');
   s.run("UPDATE task SET status='resolved',resolution_code='source_execution_confirmed' WHERE case_id=? AND kind='next_service_action'",caseId);
  }else if(e.event_type==='finance.status_recorded'){
   const kind=str(p,'kind'),period=str(p,'period'),start=period+'-01',end=calendarDays(calendarMonths(start,1),-1),status=str(p,'status');
@@ -161,7 +171,7 @@ export function applyEvent(s:Store,e:EventEnvelope,inbox:string,now:number,confi
  }else throw new ReviewRequired('unsupported_type');
  s.run("UPDATE task SET status='resolved',resolution_code='source_signal_recovered' WHERE case_id=? AND kind='reconcile_missing_event' AND trigger_ref=?",caseId,'demo-gap:'+e.source_system+':'+e.event_type+':'+e.source_stream);
  s.run(`INSERT INTO source_cursor VALUES (?,?,?,?) ON CONFLICT(source,stream,event_type) DO UPDATE SET version=excluded.version`,e.source_system,e.source_stream,e.event_type,e.source_version);
- s.run("UPDATE wound_case SET revision=revision+1,freshness_state=CASE WHEN EXISTS(SELECT 1 FROM review_item WHERE case_id=? AND state='open') THEN 'conflict' WHEN EXISTS(SELECT 1 FROM task WHERE case_id=wound_case.id AND status='open' AND (kind='reconcile_missing_event' OR trigger_ref LIKE 'demo-finance-unknown:%')) THEN 'stale' ELSE 'fresh' END,last_source_at=? WHERE id=?",caseId,at,caseId);
+ s.run("UPDATE wound_case SET revision=revision+1,last_source_at=? WHERE id=?",at,caseId);refreshFreshness(s,caseId);
  queue(s,caseId,ce,e.source_system+':'+e.event_id);return caseId;
 }
 
@@ -201,7 +211,7 @@ export function command(s:Store,session:Session,input:Command,now:number):Record
    const item=s.row('SELECT minimal_envelope FROM inbox_event WHERE id=?',review.inbox_event_id??null);if(!item)throw new Denied(404,'not_found');
    const event=JSON.parse(String(item.minimal_envelope)) as EventEnvelope;
    // Лише вже перевірена особа та явне підтвердження випадку; жодного fuzzy mapping.
-   applyEvent(s,event,String(review.inbox_event_id),now,target);s.run("UPDATE inbox_event SET processing_state='applied' WHERE id=?",review.inbox_event_id??null);s.run("UPDATE review_item SET state='resolved',resolution_event_ref=?,case_id=? WHERE id=?",ce,target,review.id??null);s.run("UPDATE wound_case SET freshness_state=CASE WHEN EXISTS(SELECT 1 FROM review_item WHERE case_id=? AND state='open') THEN 'conflict' ELSE 'fresh' END WHERE id=?",target,target);
+   applyEvent(s,event,String(review.inbox_event_id),now,target);s.run("UPDATE inbox_event SET processing_state='applied' WHERE id=?",review.inbox_event_id??null);s.run("UPDATE review_item SET state='resolved',resolution_event_ref=?,case_id=? WHERE id=?",ce,target,review.id??null);refreshFreshness(s,target);
   }
   queue(s,target,ce,'command:'+input.id);const outcome={status:'recorded',case_id:target,source_confirmed:false};
   insert(s,'demo_command',{id:input.id,actor:session.actorId,case_id:target,digest,outcome:JSON.stringify(outcome)});s.audit('command','allowed',session.actorId,target,now,session.role);return outcome;

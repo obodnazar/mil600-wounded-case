@@ -11,7 +11,7 @@
 | [ASVS і нормативний мапінг](requirements-map.md) | Версійовані вимоги L2 / правові межі; без неправдивої сертифікації |
 | [Рев’ю](../reviews/phase-7.md) | Скептичний прохід і виправлення |
 
-**Доповнення 8а:** [app / фізична БД / перші чотири панелі](../prototype-8a.md) реалізовані окремим зрізом і на затвердженні. Нижче описано саме пакет фази 7; його harness лишається validated_only. Persistent app gateway / браузерні сесії / докази й залишки — [ADR 0008](../architecture/adr/0008-demo-stack-and-physical-schema.md). Реальних даних / інтеграцій / deployment немає.
+**Доповнення 8а:** [app / фізична БД / перші чотири панелі](../prototype-8a.md) затверджені разом зі стеком. [8б](../prototype-8b.md) також затверджено; актуальна доля ризиків — [R01–R22](../final-risk-disposition.md). Нижче описано саме пакет фази 7; його harness лишається validated_only. Persistent app gateway / браузерні сесії / докази й залишки — [ADR 0008](../architecture/adr/0008-demo-stack-and-physical-schema.md). Реальних даних / інтеграцій / deployment немає.
 
 ## Що є у пакеті фази 7
 
