@@ -8,6 +8,8 @@
 
 ## Проблема одним абзацом
 
+Затверджена як гіпотеза проблема: **непрозорий шлях після поранення від медичних документів до обґрунтованого рішення та його виконання**. Болі 1–4 затверджено, медична оцінка C6 поза продуктом, повернення пакета C2 — підгіпотеза. [Рішення команди](docs/decisions.md).
+
 МОУ підтверджує ризик повернення документів після поранення й тривалого доопрацювання. У жовтні 2026 **23% із 2 455 скарг** Військовому омбудсману стосувалися направлення на ВЛК та лікування; ця категорія ширша за документи поранених. [Офіційний звіт](https://milomb.gov.ua/novyny/nad-chim-pracyuvala-komanda-ofisu-viyskovogo-ombudsmana-u-zhovtni) (публ. 2026-11-06; перев. 2026-11-12). Масштаб ручної роботи, частота повернень і baseline продукту ще невідомі. Деталі та джерела — у [docs/01-problem.md](docs/01-problem.md), перевірка — у [research/validation.md](research/validation.md).
 
 ## Структура
@@ -19,11 +21,13 @@
 | [docs/02-brd.md](docs/02-brd.md) | BRD (крок I) |
 | [docs/03-as-is.md](docs/03-as-is.md) | AS IS процес для BPMN (крок I) |
 | [docs/bpmn/](docs/bpmn/) | BPMN AS IS: XML з DI, SVG, перевірки й межі моделі |
-| [docs/decisions.md](docs/decisions.md) | Рішення фази 1; порядок 1 → 4 → 2 → 3 |
+| [docs/decisions.md](docs/decisions.md) | Затвердження фаз 1, 4, 2; фаза 3 на затвердженні |
 | [docs/04-feature-concept.md](docs/04-feature-concept.md) | Концепція функціоналу, джерела даних, архітектура (крок II) |
 | [docs/ai-use.md](docs/ai-use.md) | Примітка про використання ШІ (вимога курсу) |
 | [AGENTS.md](AGENTS.md), [docs/codex-task.md](docs/codex-task.md) | Правила і завдання для ШІ-агента (Codex), 9 фаз |
-| [regulation/](regulation/) | Нормативка: перелік НПА, конспекти |
+| [regulation/](regulation/) | Фаза 3: 21 перевірений акт і конспекти з редакціями |
+| [regulation/legality-matrix.md](regulation/legality-matrix.md) | Матриця правових підстав, обмежень і власників погоджень |
+| [docs/architecture/adr/0001-legal-boundaries.md](docs/architecture/adr/0001-legal-boundaries.md) | Запропоновані правові межі ролей, джерел і строків |
 | [research/voices.md](research/voices.md) | Фаза 2: 44 публічні голоси; новіші окремо від історичного додатка |
 | [research/pain-map.md](research/pain-map.md) | Частоти болів, межі доказів A-1…A-4, рекомендація на затвердження |
 | [research/voices-method.md](research/voices-method.md) | Відбір, доступ, повтори, виключення й відтворювана перевірка |

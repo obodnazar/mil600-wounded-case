@@ -1,0 +1,215 @@
+{
+  "as_of": "2026-11-13",
+  "sources": [
+    {
+      "id": "N01",
+      "slug": "vlk-402",
+      "title": "Наказ МОУ №402: військово-лікарська експертиза",
+      "type": "наказ МОУ",
+      "adopted_at": "2008-08-14",
+      "edition_at": "2026-10-09",
+      "url": "https://zakon.rada.gov.ua/laws/show/z1109-08",
+      "checked_at": "2026-11-13"
+    },
+    {
+      "id": "N02",
+      "slug": "digital-vlk-153",
+      "title": "Наказ МОУ №153: цифрові постанови ВЛК",
+      "type": "наказ МОУ",
+      "adopted_at": "2025-02-27",
+      "edition_at": "2025-02-27",
+      "url": "https://zakon.rada.gov.ua/laws/show/z0329-25",
+      "checked_at": "2026-11-13"
+    },
+    {
+      "id": "N03",
+      "slug": "referrals-4",
+      "title": "Наказ МОУ №4: зміни щодо направлень та оцінювання",
+      "type": "наказ МОУ",
+      "adopted_at": "2025-01-03",
+      "edition_at": "2025-02-28",
+      "url": "https://zakon.rada.gov.ua/laws/show/z0027-25",
+      "checked_at": "2026-11-13"
+    },
+    {
+      "id": "N04",
+      "slug": "primary-card-879",
+      "title": "Наказ МОУ №879: ПМК №001/о та картка №002/о",
+      "type": "наказ МОУ",
+      "adopted_at": "2024-12-31",
+      "edition_at": "2025-05-23",
+      "url": "https://zakon.rada.gov.ua/laws/show/z0076-25",
+      "checked_at": "2026-11-13"
+    },
+    {
+      "id": "N05",
+      "slug": "social-protection-2011",
+      "title": "Закон №2011-XII: соціальний і правовий захист",
+      "type": "закон",
+      "adopted_at": "1991-12-20",
+      "edition_at": "2026-08-06",
+      "url": "https://zakon.rada.gov.ua/laws/show/2011-12",
+      "checked_at": "2026-11-13"
+    },
+    {
+      "id": "N06",
+      "slug": "reward-168",
+      "title": "Постанова КМУ №168: додаткова винагорода",
+      "type": "постанова КМУ",
+      "adopted_at": "2022-02-28",
+      "edition_at": "2026-07-10",
+      "url": "https://zakon.rada.gov.ua/laws/show/168-2022-%D0%BF",
+      "checked_at": "2026-11-13"
+    },
+    {
+      "id": "N07",
+      "slug": "lump-sum-975",
+      "title": "Постанова КМУ №975: призначення й виплата ОГД",
+      "type": "постанова КМУ",
+      "adopted_at": "2013-12-25",
+      "edition_at": "2025-08-31",
+      "url": "https://zakon.rada.gov.ua/laws/show/975-2013-%D0%BF",
+      "checked_at": "2026-11-13"
+    },
+    {
+      "id": "N08",
+      "slug": "medical-exchange-4497",
+      "title": "Закон №4497-IX: реєстр військовослужбовців і медичний обмін",
+      "type": "закон",
+      "adopted_at": "2025-06-17",
+      "edition_at": "2025-06-17",
+      "url": "https://zakon.rada.gov.ua/laws/show/4497-20",
+      "checked_at": "2026-11-13"
+    },
+    {
+      "id": "N09",
+      "slug": "personal-data-2297",
+      "title": "Закон №2297-VI: захист персональних даних",
+      "type": "закон",
+      "adopted_at": "2010-06-01",
+      "edition_at": "2025-06-14",
+      "url": "https://zakon.rada.gov.ua/laws/show/2297-17",
+      "checked_at": "2026-11-13"
+    },
+    {
+      "id": "N10",
+      "slug": "military-service-2232",
+      "title": "Закон №2232-XII: військовий обов’язок і служба",
+      "type": "закон",
+      "adopted_at": "1992-03-25",
+      "edition_at": "2026-08-06",
+      "url": "https://zakon.rada.gov.ua/laws/show/2232-12",
+      "checked_at": "2026-11-13"
+    },
+    {
+      "id": "N11",
+      "slug": "health-secrecy-2801",
+      "title": "Основи №2801-XII: лікарська таємниця й ЕСОЗ",
+      "type": "закон",
+      "adopted_at": "1992-11-19",
+      "edition_at": "2026-02-11",
+      "url": "https://zakon.rada.gov.ua/laws/show/2801-12",
+      "checked_at": "2026-11-13"
+    },
+    {
+      "id": "N12",
+      "slug": "electronic-documents-851",
+      "title": "Закон №851-IV: електронні документи",
+      "type": "закон",
+      "adopted_at": "2003-05-22",
+      "edition_at": "2023-12-31",
+      "url": "https://zakon.rada.gov.ua/laws/show/851-15",
+      "checked_at": "2026-11-13"
+    },
+    {
+      "id": "N13",
+      "slug": "trust-services-2155",
+      "title": "Закон №2155-VIII: електронна ідентифікація й довірчі послуги",
+      "type": "закон",
+      "adopted_at": "2017-10-05",
+      "edition_at": "2024-12-18",
+      "url": "https://zakon.rada.gov.ua/laws/show/2155-19",
+      "checked_at": "2026-11-13"
+    },
+    {
+      "id": "N14",
+      "slug": "information-security-80",
+      "title": "Закон №80/94-ВР: захист інформації в системах",
+      "type": "закон",
+      "adopted_at": "1994-07-05",
+      "edition_at": "2025-04-20",
+      "url": "https://zakon.rada.gov.ua/laws/show/80/94-%D0%B2%D1%80",
+      "checked_at": "2026-11-13"
+    },
+    {
+      "id": "N15",
+      "slug": "security-authorization-712",
+      "title": "Постанова КМУ №712: авторизація з безпеки",
+      "type": "постанова КМУ",
+      "adopted_at": "2025-06-18",
+      "edition_at": "2026-04-21",
+      "url": "https://zakon.rada.gov.ua/laws/show/712-2025-%D0%BF",
+      "checked_at": "2026-11-13"
+    },
+    {
+      "id": "N16",
+      "slug": "internal-service-548",
+      "title": "Статут внутрішньої служби, Закон №548-XIV",
+      "type": "закон / Статут",
+      "adopted_at": "1999-03-24",
+      "edition_at": "2026-03-18",
+      "url": "https://zakon.rada.gov.ua/laws/show/548-14",
+      "checked_at": "2026-11-13"
+    },
+    {
+      "id": "N17",
+      "slug": "document-exchange-901",
+      "title": "Постанова КМУ №901: обмін документами військовослужбовців",
+      "type": "постанова КМУ",
+      "adopted_at": "2023-08-23",
+      "edition_at": "2023-08-23",
+      "url": "https://zakon.rada.gov.ua/laws/show/901-2023-%D0%BF",
+      "checked_at": "2026-11-13"
+    },
+    {
+      "id": "N18",
+      "slug": "support-service-59",
+      "title": "Наказ МОУ №59: служби супроводу",
+      "type": "наказ МОУ",
+      "adopted_at": "2025-01-29",
+      "edition_at": "2025-01-29",
+      "url": "https://zakon.rada.gov.ua/laws/show/z0213-25",
+      "checked_at": "2026-11-13"
+    },
+    {
+      "id": "N19",
+      "slug": "portal-879",
+      "title": "Постанова КМУ №879: оборонний портал і кабінет Армія+",
+      "type": "постанова КМУ",
+      "adopted_at": "2024-07-30",
+      "edition_at": "2026-07-31",
+      "url": "https://zakon.rada.gov.ua/laws/show/879-2024-%D0%BF",
+      "checked_at": "2026-11-13"
+    },
+    {
+      "id": "N20",
+      "slug": "ehealth-411",
+      "title": "Постанова КМУ №411: функціонування ЕСОЗ",
+      "type": "постанова КМУ",
+      "adopted_at": "2018-04-25",
+      "edition_at": "2026-07-16",
+      "url": "https://zakon.rada.gov.ua/laws/show/411-2018-%D0%BF",
+      "checked_at": "2026-11-13"
+    },
+    {
+      "id": "N21",
+      "slug": "pay-procedure-260",
+      "title": "Наказ МОУ №260: виплата грошового забезпечення",
+      "type": "наказ МОУ",
+      "adopted_at": "2018-06-07",
+      "edition_at": "2026-06-30",
+      "url": "https://zakon.rada.gov.ua/laws/show/z0745-18",
+      "checked_at": "2026-11-13"
+    }
+  ]
+}
