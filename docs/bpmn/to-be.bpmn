@@ -1,0 +1,1991 @@
+<?xml version='1.0' encoding='utf-8'?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="Definitions_ToBe" targetNamespace="https://example.invalid/mil600/to-be" exporter="MIL600 навчальна модель">
+  <bpmn:process id="Process_ToBe" name="Координація кейсу поранення — TO BE" isExecutable="false">
+    <bpmn:documentation>Пропозиція 2026-11-13. Одна концептуальна координація, не підпорядкування установ. Медичні факти й рішення залишаються в уповноважених джерелах. Інтеграції демо синтетичні. Завершення гілки BPMN не закриває WoundCase чи всі фінансові періоди. Див. docs/06-to-be.md.</bpmn:documentation>
+    <bpmn:laneSet id="LaneSet_ToBe">
+      <bpmn:lane id="Lane_Medical" name="Медичні установи: чинна допомога">
+        <bpmn:flowNodeRef>Start_Injury</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Fork_CareCase</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Sub_Care</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_Care</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Timer_Long</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_LongReview</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_LongReview</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_System" name="Координація / сервіс: серверні межі">
+        <bpmn:flowNodeRef>Sub_Intake</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_NewCase</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_Joined</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Fork_Admin</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>EventSub_Control</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_Unit" name="Частина: належні посадові особи">
+        <bpmn:flowNodeRef>Sub_Certificate</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_Certificate</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_ServiceExecution</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_Service</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Timer_Certificate</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_CertReview</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_CertReview</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_VLK" name="Направлення / ВЛК: учасники в деталях">
+        <bpmn:flowNodeRef>Sub_VLK</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Fork_AfterVLK</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_Finance" name="Фінансові маршрути: учасники в деталях">
+        <bpmn:flowNodeRef>Sub_Reward</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_Reward</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Sub_OGD</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_OGD</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="Start_Injury" name="Поранення">
+      <bpmn:outgoing>F_Start_Injury_Fork_CareCase</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:parallelGateway id="Fork_CareCase" name="">
+      <bpmn:incoming>F_Start_Injury_Fork_CareCase</bpmn:incoming>
+      <bpmn:outgoing>F_Fork_CareCase_Sub_Care</bpmn:outgoing>
+      <bpmn:outgoing>F_ToIntake</bpmn:outgoing>
+    </bpmn:parallelGateway>
+    <bpmn:subProcess id="Sub_Care" name="Чинна допомога, лікування, переведення">
+      <bpmn:incoming>F_Fork_CareCase_Sub_Care</bpmn:incoming>
+      <bpmn:outgoing>F_Sub_Care_End_Care</bpmn:outgoing>
+      <bpmn:startEvent id="Care_Start" name="">
+        <bpmn:outgoing>F_Care_Start_Care_Primary</bpmn:outgoing>
+      </bpmn:startEvent>
+      <bpmn:userTask id="Care_Primary" name="Медик: допомога; ПМК / еПМК у чинній системі">
+        <bpmn:incoming>F_Care_Start_Care_Primary</bpmn:incoming>
+        <bpmn:outgoing>F_Care_Primary_Care_Admission</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:userTask id="Care_Admission" name="Заклад: початок / епізод лікування; джерельна дата">
+        <bpmn:incoming>F_Care_Primary_Care_Admission</bpmn:incoming>
+        <bpmn:incoming>Care_TransferLoop</bpmn:incoming>
+        <bpmn:outgoing>F_Care_Admission_Care_Treatment</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:userTask id="Care_Treatment" name="Медики: лікування за клінічними рішеннями">
+        <bpmn:incoming>F_Care_Admission_Care_Treatment</bpmn:incoming>
+        <bpmn:outgoing>F_Care_Treatment_Care_TransferNeeded</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:exclusiveGateway id="Care_TransferNeeded" name="Переведення?" default="Care_NoTransfer">
+        <bpmn:incoming>F_Care_Treatment_Care_TransferNeeded</bpmn:incoming>
+        <bpmn:outgoing>Care_NoTransfer</bpmn:outgoing>
+        <bpmn:outgoing>Care_YesTransfer</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:userTask id="Care_Transfer" name="Заклад: переведення, новий епізод; початок без скидання">
+        <bpmn:incoming>Care_YesTransfer</bpmn:incoming>
+        <bpmn:outgoing>Care_TransferLoop</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:userTask id="Care_Documents" name="Автор: оформити належні медичні документи у джерелі">
+        <bpmn:incoming>Care_NoTransfer</bpmn:incoming>
+        <bpmn:outgoing>F_Care_Documents_Care_End</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:endEvent id="Care_End" name="Завершено клінічний епізод">
+        <bpmn:incoming>F_Care_Documents_Care_End</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:sequenceFlow id="F_Care_Start_Care_Primary" sourceRef="Care_Start" targetRef="Care_Primary" />
+      <bpmn:sequenceFlow id="F_Care_Primary_Care_Admission" sourceRef="Care_Primary" targetRef="Care_Admission" />
+      <bpmn:sequenceFlow id="F_Care_Admission_Care_Treatment" sourceRef="Care_Admission" targetRef="Care_Treatment" />
+      <bpmn:sequenceFlow id="F_Care_Treatment_Care_TransferNeeded" sourceRef="Care_Treatment" targetRef="Care_TransferNeeded" />
+      <bpmn:sequenceFlow id="Care_NoTransfer" sourceRef="Care_TransferNeeded" targetRef="Care_Documents" name="Ні" />
+      <bpmn:sequenceFlow id="Care_YesTransfer" sourceRef="Care_TransferNeeded" targetRef="Care_Transfer" name="Так">
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">transfer_required</bpmn:conditionExpression>
+      </bpmn:sequenceFlow>
+      <bpmn:sequenceFlow id="Care_TransferLoop" sourceRef="Care_Transfer" targetRef="Care_Admission" />
+      <bpmn:sequenceFlow id="F_Care_Documents_Care_End" sourceRef="Care_Documents" targetRef="Care_End" />
+      <bpmn:textAnnotation id="Care_Note">
+        <bpmn:text>Кейс отримує лише дозволені мінімальні події / посилання. Медики не вводять ті самі клінічні дані в новий застосунок; реальні адаптери залежать від власників. N01, N04, N05; ADR 0001, 0003–0005.</bpmn:text>
+      </bpmn:textAnnotation>
+      <bpmn:textAnnotation id="Title_care">
+        <bpmn:text>Медична допомога • чинні уповноважені медики • C6 поза продуктом</bpmn:text>
+      </bpmn:textAnnotation>
+    </bpmn:subProcess>
+    <bpmn:endEvent id="End_Care" name="Клінічна гілка">
+      <bpmn:incoming>F_Sub_Care_End_Care</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:subProcess id="Sub_Intake" name="еПМК АБО адміністративна ініціація; особа + випадок">
+      <bpmn:incoming>F_ToIntake</bpmn:incoming>
+      <bpmn:outgoing>F_Sub_Intake_Gateway_NewCase</bpmn:outgoing>
+      <bpmn:intermediateCatchEvent id="Intake_Med" name="Погоджена подія еПМК">
+        <bpmn:incoming>Intake_WaitMed</bpmn:incoming>
+        <bpmn:outgoing>Intake_MedMerge</bpmn:outgoing>
+        <bpmn:messageEventDefinition id="MessageDef_IntakeMed" />
+      </bpmn:intermediateCatchEvent>
+      <bpmn:intermediateCatchEvent id="Intake_Admin" name="Запит належного командира / супроводу">
+        <bpmn:incoming>Intake_WaitAdmin</bpmn:incoming>
+        <bpmn:outgoing>Intake_AdminMerge</bpmn:outgoing>
+        <bpmn:messageEventDefinition id="MessageDef_IntakeAdmin" />
+      </bpmn:intermediateCatchEvent>
+      <bpmn:exclusiveGateway id="Intake_Merge" name="">
+        <bpmn:incoming>Intake_MedMerge</bpmn:incoming>
+        <bpmn:incoming>Intake_AdminMerge</bpmn:incoming>
+        <bpmn:outgoing>F_Intake_Merge_Intake_Validate</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:serviceTask id="Intake_Validate" name="Сервер: повноваження, мінімальний конверт, джерело">
+        <bpmn:incoming>F_Intake_Merge_Intake_Validate</bpmn:incoming>
+        <bpmn:outgoing>F_Intake_Validate_Intake_Link</bpmn:outgoing>
+      </bpmn:serviceTask>
+      <bpmn:serviceTask id="Intake_Link" name="Перевірене зіставлення: особа + випадок + область">
+        <bpmn:incoming>F_Intake_Validate_Intake_Link</bpmn:incoming>
+        <bpmn:incoming>Intake_Retry</bpmn:incoming>
+        <bpmn:outgoing>F_Intake_Link_Intake_Matched</bpmn:outgoing>
+      </bpmn:serviceTask>
+      <bpmn:exclusiveGateway id="Intake_Matched" name="Достатній доказ?" default="Intake_Uncertain">
+        <bpmn:incoming>F_Intake_Link_Intake_Matched</bpmn:incoming>
+        <bpmn:outgoing>Intake_Trusted</bpmn:outgoing>
+        <bpmn:outgoing>Intake_Uncertain</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:userTask id="Intake_Review" name="Уповноважений: перевірити збіг; без пошуку за схожим ПІБ">
+        <bpmn:incoming>Intake_Uncertain</bpmn:incoming>
+        <bpmn:outgoing>F_Intake_Review_Intake_Resolved</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:exclusiveGateway id="Intake_Resolved" name="Збіг доведено?" default="Intake_ResolvedNo">
+        <bpmn:incoming>F_Intake_Review_Intake_Resolved</bpmn:incoming>
+        <bpmn:outgoing>Intake_ResolvedYes</bpmn:outgoing>
+        <bpmn:outgoing>Intake_ResolvedNo</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:receiveTask id="Intake_AwaitProof" name="Очікувати належне уточнення; до того не зливати кейси">
+        <bpmn:incoming>Intake_ResolvedNo</bpmn:incoming>
+        <bpmn:outgoing>Intake_Retry</bpmn:outgoing>
+      </bpmn:receiveTask>
+      <bpmn:serviceTask id="Intake_EnsureCase" name="Атомарно: створити або знайти кейс; подія / аудит / outbox">
+        <bpmn:incoming>Intake_Trusted</bpmn:incoming>
+        <bpmn:incoming>Intake_ResolvedYes</bpmn:incoming>
+        <bpmn:outgoing>F_Intake_EnsureCase_Intake_End</bpmn:outgoing>
+      </bpmn:serviceTask>
+      <bpmn:endEvent id="Intake_End" name="created = так / ні">
+        <bpmn:incoming>F_Intake_EnsureCase_Intake_End</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:sequenceFlow id="Intake_MedMerge" sourceRef="Intake_Med" targetRef="Intake_Merge" />
+      <bpmn:sequenceFlow id="Intake_AdminMerge" sourceRef="Intake_Admin" targetRef="Intake_Merge" />
+      <bpmn:sequenceFlow id="F_Intake_Merge_Intake_Validate" sourceRef="Intake_Merge" targetRef="Intake_Validate" />
+      <bpmn:sequenceFlow id="F_Intake_Validate_Intake_Link" sourceRef="Intake_Validate" targetRef="Intake_Link" />
+      <bpmn:sequenceFlow id="F_Intake_Link_Intake_Matched" sourceRef="Intake_Link" targetRef="Intake_Matched" />
+      <bpmn:sequenceFlow id="Intake_Trusted" sourceRef="Intake_Matched" targetRef="Intake_EnsureCase" name="Так">
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">identity_and_incident_verified</bpmn:conditionExpression>
+      </bpmn:sequenceFlow>
+      <bpmn:sequenceFlow id="Intake_Uncertain" sourceRef="Intake_Matched" targetRef="Intake_Review" name="Ні / конфлікт" />
+      <bpmn:sequenceFlow id="F_Intake_Review_Intake_Resolved" sourceRef="Intake_Review" targetRef="Intake_Resolved" />
+      <bpmn:sequenceFlow id="Intake_ResolvedYes" sourceRef="Intake_Resolved" targetRef="Intake_EnsureCase" name="Так">
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">review_verified</bpmn:conditionExpression>
+      </bpmn:sequenceFlow>
+      <bpmn:sequenceFlow id="Intake_ResolvedNo" sourceRef="Intake_Resolved" targetRef="Intake_AwaitProof" name="Ні" />
+      <bpmn:sequenceFlow id="Intake_Retry" sourceRef="Intake_AwaitProof" targetRef="Intake_Link" />
+      <bpmn:sequenceFlow id="F_Intake_EnsureCase_Intake_End" sourceRef="Intake_EnsureCase" targetRef="Intake_End" />
+      <bpmn:startEvent id="Intake_Start" name="">
+        <bpmn:outgoing>F_Intake_Start_Intake_WaitFirst</bpmn:outgoing>
+      </bpmn:startEvent>
+      <bpmn:eventBasedGateway id="Intake_WaitFirst" name="Перший дозволений вхід">
+        <bpmn:incoming>F_Intake_Start_Intake_WaitFirst</bpmn:incoming>
+        <bpmn:outgoing>Intake_WaitMed</bpmn:outgoing>
+        <bpmn:outgoing>Intake_WaitAdmin</bpmn:outgoing>
+      </bpmn:eventBasedGateway>
+      <bpmn:sequenceFlow id="F_Intake_Start_Intake_WaitFirst" sourceRef="Intake_Start" targetRef="Intake_WaitFirst" />
+      <bpmn:sequenceFlow id="Intake_WaitMed" sourceRef="Intake_WaitFirst" targetRef="Intake_Med" />
+      <bpmn:sequenceFlow id="Intake_WaitAdmin" sourceRef="Intake_WaitFirst" targetRef="Intake_Admin" />
+      <bpmn:textAnnotation id="Intake_Note">
+        <bpmn:text>Повтор і пізня еПМК не створюють другого кейсу / комплекту задач. Нове поранення тієї самої особи — окремий випадок. Подія не надає AccessGrant. Невалідний / неавторизований запит відхиляє шлюз, а не гілка успішного процесу. F01, F09, F10; ADR 0003, 0005.</bpmn:text>
+      </bpmn:textAnnotation>
+      <bpmn:textAnnotation id="Title_intake">
+        <bpmn:text>Ініціація • дві альтернативи • адміністративний кейс не створює медичного факту</bpmn:text>
+      </bpmn:textAnnotation>
+    </bpmn:subProcess>
+    <bpmn:exclusiveGateway id="Gateway_NewCase" name="Новий кейс?" default="F_Existing">
+      <bpmn:incoming>F_Sub_Intake_Gateway_NewCase</bpmn:incoming>
+      <bpmn:outgoing>F_Existing</bpmn:outgoing>
+      <bpmn:outgoing>F_New</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="End_Joined" name="Долучено до наявного; задачі не дублюються">
+      <bpmn:incoming>F_Existing</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:parallelGateway id="Fork_Admin" name="">
+      <bpmn:incoming>F_New</bpmn:incoming>
+      <bpmn:outgoing>F_ToCert</bpmn:outgoing>
+      <bpmn:outgoing>F_ToVLK</bpmn:outgoing>
+      <bpmn:outgoing>F_ToReward</bpmn:outgoing>
+    </bpmn:parallelGateway>
+    <bpmn:subProcess id="Sub_Certificate" name="Довідка: скласти → видати → отримати">
+      <bpmn:incoming>F_ToCert</bpmn:incoming>
+      <bpmn:outgoing>F_Sub_Certificate_End_Certificate</bpmn:outgoing>
+      <bpmn:startEvent id="Cert_Start" name="">
+        <bpmn:outgoing>F_Cert_Start_Cert_Anchor</bpmn:outgoing>
+      </bpmn:startEvent>
+      <bpmn:serviceTask id="Cert_Anchor" name="Сервіс: правило + якір; невідоме → задача уточнення">
+        <bpmn:incoming>F_Cert_Start_Cert_Anchor</bpmn:incoming>
+        <bpmn:outgoing>F_Cert_Anchor_Cert_Prepare</bpmn:outgoing>
+      </bpmn:serviceTask>
+      <bpmn:userTask id="Cert_Prepare" name="Начальник медслужби: скласти довідку">
+        <bpmn:incoming>F_Cert_Anchor_Cert_Prepare</bpmn:incoming>
+        <bpmn:outgoing>F_Cert_Prepare_Cert_Issue</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:userTask id="Cert_Issue" name="Командир: видати довідку за повноваженнями">
+        <bpmn:incoming>F_Cert_Prepare_Cert_Issue</bpmn:incoming>
+        <bpmn:outgoing>F_Cert_Issue_Cert_Send</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:userTask id="Cert_Send" name="Належний відправник: передати чинним дозволеним каналом">
+        <bpmn:incoming>F_Cert_Issue_Cert_Send</bpmn:incoming>
+        <bpmn:outgoing>F_Cert_Send_Cert_Receipt</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:receiveTask id="Cert_Receipt" name="Очікувати підтвердження отримання адресатом саме цієї версії">
+        <bpmn:incoming>F_Cert_Send_Cert_Receipt</bpmn:incoming>
+        <bpmn:outgoing>F_Cert_Receipt_Cert_Record</bpmn:outgoing>
+      </bpmn:receiveTask>
+      <bpmn:serviceTask id="Cert_Record" name="Сервіс: зафіксувати отримувача / версію / час; оновити вимоги">
+        <bpmn:incoming>F_Cert_Receipt_Cert_Record</bpmn:incoming>
+        <bpmn:outgoing>F_Cert_Record_Cert_End</bpmn:outgoing>
+      </bpmn:serviceTask>
+      <bpmn:endEvent id="Cert_End" name="Версія отримана">
+        <bpmn:incoming>F_Cert_Record_Cert_End</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:sequenceFlow id="F_Cert_Start_Cert_Anchor" sourceRef="Cert_Start" targetRef="Cert_Anchor" />
+      <bpmn:sequenceFlow id="F_Cert_Anchor_Cert_Prepare" sourceRef="Cert_Anchor" targetRef="Cert_Prepare" />
+      <bpmn:sequenceFlow id="F_Cert_Prepare_Cert_Issue" sourceRef="Cert_Prepare" targetRef="Cert_Issue" />
+      <bpmn:sequenceFlow id="F_Cert_Issue_Cert_Send" sourceRef="Cert_Issue" targetRef="Cert_Send" />
+      <bpmn:sequenceFlow id="F_Cert_Send_Cert_Receipt" sourceRef="Cert_Send" targetRef="Cert_Receipt" />
+      <bpmn:sequenceFlow id="F_Cert_Receipt_Cert_Record" sourceRef="Cert_Receipt" targetRef="Cert_Record" />
+      <bpmn:sequenceFlow id="F_Cert_Record_Cert_End" sourceRef="Cert_Record" targetRef="Cert_End" />
+      <bpmn:textAnnotation id="Cert_Note">
+        <bpmn:text>N16 ст.260: для визначеного випадку 5 днів рахуються від отримання військовим первинного медичного облікового документа (за відсутності — довідки закладу), не від поранення / створення еПМК. Невідомий якір → null і уточнення; таймер нічого не санкціонує. Оригінал ≠ фото / OCR. Виправлена версія потребує нового отримання.</bpmn:text>
+      </bpmn:textAnnotation>
+      <bpmn:textAnnotation id="Title_certificate">
+        <bpmn:text>Довідка • підготовка, видача, надсилання та отримання різні • F03–F04</bpmn:text>
+      </bpmn:textAnnotation>
+    </bpmn:subProcess>
+    <bpmn:endEvent id="End_Certificate" name="Отримання цієї версії підтверджено">
+      <bpmn:incoming>F_Sub_Certificate_End_Certificate</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:subProcess id="Sub_VLK" name="Належне направлення → пакет → рішення ВЛК">
+      <bpmn:incoming>F_ToVLK</bpmn:incoming>
+      <bpmn:outgoing>F_Sub_VLK_Fork_AfterVLK</bpmn:outgoing>
+      <bpmn:startEvent id="VLK_Start" name="">
+        <bpmn:outgoing>F_VLK_Start_VLK_Referral</bpmn:outgoing>
+      </bpmn:startEvent>
+      <bpmn:userTask id="VLK_Referral" name="Належний видавець: оформити направлення за N01">
+        <bpmn:incoming>F_VLK_Start_VLK_Referral</bpmn:incoming>
+        <bpmn:outgoing>F_VLK_Referral_VLK_Checklist</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:serviceTask id="VLK_Checklist" name="Сервіс: технічні вимоги пакета + версія правил">
+        <bpmn:incoming>F_VLK_Referral_VLK_Checklist</bpmn:incoming>
+        <bpmn:outgoing>F_VLK_Checklist_VLK_Gaps</bpmn:outgoing>
+      </bpmn:serviceTask>
+      <bpmn:exclusiveGateway id="VLK_Gaps" name="Прогалина?" default="VLK_NoGap">
+        <bpmn:incoming>F_VLK_Checklist_VLK_Gaps</bpmn:incoming>
+        <bpmn:outgoing>VLK_NoGap</bpmn:outgoing>
+        <bpmn:outgoing>VLK_HasGap</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:serviceTask id="VLK_CreateTask" name="Створити задачу автору; це не очікування її виконання">
+        <bpmn:incoming>VLK_HasGap</bpmn:incoming>
+        <bpmn:outgoing>VLK_TaskCreated</bpmn:outgoing>
+      </bpmn:serviceTask>
+      <bpmn:exclusiveGateway id="VLK_Merge" name="">
+        <bpmn:incoming>VLK_NoGap</bpmn:incoming>
+        <bpmn:incoming>VLK_TaskCreated</bpmn:incoming>
+        <bpmn:outgoing>F_VLK_Merge_VLK_Send</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:userTask id="VLK_Send" name="Належний учасник: передати наявні документи чинним каналом">
+        <bpmn:incoming>F_VLK_Merge_VLK_Send</bpmn:incoming>
+        <bpmn:incoming>VLK_CorrectionLoop</bpmn:incoming>
+        <bpmn:outgoing>F_VLK_Send_VLK_Receipt</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:receiveTask id="VLK_Receipt" name="Очікувати підтвердження отримання пакета ВЛК">
+        <bpmn:incoming>F_VLK_Send_VLK_Receipt</bpmn:incoming>
+        <bpmn:outgoing>F_VLK_Receipt_VLK_Returned</bpmn:outgoing>
+      </bpmn:receiveTask>
+      <bpmn:exclusiveGateway id="VLK_Returned" name="Повернення?" default="VLK_NotReturned">
+        <bpmn:incoming>F_VLK_Receipt_VLK_Returned</bpmn:incoming>
+        <bpmn:outgoing>VLK_NotReturned</bpmn:outgoing>
+        <bpmn:outgoing>VLK_WasReturned</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:userTask id="VLK_Correct" name="Автор документа: усунути зауваження; нова версія">
+        <bpmn:incoming>VLK_WasReturned</bpmn:incoming>
+        <bpmn:outgoing>VLK_CorrectionLoop</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:userTask id="VLK_Exam" name="ВЛК: медичний огляд і причинний зв’язок; поза продуктом C6">
+        <bpmn:incoming>VLK_NotReturned</bpmn:incoming>
+        <bpmn:outgoing>F_VLK_Exam_VLK_Decision</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:userTask id="VLK_Decision" name="ВЛК: прийняти й оформити належну постанову">
+        <bpmn:incoming>F_VLK_Exam_VLK_Decision</bpmn:incoming>
+        <bpmn:outgoing>F_VLK_Decision_VLK_Record</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:serviceTask id="VLK_Record" name="Сервіс: зафіксувати дозволений результат; наступна службова дія окремо">
+        <bpmn:incoming>F_VLK_Decision_VLK_Record</bpmn:incoming>
+        <bpmn:outgoing>F_VLK_Record_VLK_End</bpmn:outgoing>
+      </bpmn:serviceTask>
+      <bpmn:endEvent id="VLK_End" name="Рішення зафіксовано">
+        <bpmn:incoming>F_VLK_Record_VLK_End</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:sequenceFlow id="F_VLK_Start_VLK_Referral" sourceRef="VLK_Start" targetRef="VLK_Referral" />
+      <bpmn:sequenceFlow id="F_VLK_Referral_VLK_Checklist" sourceRef="VLK_Referral" targetRef="VLK_Checklist" />
+      <bpmn:sequenceFlow id="F_VLK_Checklist_VLK_Gaps" sourceRef="VLK_Checklist" targetRef="VLK_Gaps" />
+      <bpmn:sequenceFlow id="VLK_NoGap" sourceRef="VLK_Gaps" targetRef="VLK_Merge" name="Ні" />
+      <bpmn:sequenceFlow id="VLK_HasGap" sourceRef="VLK_Gaps" targetRef="VLK_CreateTask" name="Так">
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">requirements_missing_or_unknown</bpmn:conditionExpression>
+      </bpmn:sequenceFlow>
+      <bpmn:sequenceFlow id="VLK_TaskCreated" sourceRef="VLK_CreateTask" targetRef="VLK_Merge" />
+      <bpmn:sequenceFlow id="F_VLK_Merge_VLK_Send" sourceRef="VLK_Merge" targetRef="VLK_Send" />
+      <bpmn:sequenceFlow id="F_VLK_Send_VLK_Receipt" sourceRef="VLK_Send" targetRef="VLK_Receipt" />
+      <bpmn:sequenceFlow id="F_VLK_Receipt_VLK_Returned" sourceRef="VLK_Receipt" targetRef="VLK_Returned" />
+      <bpmn:sequenceFlow id="VLK_NotReturned" sourceRef="VLK_Returned" targetRef="VLK_Exam" name="Ні" />
+      <bpmn:sequenceFlow id="VLK_WasReturned" sourceRef="VLK_Returned" targetRef="VLK_Correct" name="Так">
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">explicit_return_received</bpmn:conditionExpression>
+      </bpmn:sequenceFlow>
+      <bpmn:sequenceFlow id="VLK_CorrectionLoop" sourceRef="VLK_Correct" targetRef="VLK_Send" />
+      <bpmn:sequenceFlow id="F_VLK_Exam_VLK_Decision" sourceRef="VLK_Exam" targetRef="VLK_Decision" />
+      <bpmn:sequenceFlow id="F_VLK_Decision_VLK_Record" sourceRef="VLK_Decision" targetRef="VLK_Record" />
+      <bpmn:sequenceFlow id="F_VLK_Record_VLK_End" sourceRef="VLK_Record" targetRef="VLK_End" />
+      <bpmn:textAnnotation id="VLK_Note">
+        <bpmn:text>Направлення видає суб’єкт належного рівня за N01 II 6.1 / за умовами 6.4; супровід координує, не підписує замість нього. Технічна прогалина створює задачу, не відмову в направленні. C2 — підгіпотеза; повернення моделюємо як можливий виняток. Оригінали й правомірність доступу перевіряє джерело.</bpmn:text>
+      </bpmn:textAnnotation>
+      <bpmn:textAnnotation id="Title_vlk">
+        <bpmn:text>ВЛК • технічний чекліст не блокує направлення • клінічне рішення залишається ВЛК</bpmn:text>
+      </bpmn:textAnnotation>
+    </bpmn:subProcess>
+    <bpmn:parallelGateway id="Fork_AfterVLK" name="">
+      <bpmn:incoming>F_Sub_VLK_Fork_AfterVLK</bpmn:incoming>
+      <bpmn:outgoing>F_ToService</bpmn:outgoing>
+      <bpmn:outgoing>F_ToOGD</bpmn:outgoing>
+    </bpmn:parallelGateway>
+    <bpmn:userTask id="Task_ServiceExecution" name="Уповноважена особа: виконати службову дію; підтвердити окремо">
+      <bpmn:incoming>F_ToService</bpmn:incoming>
+      <bpmn:outgoing>F_Task_ServiceExecution_End_Service</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="End_Service" name="Службова дія виконана">
+      <bpmn:incoming>F_Task_ServiceExecution_End_Service</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:subProcess id="Sub_Reward" name="Додаткова винагорода: окремий період / підстави">
+      <bpmn:incoming>F_ToReward</bpmn:incoming>
+      <bpmn:outgoing>F_Sub_Reward_End_Reward</bpmn:outgoing>
+      <bpmn:startEvent id="Reward_Start" name="">
+        <bpmn:outgoing>F_Reward_Start_Reward_Basis</bpmn:outgoing>
+      </bpmn:startEvent>
+      <bpmn:userTask id="Reward_Basis" name="Уповноважені: підстави винагороди для конкретного періоду; чинні N06 / N21">
+        <bpmn:incoming>F_Reward_Start_Reward_Basis</bpmn:incoming>
+        <bpmn:outgoing>F_Reward_Basis_Reward_Checklist</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:serviceTask id="Reward_Checklist" name="Сервіс: окремі вимоги / правила / період; не визначає право">
+        <bpmn:incoming>F_Reward_Basis_Reward_Checklist</bpmn:incoming>
+        <bpmn:outgoing>F_Reward_Checklist_Reward_Send</bpmn:outgoing>
+      </bpmn:serviceTask>
+      <bpmn:userTask id="Reward_Send" name="Належний заявник / учасник: подати пакет чинним каналом">
+        <bpmn:incoming>F_Reward_Checklist_Reward_Send</bpmn:incoming>
+        <bpmn:incoming>Reward_FixLoop</bpmn:incoming>
+        <bpmn:outgoing>F_Reward_Send_Reward_Receipt</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:receiveTask id="Reward_Receipt" name="Очікувати підтвердження реєстрації / отримання належним органом">
+        <bpmn:incoming>F_Reward_Send_Reward_Receipt</bpmn:incoming>
+        <bpmn:outgoing>F_Reward_Receipt_Reward_Decision</bpmn:outgoing>
+      </bpmn:receiveTask>
+      <bpmn:userTask id="Reward_Decision" name="Належний орган: рішення; сервіс лише отримує підтверджений стан">
+        <bpmn:incoming>F_Reward_Receipt_Reward_Decision</bpmn:incoming>
+        <bpmn:outgoing>F_Reward_Decision_Reward_Outcome</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:exclusiveGateway id="Reward_Outcome" name="Який стан?" default="Reward_Unknown">
+        <bpmn:incoming>F_Reward_Decision_Reward_Outcome</bpmn:incoming>
+        <bpmn:incoming>Reward_StatusLoop</bpmn:incoming>
+        <bpmn:outgoing>Reward_Returned</bpmn:outgoing>
+        <bpmn:outgoing>Reward_Refused</bpmn:outgoing>
+        <bpmn:outgoing>Reward_Unknown</bpmn:outgoing>
+        <bpmn:outgoing>Reward_Approved</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:userTask id="Reward_Fix" name="Автор / заявник: доопрацювати; повернення не є відмовою">
+        <bpmn:incoming>Reward_Returned</bpmn:incoming>
+        <bpmn:outgoing>Reward_FixLoop</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:userTask id="Reward_Explain" name="Супровід: пояснити причину відмови й чинний шлях оскарження">
+        <bpmn:incoming>Reward_Refused</bpmn:incoming>
+        <bpmn:outgoing>F_Reward_Explain_Reward_Denied</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:endEvent id="Reward_Denied" name="Обґрунтована відмова; право на оскарження збережено">
+        <bpmn:incoming>F_Reward_Explain_Reward_Denied</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:userTask id="Reward_Clarify" name="Супровід: уточнити невідомий стан; без обіцянки грошей">
+        <bpmn:incoming>Reward_Unknown</bpmn:incoming>
+        <bpmn:outgoing>F_Reward_Clarify_Reward_AwaitStatus</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:receiveTask id="Reward_AwaitStatus" name="Очікувати відповідь належного джерела">
+        <bpmn:incoming>F_Reward_Clarify_Reward_AwaitStatus</bpmn:incoming>
+        <bpmn:outgoing>Reward_StatusLoop</bpmn:outgoing>
+      </bpmn:receiveTask>
+      <bpmn:receiveTask id="Reward_AwaitExecution" name="Очікувати належне підтвердження виконання за обраним періодом / пакетом">
+        <bpmn:incoming>Reward_Approved</bpmn:incoming>
+        <bpmn:incoming>Reward_ExecutionLoop</bpmn:incoming>
+        <bpmn:outgoing>F_Reward_AwaitExecution_Reward_Enough</bpmn:outgoing>
+      </bpmn:receiveTask>
+      <bpmn:exclusiveGateway id="Reward_Enough" name="Увесь обраний обсяг виконано?" default="Reward_PartExecuted">
+        <bpmn:incoming>F_Reward_AwaitExecution_Reward_Enough</bpmn:incoming>
+        <bpmn:outgoing>Reward_AllExecuted</bpmn:outgoing>
+        <bpmn:outgoing>Reward_PartExecuted</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:serviceTask id="Reward_Partial" name="Зафіксувати частину; решту лишити відкритою">
+        <bpmn:incoming>Reward_PartExecuted</bpmn:incoming>
+        <bpmn:outgoing>Reward_ExecutionLoop</bpmn:outgoing>
+      </bpmn:serviceTask>
+      <bpmn:serviceTask id="Reward_Confirmed" name="Зафіксувати виконання: джерело + сума / період / час">
+        <bpmn:incoming>Reward_AllExecuted</bpmn:incoming>
+        <bpmn:outgoing>F_Reward_Confirmed_Reward_End</bpmn:outgoing>
+      </bpmn:serviceTask>
+      <bpmn:endEvent id="Reward_End" name="Підтверджено лише обраний обсяг">
+        <bpmn:incoming>F_Reward_Confirmed_Reward_End</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:sequenceFlow id="F_Reward_Start_Reward_Basis" sourceRef="Reward_Start" targetRef="Reward_Basis" />
+      <bpmn:sequenceFlow id="F_Reward_Basis_Reward_Checklist" sourceRef="Reward_Basis" targetRef="Reward_Checklist" />
+      <bpmn:sequenceFlow id="F_Reward_Checklist_Reward_Send" sourceRef="Reward_Checklist" targetRef="Reward_Send" />
+      <bpmn:sequenceFlow id="F_Reward_Send_Reward_Receipt" sourceRef="Reward_Send" targetRef="Reward_Receipt" />
+      <bpmn:sequenceFlow id="F_Reward_Receipt_Reward_Decision" sourceRef="Reward_Receipt" targetRef="Reward_Decision" />
+      <bpmn:sequenceFlow id="F_Reward_Decision_Reward_Outcome" sourceRef="Reward_Decision" targetRef="Reward_Outcome" />
+      <bpmn:sequenceFlow id="Reward_Returned" sourceRef="Reward_Outcome" targetRef="Reward_Fix" name="Повернено">
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">status == returned</bpmn:conditionExpression>
+      </bpmn:sequenceFlow>
+      <bpmn:sequenceFlow id="Reward_FixLoop" sourceRef="Reward_Fix" targetRef="Reward_Send" />
+      <bpmn:sequenceFlow id="Reward_Refused" sourceRef="Reward_Outcome" targetRef="Reward_Explain" name="Відмова">
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">status == denied</bpmn:conditionExpression>
+      </bpmn:sequenceFlow>
+      <bpmn:sequenceFlow id="F_Reward_Explain_Reward_Denied" sourceRef="Reward_Explain" targetRef="Reward_Denied" />
+      <bpmn:sequenceFlow id="Reward_Unknown" sourceRef="Reward_Outcome" targetRef="Reward_Clarify" name="Невідомо" />
+      <bpmn:sequenceFlow id="F_Reward_Clarify_Reward_AwaitStatus" sourceRef="Reward_Clarify" targetRef="Reward_AwaitStatus" />
+      <bpmn:sequenceFlow id="Reward_StatusLoop" sourceRef="Reward_AwaitStatus" targetRef="Reward_Outcome" />
+      <bpmn:sequenceFlow id="Reward_Approved" sourceRef="Reward_Outcome" targetRef="Reward_AwaitExecution" name="Призначено">
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">status == approved</bpmn:conditionExpression>
+      </bpmn:sequenceFlow>
+      <bpmn:sequenceFlow id="F_Reward_AwaitExecution_Reward_Enough" sourceRef="Reward_AwaitExecution" targetRef="Reward_Enough" />
+      <bpmn:sequenceFlow id="Reward_AllExecuted" sourceRef="Reward_Enough" targetRef="Reward_Confirmed" name="Так">
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">execution_evidence_covers_selected_scope</bpmn:conditionExpression>
+      </bpmn:sequenceFlow>
+      <bpmn:sequenceFlow id="Reward_PartExecuted" sourceRef="Reward_Enough" targetRef="Reward_Partial" name="Ні / частина" />
+      <bpmn:sequenceFlow id="Reward_ExecutionLoop" sourceRef="Reward_Partial" targetRef="Reward_AwaitExecution" />
+      <bpmn:sequenceFlow id="F_Reward_Confirmed_Reward_End" sourceRef="Reward_Confirmed" targetRef="Reward_End" />
+      <bpmn:textAnnotation id="Reward_Note">
+        <bpmn:text>Повернення ≠ відмова ≠ призначення ≠ виконання. Немає довіреного джерела виконання → очікування / невідоме, не «гроші отримано». Один прохід — обраний період або пакет; інші не закриваються. F06; ADR 0001, 0003–0004.</bpmn:text>
+      </bpmn:textAnnotation>
+      <bpmn:textAnnotation id="Title_reward">
+        <bpmn:text>Додаткова винагорода • паралельно лікуванню / без загального бар’єра фінальної ВЛК • N06, N21</bpmn:text>
+      </bpmn:textAnnotation>
+    </bpmn:subProcess>
+    <bpmn:endEvent id="End_Reward" name="Стан обраного періоду">
+      <bpmn:incoming>F_Sub_Reward_End_Reward</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:subProcess id="Sub_OGD" name="ОГД: окремий пакет, орган і виконання">
+      <bpmn:incoming>F_ToOGD</bpmn:incoming>
+      <bpmn:outgoing>F_Sub_OGD_End_OGD</bpmn:outgoing>
+      <bpmn:startEvent id="OGD_Start" name="">
+        <bpmn:outgoing>F_OGD_Start_OGD_Basis</bpmn:outgoing>
+      </bpmn:startEvent>
+      <bpmn:userTask id="OGD_Basis" name="Заявник / належний орган: перевірити застосовність ОГД; ЕКОПФО за потреби — окремо від ВЛК">
+        <bpmn:incoming>F_OGD_Start_OGD_Basis</bpmn:incoming>
+        <bpmn:outgoing>OGD_CheckApplicability</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:serviceTask id="OGD_Checklist" name="Сервіс: окремі вимоги / правила / період; не визначає право">
+        <bpmn:incoming>OGD_ApplicableYes</bpmn:incoming>
+        <bpmn:outgoing>F_OGD_Checklist_OGD_Send</bpmn:outgoing>
+      </bpmn:serviceTask>
+      <bpmn:userTask id="OGD_Send" name="Належний заявник / учасник: подати пакет чинним каналом">
+        <bpmn:incoming>F_OGD_Checklist_OGD_Send</bpmn:incoming>
+        <bpmn:incoming>OGD_FixLoop</bpmn:incoming>
+        <bpmn:outgoing>F_OGD_Send_OGD_Receipt</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:receiveTask id="OGD_Receipt" name="Очікувати підтвердження реєстрації / отримання належним органом">
+        <bpmn:incoming>F_OGD_Send_OGD_Receipt</bpmn:incoming>
+        <bpmn:outgoing>F_OGD_Receipt_OGD_Decision</bpmn:outgoing>
+      </bpmn:receiveTask>
+      <bpmn:userTask id="OGD_Decision" name="Належний орган: рішення; сервіс лише отримує підтверджений стан">
+        <bpmn:incoming>F_OGD_Receipt_OGD_Decision</bpmn:incoming>
+        <bpmn:outgoing>F_OGD_Decision_OGD_Outcome</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:exclusiveGateway id="OGD_Outcome" name="Який стан?" default="OGD_Unknown">
+        <bpmn:incoming>F_OGD_Decision_OGD_Outcome</bpmn:incoming>
+        <bpmn:incoming>OGD_StatusLoop</bpmn:incoming>
+        <bpmn:outgoing>OGD_Returned</bpmn:outgoing>
+        <bpmn:outgoing>OGD_Refused</bpmn:outgoing>
+        <bpmn:outgoing>OGD_Unknown</bpmn:outgoing>
+        <bpmn:outgoing>OGD_Approved</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:userTask id="OGD_Fix" name="Автор / заявник: доопрацювати; повернення не є відмовою">
+        <bpmn:incoming>OGD_Returned</bpmn:incoming>
+        <bpmn:outgoing>OGD_FixLoop</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:userTask id="OGD_Explain" name="Супровід: пояснити причину відмови й чинний шлях оскарження">
+        <bpmn:incoming>OGD_Refused</bpmn:incoming>
+        <bpmn:outgoing>F_OGD_Explain_OGD_Denied</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:endEvent id="OGD_Denied" name="Обґрунтована відмова; право на оскарження збережено">
+        <bpmn:incoming>F_OGD_Explain_OGD_Denied</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:userTask id="OGD_Clarify" name="Супровід: уточнити невідомий стан; без обіцянки грошей">
+        <bpmn:incoming>OGD_Unknown</bpmn:incoming>
+        <bpmn:outgoing>F_OGD_Clarify_OGD_AwaitStatus</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:receiveTask id="OGD_AwaitStatus" name="Очікувати відповідь належного джерела">
+        <bpmn:incoming>F_OGD_Clarify_OGD_AwaitStatus</bpmn:incoming>
+        <bpmn:outgoing>OGD_StatusLoop</bpmn:outgoing>
+      </bpmn:receiveTask>
+      <bpmn:receiveTask id="OGD_AwaitExecution" name="Очікувати належне підтвердження виконання за обраним періодом / пакетом">
+        <bpmn:incoming>OGD_Approved</bpmn:incoming>
+        <bpmn:incoming>OGD_ExecutionLoop</bpmn:incoming>
+        <bpmn:outgoing>F_OGD_AwaitExecution_OGD_Enough</bpmn:outgoing>
+      </bpmn:receiveTask>
+      <bpmn:exclusiveGateway id="OGD_Enough" name="Увесь обраний обсяг виконано?" default="OGD_PartExecuted">
+        <bpmn:incoming>F_OGD_AwaitExecution_OGD_Enough</bpmn:incoming>
+        <bpmn:outgoing>OGD_AllExecuted</bpmn:outgoing>
+        <bpmn:outgoing>OGD_PartExecuted</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:serviceTask id="OGD_Partial" name="Зафіксувати частину; решту лишити відкритою">
+        <bpmn:incoming>OGD_PartExecuted</bpmn:incoming>
+        <bpmn:outgoing>OGD_ExecutionLoop</bpmn:outgoing>
+      </bpmn:serviceTask>
+      <bpmn:serviceTask id="OGD_Confirmed" name="Зафіксувати виконання: джерело + сума / період / час">
+        <bpmn:incoming>OGD_AllExecuted</bpmn:incoming>
+        <bpmn:outgoing>F_OGD_Confirmed_OGD_End</bpmn:outgoing>
+      </bpmn:serviceTask>
+      <bpmn:endEvent id="OGD_End" name="Підтверджено лише обраний обсяг">
+        <bpmn:incoming>F_OGD_Confirmed_OGD_End</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:sequenceFlow id="F_OGD_Start_OGD_Basis" sourceRef="OGD_Start" targetRef="OGD_Basis" />
+      <bpmn:sequenceFlow id="F_OGD_Checklist_OGD_Send" sourceRef="OGD_Checklist" targetRef="OGD_Send" />
+      <bpmn:sequenceFlow id="F_OGD_Send_OGD_Receipt" sourceRef="OGD_Send" targetRef="OGD_Receipt" />
+      <bpmn:sequenceFlow id="F_OGD_Receipt_OGD_Decision" sourceRef="OGD_Receipt" targetRef="OGD_Decision" />
+      <bpmn:sequenceFlow id="F_OGD_Decision_OGD_Outcome" sourceRef="OGD_Decision" targetRef="OGD_Outcome" />
+      <bpmn:sequenceFlow id="OGD_Returned" sourceRef="OGD_Outcome" targetRef="OGD_Fix" name="Повернено">
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">status == returned</bpmn:conditionExpression>
+      </bpmn:sequenceFlow>
+      <bpmn:sequenceFlow id="OGD_FixLoop" sourceRef="OGD_Fix" targetRef="OGD_Send" />
+      <bpmn:sequenceFlow id="OGD_Refused" sourceRef="OGD_Outcome" targetRef="OGD_Explain" name="Відмова">
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">status == denied</bpmn:conditionExpression>
+      </bpmn:sequenceFlow>
+      <bpmn:sequenceFlow id="F_OGD_Explain_OGD_Denied" sourceRef="OGD_Explain" targetRef="OGD_Denied" />
+      <bpmn:sequenceFlow id="OGD_Unknown" sourceRef="OGD_Outcome" targetRef="OGD_Clarify" name="Невідомо" />
+      <bpmn:sequenceFlow id="F_OGD_Clarify_OGD_AwaitStatus" sourceRef="OGD_Clarify" targetRef="OGD_AwaitStatus" />
+      <bpmn:sequenceFlow id="OGD_StatusLoop" sourceRef="OGD_AwaitStatus" targetRef="OGD_Outcome" />
+      <bpmn:sequenceFlow id="OGD_Approved" sourceRef="OGD_Outcome" targetRef="OGD_AwaitExecution" name="Призначено">
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">status == approved</bpmn:conditionExpression>
+      </bpmn:sequenceFlow>
+      <bpmn:sequenceFlow id="F_OGD_AwaitExecution_OGD_Enough" sourceRef="OGD_AwaitExecution" targetRef="OGD_Enough" />
+      <bpmn:sequenceFlow id="OGD_AllExecuted" sourceRef="OGD_Enough" targetRef="OGD_Confirmed" name="Так">
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">execution_evidence_covers_selected_scope</bpmn:conditionExpression>
+      </bpmn:sequenceFlow>
+      <bpmn:sequenceFlow id="OGD_PartExecuted" sourceRef="OGD_Enough" targetRef="OGD_Partial" name="Ні / частина" />
+      <bpmn:sequenceFlow id="OGD_ExecutionLoop" sourceRef="OGD_Partial" targetRef="OGD_AwaitExecution" />
+      <bpmn:sequenceFlow id="F_OGD_Confirmed_OGD_End" sourceRef="OGD_Confirmed" targetRef="OGD_End" />
+      <bpmn:exclusiveGateway id="OGD_Applicable" name="Є підстава / звернення?" default="OGD_ApplicableUnknown">
+        <bpmn:incoming>OGD_CheckApplicability</bpmn:incoming>
+        <bpmn:incoming>OGD_ApplicabilityRetry</bpmn:incoming>
+        <bpmn:outgoing>OGD_ApplicableYes</bpmn:outgoing>
+        <bpmn:outgoing>OGD_ApplicableNo</bpmn:outgoing>
+        <bpmn:outgoing>OGD_ApplicableUnknown</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:endEvent id="OGD_NotApplicable" name="ОГД не запитується / не застосовується; без відмови сервісом">
+        <bpmn:incoming>OGD_ApplicableNo</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:sequenceFlow id="OGD_CheckApplicability" sourceRef="OGD_Basis" targetRef="OGD_Applicable" />
+      <bpmn:sequenceFlow id="OGD_ApplicableYes" sourceRef="OGD_Applicable" targetRef="OGD_Checklist" name="Так">
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">authorized_applicability_confirmed</bpmn:conditionExpression>
+      </bpmn:sequenceFlow>
+      <bpmn:sequenceFlow id="OGD_ApplicableNo" sourceRef="OGD_Applicable" targetRef="OGD_NotApplicable" name="Явне ні">
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">not_requested_or_authorized_not_applicable</bpmn:conditionExpression>
+      </bpmn:sequenceFlow>
+      <bpmn:receiveTask id="OGD_ApplicabilityWait" name="Застосовність невідома: уточнити / очікувати належну відповідь">
+        <bpmn:incoming>OGD_ApplicableUnknown</bpmn:incoming>
+        <bpmn:outgoing>OGD_ApplicabilityRetry</bpmn:outgoing>
+      </bpmn:receiveTask>
+      <bpmn:sequenceFlow id="OGD_ApplicableUnknown" sourceRef="OGD_Applicable" targetRef="OGD_ApplicabilityWait" name="Невідомо" />
+      <bpmn:sequenceFlow id="OGD_ApplicabilityRetry" sourceRef="OGD_ApplicabilityWait" targetRef="OGD_Applicable" />
+      <bpmn:textAnnotation id="OGD_Note">
+        <bpmn:text>Повернення ≠ відмова ≠ призначення ≠ виконання. Немає довіреного джерела виконання → очікування / невідоме, не «гроші отримано». Один прохід — обраний період або пакет; інші не закриваються. F06; ADR 0001, 0003–0004.</bpmn:text>
+      </bpmn:textAnnotation>
+      <bpmn:textAnnotation id="OGD_Deadlines">
+        <bpmn:text>Строк рішення ≠ банківське зарахування. N07 п.23: у воєнний час рішення про призначення — 3 місяці від отримання всіх необхідних документів. Невідомий якір → уточнення. Повні умови — у нормативній матриці.</bpmn:text>
+      </bpmn:textAnnotation>
+      <bpmn:textAnnotation id="Title_ogd">
+        <bpmn:text>ОГД • окрема заява / пакет / орган призначення • N07 • опціональний маршрут</bpmn:text>
+      </bpmn:textAnnotation>
+    </bpmn:subProcess>
+    <bpmn:endEvent id="End_OGD" name="Стан окремого пакета">
+      <bpmn:incoming>F_Sub_OGD_End_OGD</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:subProcess id="EventSub_Control" name="Нова подія / погоджена звірка / звернення: окремий прохід" triggeredByEvent="true">
+      <bpmn:startEvent id="Control_Start" name="Погоджений вхід для case_id" isInterrupting="false">
+        <bpmn:outgoing>F_Control_Start_Control_Validate</bpmn:outgoing>
+        <bpmn:messageEventDefinition id="MessageDef_Control" />
+      </bpmn:startEvent>
+      <bpmn:serviceTask id="Control_Validate" name="Сервер: джерело, scope, мінімізація; перевірити версію / збіг">
+        <bpmn:incoming>F_Control_Start_Control_Validate</bpmn:incoming>
+        <bpmn:outgoing>F_Control_Validate_Control_Trusted</bpmn:outgoing>
+      </bpmn:serviceTask>
+      <bpmn:exclusiveGateway id="Control_Trusted" name="Узгоджено?" default="Control_Conflict">
+        <bpmn:incoming>F_Control_Validate_Control_Trusted</bpmn:incoming>
+        <bpmn:outgoing>Control_Valid</bpmn:outgoing>
+        <bpmn:outgoing>Control_Conflict</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:serviceTask id="Control_Review" name="ReviewItem + власник: конфлікт / прогалина; жодної тихої підміни">
+        <bpmn:incoming>Control_Conflict</bpmn:incoming>
+        <bpmn:outgoing>F_Control_Review_Control_Pending</bpmn:outgoing>
+      </bpmn:serviceTask>
+      <bpmn:endEvent id="Control_Pending" name="Ручний розгляд лишається відкритим">
+        <bpmn:incoming>F_Control_Review_Control_Pending</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:exclusiveGateway id="Control_Repeat" name="Точний повтор?" default="Control_New">
+        <bpmn:incoming>Control_Valid</bpmn:incoming>
+        <bpmn:outgoing>Control_IsRepeat</bpmn:outgoing>
+        <bpmn:outgoing>Control_New</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:endEvent id="Control_Duplicate" name="Без повторного ефекту">
+        <bpmn:incoming>Control_IsRepeat</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:serviceTask id="Control_Atomic" name="Одна транзакція: inbox / стан / задача / аудит / outbox">
+        <bpmn:incoming>Control_New</bpmn:incoming>
+        <bpmn:outgoing>F_Control_Atomic_Control_Project</bpmn:outgoing>
+      </bpmn:serviceTask>
+      <bpmn:serviceTask id="Control_Project" name="Рольова проєкція: час / джерело / свіжість / власник; без діагнозу командиру">
+        <bpmn:incoming>F_Control_Atomic_Control_Project</bpmn:incoming>
+        <bpmn:outgoing>F_Control_Project_Control_NeedsSupport</bpmn:outgoing>
+      </bpmn:serviceTask>
+      <bpmn:exclusiveGateway id="Control_NeedsSupport" name="Звернення?" default="Control_NoSupport">
+        <bpmn:incoming>F_Control_Project_Control_NeedsSupport</bpmn:incoming>
+        <bpmn:outgoing>Control_NoSupport</bpmn:outgoing>
+        <bpmn:outgoing>Control_WithSupport</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:userTask id="Control_Support" name="Призначений супровід: допомога без входу бійця; родині лише дозволене">
+        <bpmn:incoming>Control_WithSupport</bpmn:incoming>
+        <bpmn:outgoing>Control_SupportDone</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:serviceTask id="Control_Aggregate" name="Лише захищений агрегат BO1–BO6: когорта, покриття, unknown; приховування груп">
+        <bpmn:incoming>Control_NoSupport</bpmn:incoming>
+        <bpmn:incoming>Control_SupportDone</bpmn:incoming>
+        <bpmn:outgoing>F_Control_Aggregate_Control_End</bpmn:outgoing>
+      </bpmn:serviceTask>
+      <bpmn:endEvent id="Control_End" name="Проєкції оновлено">
+        <bpmn:incoming>F_Control_Aggregate_Control_End</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:sequenceFlow id="F_Control_Start_Control_Validate" sourceRef="Control_Start" targetRef="Control_Validate" />
+      <bpmn:sequenceFlow id="F_Control_Validate_Control_Trusted" sourceRef="Control_Validate" targetRef="Control_Trusted" />
+      <bpmn:sequenceFlow id="Control_Valid" sourceRef="Control_Trusted" targetRef="Control_Repeat" name="Так">
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">verified_and_consistent</bpmn:conditionExpression>
+      </bpmn:sequenceFlow>
+      <bpmn:sequenceFlow id="Control_Conflict" sourceRef="Control_Trusted" targetRef="Control_Review" name="Ні / невідомо" />
+      <bpmn:sequenceFlow id="F_Control_Review_Control_Pending" sourceRef="Control_Review" targetRef="Control_Pending" />
+      <bpmn:sequenceFlow id="Control_IsRepeat" sourceRef="Control_Repeat" targetRef="Control_Duplicate" name="Так">
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">same_id_and_digest</bpmn:conditionExpression>
+      </bpmn:sequenceFlow>
+      <bpmn:sequenceFlow id="Control_New" sourceRef="Control_Repeat" targetRef="Control_Atomic" name="Ні" />
+      <bpmn:sequenceFlow id="F_Control_Atomic_Control_Project" sourceRef="Control_Atomic" targetRef="Control_Project" />
+      <bpmn:sequenceFlow id="F_Control_Project_Control_NeedsSupport" sourceRef="Control_Project" targetRef="Control_NeedsSupport" />
+      <bpmn:sequenceFlow id="Control_NoSupport" sourceRef="Control_NeedsSupport" targetRef="Control_Aggregate" name="Ні" />
+      <bpmn:sequenceFlow id="Control_WithSupport" sourceRef="Control_NeedsSupport" targetRef="Control_Support" name="Так">
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">support_requested</bpmn:conditionExpression>
+      </bpmn:sequenceFlow>
+      <bpmn:sequenceFlow id="Control_SupportDone" sourceRef="Control_Support" targetRef="Control_Aggregate" />
+      <bpmn:sequenceFlow id="F_Control_Aggregate_Control_End" sourceRef="Control_Aggregate" targetRef="Control_End" />
+      <bpmn:textAnnotation id="Control_Note">
+        <bpmn:text>Реальні адаптери й push / poll — тільки після погодження власника. Пізня / виправлена версія не визначається часом отримання; непрозорий source_version не сортуємо. Клінічні body / довільні URL не зберігаємо. Нове отримання кожної виправленої версії — окремий Delivery. Симулятор використовує той самий шлюз (F09).</bpmn:text>
+      </bpmn:textAnnotation>
+      <bpmn:textAnnotation id="Title_control">
+        <bpmn:text>Окремий непереривний прохід • нова подія / звірка / звернення • не клінічне рішення</bpmn:text>
+      </bpmn:textAnnotation>
+    </bpmn:subProcess>
+    <bpmn:boundaryEvent id="Timer_Long" name="Контроль до 4 календарних місяців" attachedToRef="Sub_Care" cancelActivity="false">
+      <bpmn:outgoing>F_LongAlert</bpmn:outgoing>
+      <bpmn:timerEventDefinition id="TimerDef_Long">
+        <bpmn:timeDate>long_treatment_review_at</bpmn:timeDate>
+      </bpmn:timerEventDefinition>
+    </bpmn:boundaryEvent>
+    <bpmn:userTask id="Task_LongReview" name="Медик / супровід: перевірити актуальність і організувати належний огляд">
+      <bpmn:incoming>F_LongAlert</bpmn:incoming>
+      <bpmn:outgoing>F_Task_LongReview_End_LongReview</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="End_LongReview" name="Без санкцій від таймера">
+      <bpmn:incoming>F_Task_LongReview_End_LongReview</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:boundaryEvent id="Timer_Certificate" name="Контроль застосовного строку" attachedToRef="Sub_Certificate" cancelActivity="false">
+      <bpmn:outgoing>F_CertAlert</bpmn:outgoing>
+      <bpmn:timerEventDefinition id="TimerDef_Certificate">
+        <bpmn:timeDate>certificate_due_at</bpmn:timeDate>
+      </bpmn:timerEventDefinition>
+    </bpmn:boundaryEvent>
+    <bpmn:userTask id="Task_CertReview" name="Супровід: перевірити стан / дату; уточнити в автора">
+      <bpmn:incoming>F_CertAlert</bpmn:incoming>
+      <bpmn:outgoing>F_Task_CertReview_End_CertReview</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="End_CertReview" name="Без автоматичної відмови">
+      <bpmn:incoming>F_Task_CertReview_End_CertReview</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="F_Start_Injury_Fork_CareCase" sourceRef="Start_Injury" targetRef="Fork_CareCase" />
+    <bpmn:sequenceFlow id="F_Fork_CareCase_Sub_Care" sourceRef="Fork_CareCase" targetRef="Sub_Care" />
+    <bpmn:sequenceFlow id="F_Sub_Care_End_Care" sourceRef="Sub_Care" targetRef="End_Care" />
+    <bpmn:sequenceFlow id="F_ToIntake" sourceRef="Fork_CareCase" targetRef="Sub_Intake" />
+    <bpmn:sequenceFlow id="F_Sub_Intake_Gateway_NewCase" sourceRef="Sub_Intake" targetRef="Gateway_NewCase" />
+    <bpmn:sequenceFlow id="F_Existing" sourceRef="Gateway_NewCase" targetRef="End_Joined" name="Наявний / повтор" />
+    <bpmn:sequenceFlow id="F_New" sourceRef="Gateway_NewCase" targetRef="Fork_Admin" name="Створено">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">created == true</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="F_ToCert" sourceRef="Fork_Admin" targetRef="Sub_Certificate" />
+    <bpmn:sequenceFlow id="F_ToVLK" sourceRef="Fork_Admin" targetRef="Sub_VLK" />
+    <bpmn:sequenceFlow id="F_ToReward" sourceRef="Fork_Admin" targetRef="Sub_Reward" />
+    <bpmn:sequenceFlow id="F_Sub_Certificate_End_Certificate" sourceRef="Sub_Certificate" targetRef="End_Certificate" />
+    <bpmn:sequenceFlow id="F_Sub_Reward_End_Reward" sourceRef="Sub_Reward" targetRef="End_Reward" />
+    <bpmn:sequenceFlow id="F_Sub_VLK_Fork_AfterVLK" sourceRef="Sub_VLK" targetRef="Fork_AfterVLK" />
+    <bpmn:sequenceFlow id="F_ToService" sourceRef="Fork_AfterVLK" targetRef="Task_ServiceExecution" />
+    <bpmn:sequenceFlow id="F_ToOGD" sourceRef="Fork_AfterVLK" targetRef="Sub_OGD" />
+    <bpmn:sequenceFlow id="F_Task_ServiceExecution_End_Service" sourceRef="Task_ServiceExecution" targetRef="End_Service" />
+    <bpmn:sequenceFlow id="F_Sub_OGD_End_OGD" sourceRef="Sub_OGD" targetRef="End_OGD" />
+    <bpmn:sequenceFlow id="F_LongAlert" sourceRef="Timer_Long" targetRef="Task_LongReview" />
+    <bpmn:sequenceFlow id="F_Task_LongReview_End_LongReview" sourceRef="Task_LongReview" targetRef="End_LongReview" />
+    <bpmn:sequenceFlow id="F_CertAlert" sourceRef="Timer_Certificate" targetRef="Task_CertReview" />
+    <bpmn:sequenceFlow id="F_Task_CertReview_End_CertReview" sourceRef="Task_CertReview" targetRef="End_CertReview" />
+    <bpmn:textAnnotation id="Note_Timers">
+      <bpmn:text>Таймер вмикається лише за відомої застосовної дати. Невідома дата → задача уточнення. 4 місяці — від початку лікування; переведення не скидає її. 5 днів для визначеного випадку N16 — від отримання документа військовим.</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:textAnnotation id="Note_Trust">
+      <bpmn:text>Усі читання / дії: серверна роль + scope + поля; оригінали в джерелах. Немає входу бійця → призначений супровід. Родина не отримує доступ автоматично. Немає події ≠ немає лікування / права. Демо — лише вигадані дані.</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:textAnnotation id="Title_overview">
+      <bpmn:text>TO BE • навчальна пропозиція • 2026-11-13 • деталі: окремі SVG / DI цього XML</bpmn:text>
+    </bpmn:textAnnotation>
+  </bpmn:process>
+  <bpmn:collaboration id="Collaboration_ToBe">
+    <bpmn:participant id="Participant_ToBe" name="Навчальний наскрізний маршрут • чинні ролі / окремі повноваження" processRef="Process_ToBe" />
+  </bpmn:collaboration>
+  <bpmndi:BPMNDiagram id="Diagram_overview" name="overview">
+    <bpmndi:BPMNPlane id="Plane_overview" bpmnElement="Collaboration_ToBe">
+      <bpmndi:BPMNShape id="DI_Participant_ToBe" bpmnElement="Participant_ToBe" isHorizontal="true">
+        <dc:Bounds x="40" y="80" width="2250" height="1270" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Lane_Medical" bpmnElement="Lane_Medical" isHorizontal="true">
+        <dc:Bounds x="70" y="80" width="2220" height="240" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Lane_System" bpmnElement="Lane_System" isHorizontal="true">
+        <dc:Bounds x="70" y="320" width="2220" height="250" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Lane_Unit" bpmnElement="Lane_Unit" isHorizontal="true">
+        <dc:Bounds x="70" y="570" width="2220" height="280" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Lane_VLK" bpmnElement="Lane_VLK" isHorizontal="true">
+        <dc:Bounds x="70" y="850" width="2220" height="220" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Lane_Finance" bpmnElement="Lane_Finance" isHorizontal="true">
+        <dc:Bounds x="70" y="1070" width="2220" height="280" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Start_Injury" bpmnElement="Start_Injury">
+        <dc:Bounds x="160" y="150" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="90" y="196" width="190" height="58" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Fork_CareCase" bpmnElement="Fork_CareCase">
+        <dc:Bounds x="270" y="143" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Sub_Care" bpmnElement="Sub_Care" isExpanded="false">
+        <dc:Bounds x="420" y="118" width="220" height="100" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_End_Care" bpmnElement="End_Care">
+        <dc:Bounds x="690" y="150" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="620" y="196" width="190" height="58" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Sub_Intake" bpmnElement="Sub_Intake" isExpanded="false">
+        <dc:Bounds x="420" y="365" width="250" height="100" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Gateway_NewCase" bpmnElement="Gateway_NewCase" isMarkerVisible="true">
+        <dc:Bounds x="760" y="390" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="695" y="328" width="180" height="50" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_End_Joined" bpmnElement="End_Joined">
+        <dc:Bounds x="930" y="390" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="930" y="440" width="210" height="48" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Fork_Admin" bpmnElement="Fork_Admin">
+        <dc:Bounds x="830" y="490" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Sub_Certificate" bpmnElement="Sub_Certificate" isExpanded="false">
+        <dc:Bounds x="940" y="640" width="220" height="100" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_End_Certificate" bpmnElement="End_Certificate">
+        <dc:Bounds x="1210" y="672" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1210" y="740" width="160" height="45" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Sub_VLK" bpmnElement="Sub_VLK" isExpanded="false">
+        <dc:Bounds x="1250" y="900" width="230" height="100" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Fork_AfterVLK" bpmnElement="Fork_AfterVLK">
+        <dc:Bounds x="1580" y="925" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Task_ServiceExecution" bpmnElement="Task_ServiceExecution">
+        <dc:Bounds x="1800" y="640" width="230" height="100" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_End_Service" bpmnElement="End_Service">
+        <dc:Bounds x="2150" y="672" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2080" y="718" width="190" height="58" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Sub_Reward" bpmnElement="Sub_Reward" isExpanded="false">
+        <dc:Bounds x="940" y="1140" width="230" height="100" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_End_Reward" bpmnElement="End_Reward">
+        <dc:Bounds x="1250" y="1172" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1180" y="1218" width="190" height="58" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Sub_OGD" bpmnElement="Sub_OGD" isExpanded="false">
+        <dc:Bounds x="1800" y="1140" width="230" height="100" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_End_OGD" bpmnElement="End_OGD">
+        <dc:Bounds x="2150" y="1172" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2080" y="1218" width="190" height="58" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_EventSub_Control" bpmnElement="EventSub_Control" isExpanded="false">
+        <dc:Bounds x="1360" y="365" width="290" height="110" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Timer_Long" bpmnElement="Timer_Long">
+        <dc:Bounds x="520" y="202" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="350" y="240" width="170" height="45" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Task_LongReview" bpmnElement="Task_LongReview">
+        <dc:Bounds x="790" y="145" width="220" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_End_LongReview" bpmnElement="End_LongReview">
+        <dc:Bounds x="1110" y="167" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1040" y="213" width="190" height="58" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Timer_Certificate" bpmnElement="Timer_Certificate">
+        <dc:Bounds x="1040" y="722" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="860" y="760" width="180" height="45" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Task_CertReview" bpmnElement="Task_CertReview">
+        <dc:Bounds x="1330" y="650" width="200" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_End_CertReview" bpmnElement="End_CertReview">
+        <dc:Bounds x="1600" y="672" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1530" y="718" width="190" height="58" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Note_Timers" bpmnElement="Note_Timers">
+        <dc:Bounds x="120" y="1370" width="1230" height="95" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Note_Trust" bpmnElement="Note_Trust">
+        <dc:Bounds x="1400" y="1370" width="850" height="95" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Title_overview" bpmnElement="Title_overview">
+        <dc:Bounds x="80" y="0" width="2160" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="DI_F_Start_Injury_Fork_CareCase" bpmnElement="F_Start_Injury_Fork_CareCase">
+        <di:waypoint x="196" y="168.0" />
+        <di:waypoint x="270" y="168.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_Fork_CareCase_Sub_Care" bpmnElement="F_Fork_CareCase_Sub_Care">
+        <di:waypoint x="320" y="168.0" />
+        <di:waypoint x="420" y="168.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_Sub_Care_End_Care" bpmnElement="F_Sub_Care_End_Care">
+        <di:waypoint x="640" y="168.0" />
+        <di:waypoint x="690" y="168.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_ToIntake" bpmnElement="F_ToIntake">
+        <di:waypoint x="295" y="193" />
+        <di:waypoint x="295" y="415" />
+        <di:waypoint x="420" y="415" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_Sub_Intake_Gateway_NewCase" bpmnElement="F_Sub_Intake_Gateway_NewCase">
+        <di:waypoint x="670" y="415.0" />
+        <di:waypoint x="760" y="415.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_Existing" bpmnElement="F_Existing">
+        <di:waypoint x="810" y="415.0" />
+        <di:waypoint x="870.0" y="415.0" />
+        <di:waypoint x="870.0" y="408.0" />
+        <di:waypoint x="930" y="408.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="820" y="370" width="135" height="25" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_New" bpmnElement="F_New">
+        <di:waypoint x="785" y="440" />
+        <di:waypoint x="785" y="515" />
+        <di:waypoint x="830" y="515" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="700" y="460" width="100" height="25" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_ToCert" bpmnElement="F_ToCert">
+        <di:waypoint x="855" y="540" />
+        <di:waypoint x="855" y="690" />
+        <di:waypoint x="940" y="690" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_ToVLK" bpmnElement="F_ToVLK">
+        <di:waypoint x="880" y="515" />
+        <di:waypoint x="1180" y="515" />
+        <di:waypoint x="1180" y="950" />
+        <di:waypoint x="1250" y="950" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_ToReward" bpmnElement="F_ToReward">
+        <di:waypoint x="855" y="540" />
+        <di:waypoint x="855" y="1190" />
+        <di:waypoint x="940" y="1190" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_Sub_Certificate_End_Certificate" bpmnElement="F_Sub_Certificate_End_Certificate">
+        <di:waypoint x="1160" y="690.0" />
+        <di:waypoint x="1210" y="690.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_Sub_Reward_End_Reward" bpmnElement="F_Sub_Reward_End_Reward">
+        <di:waypoint x="1170" y="1190.0" />
+        <di:waypoint x="1250" y="1190.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_Sub_VLK_Fork_AfterVLK" bpmnElement="F_Sub_VLK_Fork_AfterVLK">
+        <di:waypoint x="1480" y="950.0" />
+        <di:waypoint x="1580" y="950.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_ToService" bpmnElement="F_ToService">
+        <di:waypoint x="1605" y="925" />
+        <di:waypoint x="1690" y="925" />
+        <di:waypoint x="1690" y="690" />
+        <di:waypoint x="1800" y="690" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_ToOGD" bpmnElement="F_ToOGD">
+        <di:waypoint x="1605" y="975" />
+        <di:waypoint x="1690" y="975" />
+        <di:waypoint x="1690" y="1190" />
+        <di:waypoint x="1800" y="1190" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_Task_ServiceExecution_End_Service" bpmnElement="F_Task_ServiceExecution_End_Service">
+        <di:waypoint x="2030" y="690.0" />
+        <di:waypoint x="2150" y="690.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_Sub_OGD_End_OGD" bpmnElement="F_Sub_OGD_End_OGD">
+        <di:waypoint x="2030" y="1190.0" />
+        <di:waypoint x="2150" y="1190.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_LongAlert" bpmnElement="F_LongAlert">
+        <di:waypoint x="538" y="238" />
+        <di:waypoint x="538" y="275" />
+        <di:waypoint x="900" y="275" />
+        <di:waypoint x="900" y="225" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_Task_LongReview_End_LongReview" bpmnElement="F_Task_LongReview_End_LongReview">
+        <di:waypoint x="1010" y="185.0" />
+        <di:waypoint x="1110" y="185.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_CertAlert" bpmnElement="F_CertAlert">
+        <di:waypoint x="1058" y="758" />
+        <di:waypoint x="1058" y="800" />
+        <di:waypoint x="1430" y="800" />
+        <di:waypoint x="1430" y="730" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_Task_CertReview_End_CertReview" bpmnElement="F_Task_CertReview_End_CertReview">
+        <di:waypoint x="1530" y="690.0" />
+        <di:waypoint x="1600" y="690.0" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+  <bpmndi:BPMNDiagram id="Diagram_care" name="care">
+    <bpmndi:BPMNPlane id="Plane_care" bpmnElement="Sub_Care">
+      <bpmndi:BPMNShape id="DI_Care_Start" bpmnElement="Care_Start">
+        <dc:Bounds x="80" y="202" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Care_Primary" bpmnElement="Care_Primary">
+        <dc:Bounds x="170" y="180" width="180" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Care_Admission" bpmnElement="Care_Admission">
+        <dc:Bounds x="420" y="180" width="180" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Care_Treatment" bpmnElement="Care_Treatment">
+        <dc:Bounds x="670" y="180" width="180" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Care_TransferNeeded" bpmnElement="Care_TransferNeeded" isMarkerVisible="true">
+        <dc:Bounds x="940" y="195" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="875" y="133" width="180" height="50" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Care_Transfer" bpmnElement="Care_Transfer">
+        <dc:Bounds x="680" y="380" width="180" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Care_Documents" bpmnElement="Care_Documents">
+        <dc:Bounds x="1140" y="180" width="180" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Care_End" bpmnElement="Care_End">
+        <dc:Bounds x="1440" y="202" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1370" y="248" width="190" height="58" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Care_Note" bpmnElement="Care_Note">
+        <dc:Bounds x="1650" y="150" width="350" height="200" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Title_care" bpmnElement="Title_care">
+        <dc:Bounds x="80" y="0" width="1940" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="DI_F_Care_Start_Care_Primary" bpmnElement="F_Care_Start_Care_Primary">
+        <di:waypoint x="116" y="220.0" />
+        <di:waypoint x="170" y="220.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_Care_Primary_Care_Admission" bpmnElement="F_Care_Primary_Care_Admission">
+        <di:waypoint x="350" y="220.0" />
+        <di:waypoint x="420" y="220.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_Care_Admission_Care_Treatment" bpmnElement="F_Care_Admission_Care_Treatment">
+        <di:waypoint x="600" y="220.0" />
+        <di:waypoint x="670" y="220.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_Care_Treatment_Care_TransferNeeded" bpmnElement="F_Care_Treatment_Care_TransferNeeded">
+        <di:waypoint x="850" y="220.0" />
+        <di:waypoint x="940" y="220.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_Care_NoTransfer" bpmnElement="Care_NoTransfer">
+        <di:waypoint x="990" y="220.0" />
+        <di:waypoint x="1140" y="220.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1000.0" y="184.0" width="130" height="32" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_Care_YesTransfer" bpmnElement="Care_YesTransfer">
+        <di:waypoint x="965" y="245" />
+        <di:waypoint x="965" y="420" />
+        <di:waypoint x="860" y="420" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="975" y="310" width="60" height="25" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_Care_TransferLoop" bpmnElement="Care_TransferLoop">
+        <di:waypoint x="680" y="420" />
+        <di:waypoint x="390" y="420" />
+        <di:waypoint x="390" y="220" />
+        <di:waypoint x="420" y="220" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_Care_Documents_Care_End" bpmnElement="F_Care_Documents_Care_End">
+        <di:waypoint x="1320" y="220.0" />
+        <di:waypoint x="1440" y="220.0" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+  <bpmndi:BPMNDiagram id="Diagram_intake" name="intake">
+    <bpmndi:BPMNPlane id="Plane_intake" bpmnElement="Sub_Intake">
+      <bpmndi:BPMNShape id="DI_Intake_Med" bpmnElement="Intake_Med">
+        <dc:Bounds x="320" y="130" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="250" y="176" width="190" height="58" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Intake_Admin" bpmnElement="Intake_Admin">
+        <dc:Bounds x="320" y="350" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="250" y="396" width="190" height="58" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Intake_Merge" bpmnElement="Intake_Merge" isMarkerVisible="true">
+        <dc:Bounds x="530" y="220" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Intake_Validate" bpmnElement="Intake_Validate">
+        <dc:Bounds x="650" y="205" width="180" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Intake_Link" bpmnElement="Intake_Link">
+        <dc:Bounds x="910" y="205" width="180" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Intake_Matched" bpmnElement="Intake_Matched" isMarkerVisible="true">
+        <dc:Bounds x="1150" y="220" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1085" y="158" width="180" height="50" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Intake_Review" bpmnElement="Intake_Review">
+        <dc:Bounds x="1240" y="380" width="180" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Intake_Resolved" bpmnElement="Intake_Resolved" isMarkerVisible="true">
+        <dc:Bounds x="1490" y="395" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1425" y="333" width="180" height="50" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Intake_AwaitProof" bpmnElement="Intake_AwaitProof">
+        <dc:Bounds x="1550" y="560" width="180" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Intake_EnsureCase" bpmnElement="Intake_EnsureCase">
+        <dc:Bounds x="1830" y="205" width="220" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Intake_End" bpmnElement="Intake_End">
+        <dc:Bounds x="2130" y="227" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2060" y="273" width="190" height="58" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Intake_Start" bpmnElement="Intake_Start">
+        <dc:Bounds x="40" y="227" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Intake_WaitFirst" bpmnElement="Intake_WaitFirst">
+        <dc:Bounds x="140" y="220" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="20" y="100" width="190" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Intake_Note" bpmnElement="Intake_Note">
+        <dc:Bounds x="1860" y="420" width="380" height="230" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Title_intake" bpmnElement="Title_intake">
+        <dc:Bounds x="80" y="0" width="2240" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="DI_Intake_MedMerge" bpmnElement="Intake_MedMerge">
+        <di:waypoint x="356" y="148" />
+        <di:waypoint x="470" y="148" />
+        <di:waypoint x="470" y="245" />
+        <di:waypoint x="530" y="245" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_Intake_AdminMerge" bpmnElement="Intake_AdminMerge">
+        <di:waypoint x="356" y="368" />
+        <di:waypoint x="470" y="368" />
+        <di:waypoint x="470" y="245" />
+        <di:waypoint x="530" y="245" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_Intake_Merge_Intake_Validate" bpmnElement="F_Intake_Merge_Intake_Validate">
+        <di:waypoint x="580" y="245.0" />
+        <di:waypoint x="650" y="245.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_Intake_Validate_Intake_Link" bpmnElement="F_Intake_Validate_Intake_Link">
+        <di:waypoint x="830" y="245.0" />
+        <di:waypoint x="910" y="245.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_Intake_Link_Intake_Matched" bpmnElement="F_Intake_Link_Intake_Matched">
+        <di:waypoint x="1090" y="245.0" />
+        <di:waypoint x="1150" y="245.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_Intake_Trusted" bpmnElement="Intake_Trusted">
+        <di:waypoint x="1200" y="245.0" />
+        <di:waypoint x="1830" y="245.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1450.0" y="209.0" width="130" height="32" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_Intake_Uncertain" bpmnElement="Intake_Uncertain">
+        <di:waypoint x="1175" y="270" />
+        <di:waypoint x="1175" y="420" />
+        <di:waypoint x="1240" y="420" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1040" y="330" width="120" height="25" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_Intake_Review_Intake_Resolved" bpmnElement="F_Intake_Review_Intake_Resolved">
+        <di:waypoint x="1420" y="420.0" />
+        <di:waypoint x="1490" y="420.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_Intake_ResolvedYes" bpmnElement="Intake_ResolvedYes">
+        <di:waypoint x="1540" y="420" />
+        <di:waypoint x="1760" y="420" />
+        <di:waypoint x="1760" y="245" />
+        <di:waypoint x="1830" y="245" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1660" y="390" width="60" height="25" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_Intake_ResolvedNo" bpmnElement="Intake_ResolvedNo">
+        <di:waypoint x="1515" y="445" />
+        <di:waypoint x="1515" y="600" />
+        <di:waypoint x="1550" y="600" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1430" y="500" width="60" height="25" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_Intake_Retry" bpmnElement="Intake_Retry">
+        <di:waypoint x="1730" y="600" />
+        <di:waypoint x="1780" y="600" />
+        <di:waypoint x="1780" y="730" />
+        <di:waypoint x="880" y="730" />
+        <di:waypoint x="880" y="245" />
+        <di:waypoint x="910" y="245" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_Intake_EnsureCase_Intake_End" bpmnElement="F_Intake_EnsureCase_Intake_End">
+        <di:waypoint x="2050" y="245.0" />
+        <di:waypoint x="2130" y="245.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_Intake_Start_Intake_WaitFirst" bpmnElement="F_Intake_Start_Intake_WaitFirst">
+        <di:waypoint x="76" y="245.0" />
+        <di:waypoint x="140" y="245.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_Intake_WaitMed" bpmnElement="Intake_WaitMed">
+        <di:waypoint x="165" y="220" />
+        <di:waypoint x="165" y="148" />
+        <di:waypoint x="320" y="148" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_Intake_WaitAdmin" bpmnElement="Intake_WaitAdmin">
+        <di:waypoint x="165" y="270" />
+        <di:waypoint x="165" y="368" />
+        <di:waypoint x="320" y="368" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+  <bpmndi:BPMNDiagram id="Diagram_certificate" name="certificate">
+    <bpmndi:BPMNPlane id="Plane_certificate" bpmnElement="Sub_Certificate">
+      <bpmndi:BPMNShape id="DI_Cert_Start" bpmnElement="Cert_Start">
+        <dc:Bounds x="60" y="202" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Cert_Anchor" bpmnElement="Cert_Anchor">
+        <dc:Bounds x="150" y="180" width="220" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Cert_Prepare" bpmnElement="Cert_Prepare">
+        <dc:Bounds x="430" y="180" width="220" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Cert_Issue" bpmnElement="Cert_Issue">
+        <dc:Bounds x="710" y="180" width="220" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Cert_Send" bpmnElement="Cert_Send">
+        <dc:Bounds x="990" y="180" width="220" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Cert_Receipt" bpmnElement="Cert_Receipt">
+        <dc:Bounds x="1270" y="180" width="220" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Cert_Record" bpmnElement="Cert_Record">
+        <dc:Bounds x="1550" y="180" width="220" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Cert_End" bpmnElement="Cert_End">
+        <dc:Bounds x="1900" y="202" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1830" y="248" width="190" height="58" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Cert_Note" bpmnElement="Cert_Note">
+        <dc:Bounds x="150" y="310" width="1810" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Title_certificate" bpmnElement="Title_certificate">
+        <dc:Bounds x="80" y="0" width="1910" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="DI_F_Cert_Start_Cert_Anchor" bpmnElement="F_Cert_Start_Cert_Anchor">
+        <di:waypoint x="96" y="220.0" />
+        <di:waypoint x="150" y="220.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_Cert_Anchor_Cert_Prepare" bpmnElement="F_Cert_Anchor_Cert_Prepare">
+        <di:waypoint x="370" y="220.0" />
+        <di:waypoint x="430" y="220.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_Cert_Prepare_Cert_Issue" bpmnElement="F_Cert_Prepare_Cert_Issue">
+        <di:waypoint x="650" y="220.0" />
+        <di:waypoint x="710" y="220.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_Cert_Issue_Cert_Send" bpmnElement="F_Cert_Issue_Cert_Send">
+        <di:waypoint x="930" y="220.0" />
+        <di:waypoint x="990" y="220.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_Cert_Send_Cert_Receipt" bpmnElement="F_Cert_Send_Cert_Receipt">
+        <di:waypoint x="1210" y="220.0" />
+        <di:waypoint x="1270" y="220.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_Cert_Receipt_Cert_Record" bpmnElement="F_Cert_Receipt_Cert_Record">
+        <di:waypoint x="1490" y="220.0" />
+        <di:waypoint x="1550" y="220.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_Cert_Record_Cert_End" bpmnElement="F_Cert_Record_Cert_End">
+        <di:waypoint x="1770" y="220.0" />
+        <di:waypoint x="1900" y="220.0" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+  <bpmndi:BPMNDiagram id="Diagram_vlk" name="vlk">
+    <bpmndi:BPMNPlane id="Plane_vlk" bpmnElement="Sub_VLK">
+      <bpmndi:BPMNShape id="DI_VLK_Start" bpmnElement="VLK_Start">
+        <dc:Bounds x="50" y="202" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_VLK_Referral" bpmnElement="VLK_Referral">
+        <dc:Bounds x="140" y="180" width="210" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_VLK_Checklist" bpmnElement="VLK_Checklist">
+        <dc:Bounds x="420" y="180" width="210" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_VLK_Gaps" bpmnElement="VLK_Gaps" isMarkerVisible="true">
+        <dc:Bounds x="710" y="195" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="645" y="133" width="180" height="50" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_VLK_CreateTask" bpmnElement="VLK_CreateTask">
+        <dc:Bounds x="690" y="410" width="220" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_VLK_Merge" bpmnElement="VLK_Merge" isMarkerVisible="true">
+        <dc:Bounds x="1010" y="195" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_VLK_Send" bpmnElement="VLK_Send">
+        <dc:Bounds x="1140" y="180" width="220" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_VLK_Receipt" bpmnElement="VLK_Receipt">
+        <dc:Bounds x="1430" y="180" width="220" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_VLK_Returned" bpmnElement="VLK_Returned" isMarkerVisible="true">
+        <dc:Bounds x="1720" y="195" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1655" y="133" width="180" height="50" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_VLK_Correct" bpmnElement="VLK_Correct">
+        <dc:Bounds x="1420" y="410" width="220" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_VLK_Exam" bpmnElement="VLK_Exam">
+        <dc:Bounds x="1910" y="180" width="220" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_VLK_Decision" bpmnElement="VLK_Decision">
+        <dc:Bounds x="2200" y="180" width="220" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_VLK_Record" bpmnElement="VLK_Record">
+        <dc:Bounds x="2490" y="180" width="230" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_VLK_End" bpmnElement="VLK_End">
+        <dc:Bounds x="2830" y="202" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2760" y="248" width="190" height="58" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_VLK_Note" bpmnElement="VLK_Note">
+        <dc:Bounds x="1900" y="390" width="1110" height="140" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Title_vlk" bpmnElement="Title_vlk">
+        <dc:Bounds x="80" y="0" width="2970" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="DI_F_VLK_Start_VLK_Referral" bpmnElement="F_VLK_Start_VLK_Referral">
+        <di:waypoint x="86" y="220.0" />
+        <di:waypoint x="140" y="220.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_VLK_Referral_VLK_Checklist" bpmnElement="F_VLK_Referral_VLK_Checklist">
+        <di:waypoint x="350" y="220.0" />
+        <di:waypoint x="420" y="220.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_VLK_Checklist_VLK_Gaps" bpmnElement="F_VLK_Checklist_VLK_Gaps">
+        <di:waypoint x="630" y="220.0" />
+        <di:waypoint x="710" y="220.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_VLK_NoGap" bpmnElement="VLK_NoGap">
+        <di:waypoint x="760" y="220.0" />
+        <di:waypoint x="1010" y="220.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="820.0" y="184.0" width="130" height="32" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_VLK_HasGap" bpmnElement="VLK_HasGap">
+        <di:waypoint x="735" y="245" />
+        <di:waypoint x="735" y="410" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="750" y="320" width="60" height="25" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_VLK_TaskCreated" bpmnElement="VLK_TaskCreated">
+        <di:waypoint x="910" y="450" />
+        <di:waypoint x="1035" y="450" />
+        <di:waypoint x="1035" y="245" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_VLK_Merge_VLK_Send" bpmnElement="F_VLK_Merge_VLK_Send">
+        <di:waypoint x="1060" y="220.0" />
+        <di:waypoint x="1140" y="220.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_VLK_Send_VLK_Receipt" bpmnElement="F_VLK_Send_VLK_Receipt">
+        <di:waypoint x="1360" y="220.0" />
+        <di:waypoint x="1430" y="220.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_VLK_Receipt_VLK_Returned" bpmnElement="F_VLK_Receipt_VLK_Returned">
+        <di:waypoint x="1650" y="220.0" />
+        <di:waypoint x="1720" y="220.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_VLK_NotReturned" bpmnElement="VLK_NotReturned">
+        <di:waypoint x="1770" y="220.0" />
+        <di:waypoint x="1910" y="220.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1775.0" y="184.0" width="130" height="32" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_VLK_WasReturned" bpmnElement="VLK_WasReturned">
+        <di:waypoint x="1745" y="245" />
+        <di:waypoint x="1745" y="450" />
+        <di:waypoint x="1640" y="450" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1760" y="330" width="60" height="25" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_VLK_CorrectionLoop" bpmnElement="VLK_CorrectionLoop">
+        <di:waypoint x="1420" y="450" />
+        <di:waypoint x="1100" y="450" />
+        <di:waypoint x="1100" y="220" />
+        <di:waypoint x="1140" y="220" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_VLK_Exam_VLK_Decision" bpmnElement="F_VLK_Exam_VLK_Decision">
+        <di:waypoint x="2130" y="220.0" />
+        <di:waypoint x="2200" y="220.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_VLK_Decision_VLK_Record" bpmnElement="F_VLK_Decision_VLK_Record">
+        <di:waypoint x="2420" y="220.0" />
+        <di:waypoint x="2490" y="220.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_VLK_Record_VLK_End" bpmnElement="F_VLK_Record_VLK_End">
+        <di:waypoint x="2720" y="220.0" />
+        <di:waypoint x="2830" y="220.0" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+  <bpmndi:BPMNDiagram id="Diagram_reward" name="reward">
+    <bpmndi:BPMNPlane id="Plane_reward" bpmnElement="Sub_Reward">
+      <bpmndi:BPMNShape id="DI_Reward_Start" bpmnElement="Reward_Start">
+        <dc:Bounds x="60" y="227" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Reward_Basis" bpmnElement="Reward_Basis">
+        <dc:Bounds x="150" y="205" width="180" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Reward_Checklist" bpmnElement="Reward_Checklist">
+        <dc:Bounds x="400" y="205" width="180" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Reward_Send" bpmnElement="Reward_Send">
+        <dc:Bounds x="650" y="205" width="180" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Reward_Receipt" bpmnElement="Reward_Receipt">
+        <dc:Bounds x="900" y="205" width="180" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Reward_Decision" bpmnElement="Reward_Decision">
+        <dc:Bounds x="1150" y="205" width="180" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Reward_Outcome" bpmnElement="Reward_Outcome" isMarkerVisible="true">
+        <dc:Bounds x="1400" y="220" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1335" y="158" width="180" height="50" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Reward_Fix" bpmnElement="Reward_Fix">
+        <dc:Bounds x="650" y="440" width="180" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Reward_Explain" bpmnElement="Reward_Explain">
+        <dc:Bounds x="1600" y="440" width="220" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Reward_Denied" bpmnElement="Reward_Denied">
+        <dc:Bounds x="2100" y="462" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2030" y="508" width="190" height="58" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Reward_Clarify" bpmnElement="Reward_Clarify">
+        <dc:Bounds x="1150" y="680" width="180" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Reward_AwaitStatus" bpmnElement="Reward_AwaitStatus">
+        <dc:Bounds x="1360" y="680" width="180" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Reward_AwaitExecution" bpmnElement="Reward_AwaitExecution">
+        <dc:Bounds x="1580" y="205" width="220" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Reward_Enough" bpmnElement="Reward_Enough" isMarkerVisible="true">
+        <dc:Bounds x="1860" y="220" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1795" y="158" width="180" height="50" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Reward_Partial" bpmnElement="Reward_Partial">
+        <dc:Bounds x="2090" y="680" width="180" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Reward_Confirmed" bpmnElement="Reward_Confirmed">
+        <dc:Bounds x="2090" y="205" width="180" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Reward_End" bpmnElement="Reward_End">
+        <dc:Bounds x="2390" y="227" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2320" y="273" width="190" height="58" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Reward_Note" bpmnElement="Reward_Note">
+        <dc:Bounds x="80" y="950" width="2320" height="100" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Title_reward" bpmnElement="Title_reward">
+        <dc:Bounds x="80" y="0" width="2400" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="DI_F_Reward_Start_Reward_Basis" bpmnElement="F_Reward_Start_Reward_Basis">
+        <di:waypoint x="96" y="245.0" />
+        <di:waypoint x="150" y="245.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_Reward_Basis_Reward_Checklist" bpmnElement="F_Reward_Basis_Reward_Checklist">
+        <di:waypoint x="330" y="245.0" />
+        <di:waypoint x="400" y="245.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_Reward_Checklist_Reward_Send" bpmnElement="F_Reward_Checklist_Reward_Send">
+        <di:waypoint x="580" y="245.0" />
+        <di:waypoint x="650" y="245.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_Reward_Send_Reward_Receipt" bpmnElement="F_Reward_Send_Reward_Receipt">
+        <di:waypoint x="830" y="245.0" />
+        <di:waypoint x="900" y="245.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_Reward_Receipt_Reward_Decision" bpmnElement="F_Reward_Receipt_Reward_Decision">
+        <di:waypoint x="1080" y="245.0" />
+        <di:waypoint x="1150" y="245.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_Reward_Decision_Reward_Outcome" bpmnElement="F_Reward_Decision_Reward_Outcome">
+        <di:waypoint x="1330" y="245.0" />
+        <di:waypoint x="1400" y="245.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_Reward_Returned" bpmnElement="Reward_Returned">
+        <di:waypoint x="1400" y="245" />
+        <di:waypoint x="1380" y="245" />
+        <di:waypoint x="1380" y="340" />
+        <di:waypoint x="740" y="340" />
+        <di:waypoint x="740" y="440" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1050" y="305" width="120" height="25" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_Reward_FixLoop" bpmnElement="Reward_FixLoop">
+        <di:waypoint x="650" y="480" />
+        <di:waypoint x="620" y="480" />
+        <di:waypoint x="620" y="245" />
+        <di:waypoint x="650" y="245" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_Reward_Refused" bpmnElement="Reward_Refused">
+        <di:waypoint x="1425" y="220" />
+        <di:waypoint x="1425" y="100" />
+        <di:waypoint x="1530" y="100" />
+        <di:waypoint x="1530" y="480" />
+        <di:waypoint x="1600" y="480" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1460" y="65" width="120" height="25" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_Reward_Explain_Reward_Denied" bpmnElement="F_Reward_Explain_Reward_Denied">
+        <di:waypoint x="1820" y="480.0" />
+        <di:waypoint x="2100" y="480.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_Reward_Unknown" bpmnElement="Reward_Unknown">
+        <di:waypoint x="1425" y="270" />
+        <di:waypoint x="1425" y="610" />
+        <di:waypoint x="1240" y="610" />
+        <di:waypoint x="1240" y="680" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1435" y="565" width="120" height="25" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_Reward_Clarify_Reward_AwaitStatus" bpmnElement="F_Reward_Clarify_Reward_AwaitStatus">
+        <di:waypoint x="1330" y="720.0" />
+        <di:waypoint x="1360" y="720.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_Reward_StatusLoop" bpmnElement="Reward_StatusLoop">
+        <di:waypoint x="1540" y="720" />
+        <di:waypoint x="1550" y="720" />
+        <di:waypoint x="1550" y="60" />
+        <di:waypoint x="1425" y="60" />
+        <di:waypoint x="1425" y="220" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_Reward_Approved" bpmnElement="Reward_Approved">
+        <di:waypoint x="1450" y="245.0" />
+        <di:waypoint x="1580" y="245.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1460" y="210" width="120" height="25" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_Reward_AwaitExecution_Reward_Enough" bpmnElement="F_Reward_AwaitExecution_Reward_Enough">
+        <di:waypoint x="1800" y="245.0" />
+        <di:waypoint x="1860" y="245.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_Reward_AllExecuted" bpmnElement="Reward_AllExecuted">
+        <di:waypoint x="1910" y="245.0" />
+        <di:waypoint x="2090" y="245.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1935.0" y="209.0" width="130" height="32" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_Reward_PartExecuted" bpmnElement="Reward_PartExecuted">
+        <di:waypoint x="1885" y="270" />
+        <di:waypoint x="1885" y="720" />
+        <di:waypoint x="2090" y="720" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1900" y="600" width="150" height="25" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_Reward_ExecutionLoop" bpmnElement="Reward_ExecutionLoop">
+        <di:waypoint x="2270" y="720" />
+        <di:waypoint x="2310" y="720" />
+        <di:waypoint x="2310" y="870" />
+        <di:waypoint x="1560" y="870" />
+        <di:waypoint x="1560" y="245" />
+        <di:waypoint x="1580" y="245" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_Reward_Confirmed_Reward_End" bpmnElement="F_Reward_Confirmed_Reward_End">
+        <di:waypoint x="2270" y="245.0" />
+        <di:waypoint x="2390" y="245.0" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+  <bpmndi:BPMNDiagram id="Diagram_ogd" name="ogd">
+    <bpmndi:BPMNPlane id="Plane_ogd" bpmnElement="Sub_OGD">
+      <bpmndi:BPMNShape id="DI_OGD_Start" bpmnElement="OGD_Start">
+        <dc:Bounds x="60" y="227" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_OGD_Basis" bpmnElement="OGD_Basis">
+        <dc:Bounds x="150" y="205" width="180" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_OGD_Checklist" bpmnElement="OGD_Checklist">
+        <dc:Bounds x="400" y="205" width="180" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_OGD_Send" bpmnElement="OGD_Send">
+        <dc:Bounds x="650" y="205" width="180" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_OGD_Receipt" bpmnElement="OGD_Receipt">
+        <dc:Bounds x="900" y="205" width="180" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_OGD_Decision" bpmnElement="OGD_Decision">
+        <dc:Bounds x="1150" y="205" width="180" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_OGD_Outcome" bpmnElement="OGD_Outcome" isMarkerVisible="true">
+        <dc:Bounds x="1400" y="220" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1335" y="158" width="180" height="50" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_OGD_Fix" bpmnElement="OGD_Fix">
+        <dc:Bounds x="650" y="440" width="180" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_OGD_Explain" bpmnElement="OGD_Explain">
+        <dc:Bounds x="1600" y="440" width="220" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_OGD_Denied" bpmnElement="OGD_Denied">
+        <dc:Bounds x="2100" y="462" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2030" y="508" width="190" height="58" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_OGD_Clarify" bpmnElement="OGD_Clarify">
+        <dc:Bounds x="1150" y="680" width="180" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_OGD_AwaitStatus" bpmnElement="OGD_AwaitStatus">
+        <dc:Bounds x="1360" y="680" width="180" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_OGD_AwaitExecution" bpmnElement="OGD_AwaitExecution">
+        <dc:Bounds x="1580" y="205" width="220" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_OGD_Enough" bpmnElement="OGD_Enough" isMarkerVisible="true">
+        <dc:Bounds x="1860" y="220" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1795" y="158" width="180" height="50" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_OGD_Partial" bpmnElement="OGD_Partial">
+        <dc:Bounds x="2090" y="680" width="180" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_OGD_Confirmed" bpmnElement="OGD_Confirmed">
+        <dc:Bounds x="2090" y="205" width="180" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_OGD_End" bpmnElement="OGD_End">
+        <dc:Bounds x="2390" y="227" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2320" y="273" width="190" height="58" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_OGD_Applicable" bpmnElement="OGD_Applicable" isMarkerVisible="true">
+        <dc:Bounds x="350" y="385" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="285" y="323" width="180" height="50" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_OGD_NotApplicable" bpmnElement="OGD_NotApplicable">
+        <dc:Bounds x="70" y="427" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="0" y="473" width="190" height="58" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_OGD_ApplicabilityWait" bpmnElement="OGD_ApplicabilityWait">
+        <dc:Bounds x="360" y="760" width="230" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_OGD_Note" bpmnElement="OGD_Note">
+        <dc:Bounds x="80" y="950" width="2320" height="100" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_OGD_Deadlines" bpmnElement="OGD_Deadlines">
+        <dc:Bounds x="650" y="550" width="420" height="150" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Title_ogd" bpmnElement="Title_ogd">
+        <dc:Bounds x="80" y="0" width="2400" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="DI_F_OGD_Start_OGD_Basis" bpmnElement="F_OGD_Start_OGD_Basis">
+        <di:waypoint x="96" y="245.0" />
+        <di:waypoint x="150" y="245.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_OGD_Checklist_OGD_Send" bpmnElement="F_OGD_Checklist_OGD_Send">
+        <di:waypoint x="580" y="245.0" />
+        <di:waypoint x="650" y="245.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_OGD_Send_OGD_Receipt" bpmnElement="F_OGD_Send_OGD_Receipt">
+        <di:waypoint x="830" y="245.0" />
+        <di:waypoint x="900" y="245.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_OGD_Receipt_OGD_Decision" bpmnElement="F_OGD_Receipt_OGD_Decision">
+        <di:waypoint x="1080" y="245.0" />
+        <di:waypoint x="1150" y="245.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_OGD_Decision_OGD_Outcome" bpmnElement="F_OGD_Decision_OGD_Outcome">
+        <di:waypoint x="1330" y="245.0" />
+        <di:waypoint x="1400" y="245.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_OGD_Returned" bpmnElement="OGD_Returned">
+        <di:waypoint x="1400" y="245" />
+        <di:waypoint x="1380" y="245" />
+        <di:waypoint x="1380" y="340" />
+        <di:waypoint x="740" y="340" />
+        <di:waypoint x="740" y="440" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1050" y="305" width="120" height="25" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_OGD_FixLoop" bpmnElement="OGD_FixLoop">
+        <di:waypoint x="650" y="480" />
+        <di:waypoint x="620" y="480" />
+        <di:waypoint x="620" y="245" />
+        <di:waypoint x="650" y="245" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_OGD_Refused" bpmnElement="OGD_Refused">
+        <di:waypoint x="1425" y="220" />
+        <di:waypoint x="1425" y="100" />
+        <di:waypoint x="1530" y="100" />
+        <di:waypoint x="1530" y="480" />
+        <di:waypoint x="1600" y="480" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1460" y="65" width="120" height="25" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_OGD_Explain_OGD_Denied" bpmnElement="F_OGD_Explain_OGD_Denied">
+        <di:waypoint x="1820" y="480.0" />
+        <di:waypoint x="2100" y="480.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_OGD_Unknown" bpmnElement="OGD_Unknown">
+        <di:waypoint x="1425" y="270" />
+        <di:waypoint x="1425" y="610" />
+        <di:waypoint x="1240" y="610" />
+        <di:waypoint x="1240" y="680" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1435" y="565" width="120" height="25" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_OGD_Clarify_OGD_AwaitStatus" bpmnElement="F_OGD_Clarify_OGD_AwaitStatus">
+        <di:waypoint x="1330" y="720.0" />
+        <di:waypoint x="1360" y="720.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_OGD_StatusLoop" bpmnElement="OGD_StatusLoop">
+        <di:waypoint x="1540" y="720" />
+        <di:waypoint x="1550" y="720" />
+        <di:waypoint x="1550" y="60" />
+        <di:waypoint x="1425" y="60" />
+        <di:waypoint x="1425" y="220" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_OGD_Approved" bpmnElement="OGD_Approved">
+        <di:waypoint x="1450" y="245.0" />
+        <di:waypoint x="1580" y="245.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1460" y="210" width="120" height="25" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_OGD_AwaitExecution_OGD_Enough" bpmnElement="F_OGD_AwaitExecution_OGD_Enough">
+        <di:waypoint x="1800" y="245.0" />
+        <di:waypoint x="1860" y="245.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_OGD_AllExecuted" bpmnElement="OGD_AllExecuted">
+        <di:waypoint x="1910" y="245.0" />
+        <di:waypoint x="2090" y="245.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1935.0" y="209.0" width="130" height="32" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_OGD_PartExecuted" bpmnElement="OGD_PartExecuted">
+        <di:waypoint x="1885" y="270" />
+        <di:waypoint x="1885" y="720" />
+        <di:waypoint x="2090" y="720" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1900" y="600" width="150" height="25" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_OGD_ExecutionLoop" bpmnElement="OGD_ExecutionLoop">
+        <di:waypoint x="2270" y="720" />
+        <di:waypoint x="2310" y="720" />
+        <di:waypoint x="2310" y="870" />
+        <di:waypoint x="1560" y="870" />
+        <di:waypoint x="1560" y="245" />
+        <di:waypoint x="1580" y="245" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_OGD_Confirmed_OGD_End" bpmnElement="F_OGD_Confirmed_OGD_End">
+        <di:waypoint x="2270" y="245.0" />
+        <di:waypoint x="2390" y="245.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_OGD_CheckApplicability" bpmnElement="OGD_CheckApplicability">
+        <di:waypoint x="240" y="285" />
+        <di:waypoint x="240" y="410" />
+        <di:waypoint x="350" y="410" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_OGD_ApplicableYes" bpmnElement="OGD_ApplicableYes">
+        <di:waypoint x="375" y="385" />
+        <di:waypoint x="375" y="245" />
+        <di:waypoint x="400" y="245" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="500" y="320" width="60" height="25" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_OGD_ApplicableNo" bpmnElement="OGD_ApplicableNo">
+        <di:waypoint x="350" y="410" />
+        <di:waypoint x="180" y="410" />
+        <di:waypoint x="180" y="445" />
+        <di:waypoint x="106" y="445" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="220" y="380" width="100" height="25" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_OGD_ApplicableUnknown" bpmnElement="OGD_ApplicableUnknown">
+        <di:waypoint x="375" y="435" />
+        <di:waypoint x="375" y="760" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="390" y="690" width="130" height="25" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_OGD_ApplicabilityRetry" bpmnElement="OGD_ApplicabilityRetry">
+        <di:waypoint x="590" y="800" />
+        <di:waypoint x="610" y="800" />
+        <di:waypoint x="610" y="410" />
+        <di:waypoint x="400" y="410" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+  <bpmndi:BPMNDiagram id="Diagram_control" name="control">
+    <bpmndi:BPMNPlane id="Plane_control" bpmnElement="EventSub_Control">
+      <bpmndi:BPMNShape id="DI_Control_Start" bpmnElement="Control_Start">
+        <dc:Bounds x="70" y="227" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="0" y="273" width="190" height="58" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Control_Validate" bpmnElement="Control_Validate">
+        <dc:Bounds x="220" y="205" width="220" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Control_Trusted" bpmnElement="Control_Trusted" isMarkerVisible="true">
+        <dc:Bounds x="520" y="220" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="455" y="158" width="180" height="50" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Control_Review" bpmnElement="Control_Review">
+        <dc:Bounds x="450" y="440" width="220" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Control_Pending" bpmnElement="Control_Pending">
+        <dc:Bounds x="760" y="462" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="690" y="508" width="190" height="58" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Control_Repeat" bpmnElement="Control_Repeat" isMarkerVisible="true">
+        <dc:Bounds x="850" y="220" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="785" y="158" width="180" height="50" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Control_Duplicate" bpmnElement="Control_Duplicate">
+        <dc:Bounds x="857" y="462" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="930" y="450" width="180" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Control_Atomic" bpmnElement="Control_Atomic">
+        <dc:Bounds x="1100" y="205" width="220" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Control_Project" bpmnElement="Control_Project">
+        <dc:Bounds x="1400" y="205" width="220" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Control_NeedsSupport" bpmnElement="Control_NeedsSupport" isMarkerVisible="true">
+        <dc:Bounds x="1700" y="220" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1635" y="158" width="180" height="50" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Control_Support" bpmnElement="Control_Support">
+        <dc:Bounds x="1640" y="440" width="220" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Control_Aggregate" bpmnElement="Control_Aggregate">
+        <dc:Bounds x="2020" y="205" width="220" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Control_End" bpmnElement="Control_End">
+        <dc:Bounds x="2340" y="227" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2270" y="273" width="190" height="58" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Control_Note" bpmnElement="Control_Note">
+        <dc:Bounds x="1030" y="560" width="1380" height="105" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Title_control" bpmnElement="Title_control">
+        <dc:Bounds x="80" y="0" width="2350" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="DI_F_Control_Start_Control_Validate" bpmnElement="F_Control_Start_Control_Validate">
+        <di:waypoint x="106" y="245.0" />
+        <di:waypoint x="220" y="245.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_Control_Validate_Control_Trusted" bpmnElement="F_Control_Validate_Control_Trusted">
+        <di:waypoint x="440" y="245.0" />
+        <di:waypoint x="520" y="245.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_Control_Valid" bpmnElement="Control_Valid">
+        <di:waypoint x="570" y="245.0" />
+        <di:waypoint x="850" y="245.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="645.0" y="209.0" width="130" height="32" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_Control_Conflict" bpmnElement="Control_Conflict">
+        <di:waypoint x="545" y="270" />
+        <di:waypoint x="545" y="440" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="560" y="340" width="150" height="25" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_Control_Review_Control_Pending" bpmnElement="F_Control_Review_Control_Pending">
+        <di:waypoint x="670" y="480.0" />
+        <di:waypoint x="760" y="480.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_Control_IsRepeat" bpmnElement="Control_IsRepeat">
+        <di:waypoint x="875" y="270" />
+        <di:waypoint x="875" y="462" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="890" y="350" width="60" height="25" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_Control_New" bpmnElement="Control_New">
+        <di:waypoint x="900" y="245.0" />
+        <di:waypoint x="1100" y="245.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="935.0" y="209.0" width="130" height="32" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_Control_Atomic_Control_Project" bpmnElement="F_Control_Atomic_Control_Project">
+        <di:waypoint x="1320" y="245.0" />
+        <di:waypoint x="1400" y="245.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_Control_Project_Control_NeedsSupport" bpmnElement="F_Control_Project_Control_NeedsSupport">
+        <di:waypoint x="1620" y="245.0" />
+        <di:waypoint x="1700" y="245.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_Control_NoSupport" bpmnElement="Control_NoSupport">
+        <di:waypoint x="1750" y="245.0" />
+        <di:waypoint x="2020" y="245.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1820.0" y="209.0" width="130" height="32" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_Control_WithSupport" bpmnElement="Control_WithSupport">
+        <di:waypoint x="1725" y="270" />
+        <di:waypoint x="1725" y="440" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1740" y="340" width="60" height="25" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_Control_SupportDone" bpmnElement="Control_SupportDone">
+        <di:waypoint x="1860" y="480" />
+        <di:waypoint x="1950" y="480" />
+        <di:waypoint x="1950" y="245" />
+        <di:waypoint x="2020" y="245" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_Control_Aggregate_Control_End" bpmnElement="F_Control_Aggregate_Control_End">
+        <di:waypoint x="2240" y="245.0" />
+        <di:waypoint x="2340" y="245.0" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
