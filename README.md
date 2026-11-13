@@ -6,7 +6,7 @@
 
 > ⚠️ Це навчальний концепт, а не офіційний продукт Міноборони. Усі дані в репозиторії взяті з відкритих джерел. Прототип працює лише на вигаданих (мок) даних.
 
-**Стан 2026-11-13:** прототип 8б затверджений, PR #10 злитий. [Фінальний пакет фази 9](docs/final-package.md) на затвердженні: [одна сторінка пітчу](docs/pitch-one-pager.md) · [PDF](output/pdf/pitch-one-pager.pdf) · [питання комітету](docs/pitch-notes.md) · [репетиція](docs/demo-script.md) · [наскрізне рев’ю](docs/reviews/final.md). Реальні інтеграції / дані не підключалися.
+**Стан 2026-11-13:** прототип 8б затверджений, PR #10 злитий. [Фінальний пакет фази 9](docs/final-package.md) затверджено після повторного аудиту, варіант А; PR #11 очікує окремого злиття: [одна сторінка пітчу](docs/pitch-one-pager.md) · [PDF](output/pdf/pitch-one-pager.pdf) · [питання комітету](docs/pitch-notes.md) · [репетиція](docs/demo-script.md) · [наскрізне рев’ю](docs/reviews/final.md). Реальні інтеграції / дані не підключалися.
 
 ## Проблема одним абзацом
 
@@ -23,7 +23,7 @@
 | [docs/02-brd.md](docs/02-brd.md) | BRD (крок I) |
 | [docs/03-as-is.md](docs/03-as-is.md) | AS IS процес для BPMN (крок I) |
 | [docs/bpmn/](docs/bpmn/) | BPMN AS IS і TO BE: XML з DI, SVG, перевірки й межі моделей |
-| [docs/decisions.md](docs/decisions.md) | Затвердження фаз 1, 4, 2, 3, 5, 6, TO BE, 7, 8а й 8б; фінальна 9 на затвердженні |
+| [docs/decisions.md](docs/decisions.md) | Затвердження фаз 1, 4, 2, 3, 5, 6, TO BE, 7, 8а й 8б; фінальна 9 затверджена; PR #11 ще не злитий |
 | [docs/04-feature-concept.md](docs/04-feature-concept.md) | Концепція функціоналу, джерела даних, архітектура (крок II) |
 | [docs/05-product-concept.md](docs/05-product-concept.md) | Фаза 5: цінність ролей, персони з доказами, сценарії, MVP / беклог MoSCoW, приймання, метрики й трасування |
 | [docs/reviews/phase-5.md](docs/reviews/phase-5.md) | Скептичне рев’ю концепції та виправлення перед PR |
