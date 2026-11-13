@@ -1,0 +1,429 @@
+{
+  "as_of": "2026-11-13",
+  "scope": "Затверджений синтетичний прототип; не production-приймання",
+  "rows": [
+    {
+      "feature": "F01",
+      "acceptance": "AC01",
+      "title": "Відкрити й зіставити кейс",
+      "br": [
+        "BR-1",
+        "BR-8"
+      ],
+      "as_is": [
+        "Start_Injury",
+        "Task_Primary"
+      ],
+      "to_be": [
+        "Sub_Intake",
+        "Intake_EnsureCase",
+        "Intake_Review"
+      ],
+      "norms": [
+        "N04",
+        "N18"
+      ],
+      "adrs": [
+        "0001",
+        "0003",
+        "0005"
+      ],
+      "scenarios": [
+        "S1"
+      ],
+      "metrics": [
+        "BO-1"
+      ],
+      "evidence": [
+        "prototype/server/workflow.test.ts",
+        "prototype/server/app.test.ts"
+      ],
+      "proof": "резерв → пізня еПМК; повтор; невизначений випадок / чужа особа",
+      "state": "accepted_synthetic_demo"
+    },
+    {
+      "feature": "F02",
+      "acceptance": "AC02",
+      "title": "Джерело, час і наступна дія",
+      "br": [
+        "BR-4",
+        "BR-8"
+      ],
+      "as_is": [
+        "Task_Notify",
+        "Task_Admission"
+      ],
+      "to_be": [
+        "Care_Transfer",
+        "Control_Project",
+        "Control_Review"
+      ],
+      "norms": [
+        "N16",
+        "N17",
+        "N09"
+      ],
+      "adrs": [
+        "0003",
+        "0004"
+      ],
+      "scenarios": [
+        "S2",
+        "S8"
+      ],
+      "metrics": [
+        "BO-1",
+        "BO-6"
+      ],
+      "evidence": [
+        "prototype/server/workflow.test.ts"
+      ],
+      "proof": "лікування / переведення / виписка, gap / recovery, source та timestamps",
+      "state": "accepted_synthetic_demo"
+    },
+    {
+      "feature": "F03",
+      "acceptance": "AC03",
+      "title": "Технічні вимоги і версії документа",
+      "br": [
+        "BR-2",
+        "BR-3"
+      ],
+      "as_is": [
+        "Task_Collect",
+        "Task_Check",
+        "Task_Remarks"
+      ],
+      "to_be": [
+        "VLK_Checklist",
+        "VLK_CreateTask",
+        "Cert_Receipt",
+        "VLK_Correct"
+      ],
+      "norms": [
+        "N01",
+        "N07",
+        "N12"
+      ],
+      "adrs": [
+        "0001",
+        "0004"
+      ],
+      "scenarios": [
+        "S3"
+      ],
+      "metrics": [
+        "BO-2",
+        "BO-5"
+      ],
+      "evidence": [
+        "prototype/server/workflow.test.ts"
+      ],
+      "proof": "галерея / wrong kind / копія; v2 без старої квитанції; withdrawal",
+      "state": "accepted_synthetic_demo"
+    },
+    {
+      "feature": "F04",
+      "acceptance": "AC04",
+      "title": "Застосовний календар без санкцій",
+      "br": [
+        "BR-5",
+        "BR-6",
+        "BR-8"
+      ],
+      "as_is": [
+        "Task_Certificate",
+        "Timer_Certificate",
+        "Timer_Long"
+      ],
+      "to_be": [
+        "Cert_Anchor",
+        "Cert_Prepare",
+        "Cert_Issue",
+        "Timer_Long",
+        "Task_LongReview"
+      ],
+      "norms": [
+        "N16",
+        "N05",
+        "N21"
+      ],
+      "adrs": [
+        "0001",
+        "0006"
+      ],
+      "scenarios": [
+        "S6"
+      ],
+      "metrics": [
+        "BO-1",
+        "BO-3"
+      ],
+      "evidence": [
+        "prototype/server/calendar.ts",
+        "prototype/server/workflow.test.ts"
+      ],
+      "proof": "отримання еПМК / лікарняний резерв; calendar months / DST; worker без санкцій",
+      "state": "accepted_synthetic_demo"
+    },
+    {
+      "feature": "F05",
+      "acceptance": "AC05",
+      "title": "Направлення, постанова й виконання",
+      "br": [
+        "BR-3",
+        "BR-8"
+      ],
+      "as_is": [
+        "Task_Referral",
+        "Task_Decision",
+        "Task_Service"
+      ],
+      "to_be": [
+        "VLK_Referral",
+        "VLK_Receipt",
+        "VLK_Record",
+        "Task_ServiceExecution"
+      ],
+      "norms": [
+        "N01",
+        "N19"
+      ],
+      "adrs": [
+        "0001",
+        "0003"
+      ],
+      "scenarios": [
+        "S4"
+      ],
+      "metrics": [
+        "BO-1"
+      ],
+      "evidence": [
+        "prototype/server/workflow.test.ts",
+        "prototype/e2e/panels.spec.ts"
+      ],
+      "proof": "супровід не направляє замість командира; неповний перелік не блок; повернення / нова ревізія",
+      "state": "accepted_synthetic_demo"
+    },
+    {
+      "feature": "F06",
+      "acceptance": "AC06",
+      "title": "Окремі фінансові види і періоди",
+      "br": [
+        "BR-1",
+        "BR-8"
+      ],
+      "as_is": [
+        "SubProcess_Reward",
+        "SubProcess_OGD"
+      ],
+      "to_be": [
+        "Sub_Reward",
+        "Reward_Partial",
+        "Reward_Confirmed",
+        "Sub_OGD",
+        "OGD_Fix",
+        "OGD_Confirmed"
+      ],
+      "norms": [
+        "N06",
+        "N07",
+        "N21"
+      ],
+      "adrs": [
+        "0001",
+        "0003",
+        "0009"
+      ],
+      "scenarios": [
+        "S5"
+      ],
+      "metrics": [
+        "BO-3"
+      ],
+      "evidence": [
+        "prototype/server/workflow.test.ts",
+        "prototype/e2e/panels.spec.ts"
+      ],
+      "proof": "винагорода до ВЛК; returned / denied / approved / partial / executed; інший період",
+      "state": "accepted_synthetic_demo"
+    },
+    {
+      "feature": "F07",
+      "acceptance": "AC07",
+      "title": "Допомога без входу бійця",
+      "br": [
+        "BR-9",
+        "BR-7"
+      ],
+      "as_is": [
+        "Gateway_Family",
+        "Task_Family",
+        "Task_RequestFix"
+      ],
+      "to_be": [
+        "Control_Support",
+        "Control_Review"
+      ],
+      "norms": [
+        "N18",
+        "N09"
+      ],
+      "adrs": [
+        "0001",
+        "0005"
+      ],
+      "scenarios": [
+        "S7"
+      ],
+      "metrics": [
+        "BO-6"
+      ],
+      "evidence": [
+        "prototype/server/workflow.test.ts",
+        "prototype/server/app.ts"
+      ],
+      "proof": "гайд без сесії; супровід / звернення родини без нового grant",
+      "state": "accepted_synthetic_demo"
+    },
+    {
+      "feature": "F08",
+      "acceptance": "AC08",
+      "title": "Захищений вимір процесу",
+      "br": [
+        "BR-7"
+      ],
+      "as_is": [
+        "Task_Decision",
+        "Task_FinCheck",
+        "SubProcess_OGD"
+      ],
+      "to_be": [
+        "Control_Aggregate"
+      ],
+      "norms": [
+        "N09",
+        "N11"
+      ],
+      "adrs": [
+        "0007",
+        "0009"
+      ],
+      "scenarios": [
+        "S9"
+      ],
+      "metrics": [
+        "BO-1",
+        "BO-2",
+        "BO-3",
+        "BO-4",
+        "BO-5",
+        "BO-6"
+      ],
+      "evidence": [
+        "prototype/server/metrics.ts",
+        "prototype/server/workflow.test.ts",
+        "prototype/e2e/panels.spec.ts"
+      ],
+      "proof": "формули / знаменники / unknown; insufficient / small / complementary; fixed snapshot",
+      "state": "accepted_synthetic_demo"
+    },
+    {
+      "feature": "F09",
+      "acceptance": "AC09",
+      "title": "Перевірювані події й повтор",
+      "br": [
+        "BR-1",
+        "BR-4"
+      ],
+      "as_is": [
+        "Task_Primary",
+        "Task_Notify",
+        "Task_Decision"
+      ],
+      "to_be": [
+        "Control_Validate",
+        "Control_Atomic",
+        "Control_Duplicate",
+        "Control_Review"
+      ],
+      "norms": [
+        "N17"
+      ],
+      "adrs": [
+        "0003",
+        "0005",
+        "0009"
+      ],
+      "scenarios": [
+        "S1",
+        "S2",
+        "S3",
+        "S4",
+        "S5",
+        "S6",
+        "S7",
+        "S8"
+      ],
+      "metrics": [
+        "BO-1",
+        "BO-2",
+        "BO-3",
+        "BO-4",
+        "BO-5",
+        "BO-6"
+      ],
+      "evidence": [
+        "prototype/security/security.test.ts",
+        "prototype/server/app.test.ts",
+        "prototype/server/workflow.test.ts"
+      ],
+      "proof": "один gateway / HMAC / strict schema; replay / restart dedupe / atomic rollback",
+      "state": "accepted_synthetic_demo"
+    },
+    {
+      "feature": "F10",
+      "acceptance": "AC10",
+      "title": "Серверні доступи, аудит і правдивий UI",
+      "br": [
+        "BR-7",
+        "BR-9"
+      ],
+      "as_is": [
+        "Task_Admission",
+        "Task_Certificate",
+        "Task_Family"
+      ],
+      "to_be": [
+        "Intake_Validate",
+        "Control_Project",
+        "Control_Support"
+      ],
+      "norms": [
+        "N09",
+        "N11",
+        "N14",
+        "N15"
+      ],
+      "adrs": [
+        "0004",
+        "0005",
+        "0007",
+        "0009"
+      ],
+      "scenarios": [
+        "S7",
+        "S8"
+      ],
+      "metrics": [],
+      "evidence": [
+        "prototype/security/security.test.ts",
+        "prototype/server/app.test.ts",
+        "prototype/e2e/panels.spec.ts"
+      ],
+      "proof": "403 / 404 / current grant; audit / CSRF; lost response / retry / role cache; банер",
+      "state": "accepted_synthetic_demo"
+    }
+  ]
+}

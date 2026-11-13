@@ -1,0 +1,1289 @@
+{
+  "checked_at": "2026-11-13",
+  "method": "Public GET for HTML; HEAD for binary links; no auth or bypass. HTTP 200 is availability, not claim verification. Rada may return metadata cards. Previous phase legal checks remain dated prior evidence.",
+  "counts": {
+    "200": 121,
+    "403": 11,
+    "430": 3,
+    "400": 2
+  },
+  "urls": [
+    {
+      "url": "https://milomb.gov.ua/novyny/nad-chim-pracyuvala-komanda-ofisu-viyskovogo-ombudsmana-u-zhovtni",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://mod.gov.ua/explanation/dokumenti-pislya-poranennya-shho-pereviriti-shhob-ne-vtratiti-viplati-ta-status",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://milomb.gov.ua/novyny/nad-chim-pracyuvala-komanda-ofisu-viyskovogo-ombudsmana-u-veresni",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://milomb.gov.ua/novyny/nad-chim-pracyuvala-komanda-ofisu-viyskovogo-ombudsmana-u-travni",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://milomb.gov.ua/novyny/nad-chim-pracyuvala-komanda-ofisu-viyskovogo-ombudsmana-u-lipni",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://mod.gov.ua/news/minoboroni-ponovilo-prava-ponad-2-700-vijskovosluzhbovcziv-ta-chleniv-yihnih-rodin-u-2025-roczi",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://www.kmu.gov.ua/news/minoborony-informuie-pro-pershi-rezultaty-optymizatsii-sotsialnoho-suprovodu-viiskovosluzhbovtsiv-u-tsyvilnykh-likarniakh",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://mipl.org.ua/wp-content/uploads/2025/06/vlk-blind-spots_a5_17.06_ua-interactive.pdf",
+      "http": "200",
+      "read_kind": "headers_only",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://suspilne.media/840175-v-ukraini-predstavili-doslidzenna-pro-problemi-poranenih-iz-sistemi-mvs/",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://texty.org.ua/articles/113734/kuryer-na-mylycyah-skilky-bihav-po-likaryah-odyn-poranenyj-boyec-infohrafika/",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://navigator.pryncyp.org/injured/mod/comission/16",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://mod.gov.ua/explanation/yak-viiskovym-i-veteranam-proity-bezoplatnu-reabilitatsiiu",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://vmkc-pnr.mil.gov.ua/wp-content/uploads/2025/08/Алгоритм-дій-пораненого-на-лікуванні.pdf",
+      "http": "403",
+      "read_kind": "headers_only",
+      "checked_at": "2026-11-13",
+      "verification_level": "not_retrieved"
+    },
+    {
+      "url": "https://mod.gov.ua/news/minoboroni-zaprovadzhuye-elektronni-postanovi-vlk",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://mod.gov.ua/news/pervinna-medichna-kartka-novij-standart-dogospitalnoyi-dopomogi-vijskovosluzhbovczyam",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://armyinform.com.ua/2026/04/20/systema-medevac-u-zsu-vprovadzhuyut-elektronni-kartky-poranenyh/",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://mod.gov.ua/news/minoboroni-rozrobilo-napryamki-rozvitku-roboti-sluzhb-suprovodu-zsu",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://mod.gov.ua/news/armiya-vipovnyuyetsya-dva-roki-zastosunkom-aktivno-koristuyutsya-3-z-4-vijskovih",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://aplus.mod.gov.ua/raporty/na-vidpustku",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://www.radiosvoboda.org/a/komisuvannya-zsu-vlk-medychna-sluzhba/32524541.html",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://www.omg.org/spec/BPMN/2.0.2/About-BPMN",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://bpmn.io/toolkit/bpmn-js/walkthrough/",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://zakon.rada.gov.ua/laws/show/548-14/print",
+      "http": "403",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "not_retrieved"
+    },
+    {
+      "url": "https://react.dev/learn",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://vite.dev/guide/",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://nodejs.org/download/release/v26.8.2/docs/api/sqlite.html",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://www.sqlite.org/foreignkeys.html",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://www.sqlite.org/lang_transaction.html",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://apps.apple.com/ua/app/%D0%B0%D1%80%D0%BC%D1%96%D1%8F/id6499126615",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://mod.gov.ua/news/czifrovizacziya-ryatuye-zhittya-mediki-na-vsih-etapah-evakuacziyi-otrimali-dostup-do-elektronnih-medkartok",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://mod.gov.ua/news/zamist-paperovih-zhurnaliv-sistema-impuls-vzhe-vprovadzhena-u-250-pidrozdilah-zsu",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://mod.gov.ua/news/uryad-zatverdiv-poryadok-vedennya-czifrovogo-reyestru-vijskovosluzhbovcziv",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://aplus.mod.gov.ua/viiskovo-oblikovyi-dokument",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://moz.gov.ua/uk/elektronni-medichni-zapisi-v-esoz",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://e-health-ua.atlassian.net/wiki/spaces/ESOZ/pages/17571643621",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://e-health-ua.atlassian.net/wiki/spaces/ESOZ/pages/17571610896",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://e-health-ua.atlassian.net/wiki/spaces/ESOZ/pages/17571348569",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://hl7.org/fhir/R4/patient.html",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://hl7.org/fhir/R4/encounter.html",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://hl7.org/fhir/R4/episodeofcare.html",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://hl7.org/fhir/R4/documentreference.html",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://demo.bpmn.io/",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://github.com/bpmn-io/bpmn-moddle",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://github.com/obodnazar/mil600-wounded-case/pull/2",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://github.com/obodnazar/mil600-wounded-case/pull/3",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://github.com/obodnazar/mil600-wounded-case/pull/4",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://github.com/obodnazar/mil600-wounded-case/pull/5",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://github.com/obodnazar/mil600-wounded-case/pull/6",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://github.com/obodnazar/mil600-wounded-case/pull/7",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://github.com/obodnazar/mil600-wounded-case/pull/8",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://github.com/obodnazar/mil600-wounded-case/pull/9",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://zakon.rada.gov.ua/laws/show/975-2013-%D0%BF",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "rada_response_not_legal_text_verification"
+    },
+    {
+      "url": "https://github.com/advisories/GHSA-g3hv-75wg-m249",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://nodejs.org/api/crypto.html",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://docs.github.com/en/code-security/reference/code-scanning/workflow-configuration-options",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://github.com/gitleaks/gitleaks-action",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://asvs.owasp.org/",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/OWASP/ASVS/v5.0.0/5.0/docs_en/OWASP_Application_Security_Verification_Standard_5.0.0_en.csv",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/azure/security/develop/threat-modeling-tool-threats",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://linddun.org/cases/",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://zakon.rada.gov.ua/laws/show/z1109-08",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "rada_response_not_legal_text_verification"
+    },
+    {
+      "url": "https://zakon.rada.gov.ua/laws/show/z0329-25",
+      "http": "403",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "not_retrieved"
+    },
+    {
+      "url": "https://zakon.rada.gov.ua/laws/show/z0027-25",
+      "http": "403",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "not_retrieved"
+    },
+    {
+      "url": "https://zakon.rada.gov.ua/laws/show/z0076-25",
+      "http": "403",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "not_retrieved"
+    },
+    {
+      "url": "https://zakon.rada.gov.ua/laws/show/2011-12",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "rada_response_not_legal_text_verification"
+    },
+    {
+      "url": "https://zakon.rada.gov.ua/laws/show/168-2022-%D0%BF",
+      "http": "403",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "not_retrieved"
+    },
+    {
+      "url": "https://zakon.rada.gov.ua/laws/show/4497-20",
+      "http": "403",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "not_retrieved"
+    },
+    {
+      "url": "https://zakon.rada.gov.ua/laws/show/2297-17",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "rada_response_not_legal_text_verification"
+    },
+    {
+      "url": "https://zakon.rada.gov.ua/laws/show/2232-12",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "rada_response_not_legal_text_verification"
+    },
+    {
+      "url": "https://zakon.rada.gov.ua/laws/show/2801-12",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "rada_response_not_legal_text_verification"
+    },
+    {
+      "url": "https://zakon.rada.gov.ua/laws/show/851-15",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "rada_response_not_legal_text_verification"
+    },
+    {
+      "url": "https://zakon.rada.gov.ua/laws/show/2155-19",
+      "http": "403",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "not_retrieved"
+    },
+    {
+      "url": "https://zakon.rada.gov.ua/laws/show/80/94-%D0%B2%D1%80",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "rada_response_not_legal_text_verification"
+    },
+    {
+      "url": "https://zakon.rada.gov.ua/laws/show/712-2025-%D0%BF",
+      "http": "403",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "not_retrieved"
+    },
+    {
+      "url": "https://zakon.rada.gov.ua/laws/show/548-14",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "rada_response_not_legal_text_verification"
+    },
+    {
+      "url": "https://zakon.rada.gov.ua/laws/show/901-2023-%D0%BF",
+      "http": "430",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "not_retrieved"
+    },
+    {
+      "url": "https://zakon.rada.gov.ua/laws/show/z0213-25",
+      "http": "403",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "not_retrieved"
+    },
+    {
+      "url": "https://zakon.rada.gov.ua/laws/show/879-2024-%D0%BF",
+      "http": "430",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "not_retrieved"
+    },
+    {
+      "url": "https://zakon.rada.gov.ua/laws/show/411-2018-%D0%BF",
+      "http": "430",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "not_retrieved"
+    },
+    {
+      "url": "https://zakon.rada.gov.ua/laws/show/z0745-18",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "rada_response_not_legal_text_verification"
+    },
+    {
+      "url": "https://milomb.gov.ua/novyny",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://mipl.org.ua/analityka/",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://www.pryncyp.org/analytics/",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://euromaidanpress.com/2025/02/05/zelenskyy-reveals-45100-ukrainian-troops-died-contrasting-with-independent-estimates/",
+      "http": "403",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "not_retrieved"
+    },
+    {
+      "url": "https://navigator.pryncyp.org/injured/mod/comission/345",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://focus.ua/uk/voennye-novosti/568959-paperova-armiya-chomu-ukrajinski-viyskovi-skarzhatsya-na-vlk-ta-shcho-zminitsya-z-novimi-zakonami",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://zmina.info/news/za-pershi-visim-misyacziv-roboty-ofis-vijskovogo-ombudsmana-otrymav-ponad-15-tysyach-skarg-yaki-pytannya-najproblemnishi/",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://www.slovoidilo.ua/2026/06/06/novyna/bezpeka/ofisi-vijskovoho-ombudsmena-nazvaly-kilkist-skarh-pro-porushennya-prav-chotyry-misyaczi",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://apps.apple.com/ua/app/id6499126615",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://milomb.gov.ua/novyny/rik-vid-uhvalennya-zakonu-pro-viyskovogo-ombudsmana-prezentuvali-rezultati-roboti-na-komiteti-z-pitan-nacionalnoyi-bezpeki-oboroni-ta-rozvidki",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://www.0312.ua/news/4115987/vlk-ta-napravlenna-na-likuvanna-u-vijskovogo-ombudsmana-rozpovili-pro-najposirenisi-skargi",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://armyinform.com.ua/2026/01/12/minoborony-ponovylo-prava-ponad-2700-vijskovosluzhbovcziv-ta-chleniv-yihnih-rodyn-u-2025-roczi/",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://armyinform.com.ua/2025/03/03/z-pochatku-roku-ponovleno-prava-156-vijskovosluzhbovcziv-ta-yihnih-rodyn/",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://itunes.apple.com/ua/rss/customerreviews/id=6499126615/sortby=mostrecent/json",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://itunes.apple.com/ua/rss/customerreviews/page=1/id=6499126615/sortby=mostrecent/json",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://itunes.apple.com/ua/rss/customerreviews/page=1/id=6499418319/sortby=mostrecent/json",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://www.threads.com/search?q=довідка%20поранення&serp_type=default",
+      "http": "400",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "not_retrieved"
+    },
+    {
+      "url": "https://www.facebook.com/search/posts/?q=довідка%20поранення",
+      "http": "400",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "not_retrieved"
+    },
+    {
+      "url": "https://www.reddit.com/r/reddit_ukr/comments/1i52coe/влк_та_поранення/",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://play.google.com/store/apps/details?id=ua.gov.reserveplus",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://itunes.apple.com/ua/rss/customerreviews/page=3/id=6499126615/sortby=mostrecent/json",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://itunes.apple.com/ua/rss/customerreviews/page=4/id=6499126615/sortby=mostrecent/json",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://itunes.apple.com/ua/rss/customerreviews/page=6/id=6499126615/sortby=mostrecent/json",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://itunes.apple.com/ua/rss/customerreviews/page=7/id=6499126615/sortby=mostrecent/json",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://uristy.ua/ua/question/147491",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://uristy.ua/ua/question/147659",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://uristy.ua/ua/question/149335",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://uristy.ua/ua/question/150718",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://uristy.ua/ua/question/148831",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://uristy.ua/ua/question/146096",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://uristy.ua/ua/question/149767",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://uristy.ua/ua/question/148112",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://uristy.ua/ua/question/150466",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://www.radiosvoboda.org/a/sluzhba-suprovodu/33885462.html",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://te.20minut.ua/Podii/vlk-za-25-sekund-viznala-pridatnim-hocha-v-mene-buket-hvorob-pislya-po-12005231.html",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://www.radiosvoboda.org/a/viyskovyy-khirurh-bohdan-zhuravel/33863785.html",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://mediaport.ua/hroshi-pislia-poranennia-iak-viyskovyy-z-kharkova-p-iatyy-rik-dobyvaietsia-vyplat/",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://www.gk-press.if.ua/borotba-pislya-vijni",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://itunes.apple.com/ua/rss/customerreviews/page=8/id=6499126615/sortby=mostrecent/json",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://uristy.ua/ua/question/85198",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://uristy.ua/ua/question/88747",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://uristy.ua/ua/question/86889",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://uristy.ua/ua/question/137644",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://uristy.ua/ua/question/140269",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://uristy.ua/ua/question/117494",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://uristy.ua/ua/question/84091",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://uristy.ua/ua/question/74762",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://uristy.ua/ua/question/76445",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://uristy.ua/ua/question/103997",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://www.rbc.ua/rus/news/probig-15-km-gorah-protezi-istoriya-zahisnika-1751367301.html",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://www.village.com.ua/village/city/city-experience/350747-ya-proyshov-vlk-msek-i-reabilitatsiyu",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://zn.ua/ukr/war/tantsjurist-na-spetskhvili-shcho-robiti-pislja-poranennja-na-vijni.html",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://suspilne.media/chernihiv/1051401-podali-v-szc-poki-buv-na-protezuvanni-v-ssa-istoria-veterana-akij-suditsa-za-bojovi-ta-rozasnenna-uristiv/",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://www.radiosvoboda.org/a/rozpovid-paramedykyni-%D1%81%D1%81o/33000637.html",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://armyinform.com.ua/2025/01/06/dopovidayut-shho-tyazhkyj-a-vin-czygarku-kuryt-zabyntovanyj-i-posmihayetsya-yak-praczyuye-bataljonnyj-medpunkt/",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://suspilne.media/448059-nenormalno-zmusuvati-poranenih-hoditi-zbirati-dokumenti-masi-najem-pro-vijnu-vtratu-oka-princip-i-reformu-vlk/",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    },
+    {
+      "url": "https://vn.20minut.ua/Podii/vidrubali-palets-kuhonnim-nozhem-zvilneniy-z-polonu-pro-dopit-vagneriv-11787577.html",
+      "http": "200",
+      "read_kind": "body",
+      "checked_at": "2026-11-13",
+      "verification_level": "transport_only"
+    }
+  ],
+  "voices": [
+    {
+      "id": "Q01",
+      "url": "https://itunes.apple.com/ua/rss/customerreviews/page=1/id=6499126615/sortby=mostrecent/json",
+      "checked_at": "2026-11-13",
+      "status": "text_matches",
+      "date_marker_matches": true,
+      "quote_matches": true
+    },
+    {
+      "id": "Q02",
+      "url": "https://itunes.apple.com/ua/rss/customerreviews/page=3/id=6499126615/sortby=mostrecent/json",
+      "checked_at": "2026-11-13",
+      "status": "text_matches",
+      "date_marker_matches": true,
+      "quote_matches": true
+    },
+    {
+      "id": "Q03",
+      "url": "https://itunes.apple.com/ua/rss/customerreviews/page=4/id=6499126615/sortby=mostrecent/json",
+      "checked_at": "2026-11-13",
+      "status": "text_matches",
+      "date_marker_matches": true,
+      "quote_matches": true
+    },
+    {
+      "id": "Q04",
+      "url": "https://itunes.apple.com/ua/rss/customerreviews/page=6/id=6499126615/sortby=mostrecent/json",
+      "checked_at": "2026-11-13",
+      "status": "text_matches",
+      "date_marker_matches": true,
+      "quote_matches": true
+    },
+    {
+      "id": "Q05",
+      "url": "https://itunes.apple.com/ua/rss/customerreviews/page=7/id=6499126615/sortby=mostrecent/json",
+      "checked_at": "2026-11-13",
+      "status": "text_matches",
+      "date_marker_matches": true,
+      "quote_matches": true
+    },
+    {
+      "id": "Q06",
+      "url": "https://itunes.apple.com/ua/rss/customerreviews/page=8/id=6499126615/sortby=mostrecent/json",
+      "checked_at": "2026-11-13",
+      "status": "text_matches",
+      "date_marker_matches": true,
+      "quote_matches": true
+    },
+    {
+      "id": "Q07",
+      "url": "https://itunes.apple.com/ua/rss/customerreviews/page=7/id=6499126615/sortby=mostrecent/json",
+      "checked_at": "2026-11-13",
+      "status": "text_matches",
+      "date_marker_matches": true,
+      "quote_matches": true
+    },
+    {
+      "id": "Q08",
+      "url": "https://uristy.ua/ua/question/147491",
+      "checked_at": "2026-11-13",
+      "status": "text_matches",
+      "quote_matches": true
+    },
+    {
+      "id": "Q09",
+      "url": "https://uristy.ua/ua/question/147659",
+      "checked_at": "2026-11-13",
+      "status": "text_matches",
+      "quote_matches": true
+    },
+    {
+      "id": "Q10",
+      "url": "https://uristy.ua/ua/question/149335",
+      "checked_at": "2026-11-13",
+      "status": "text_matches",
+      "quote_matches": true
+    },
+    {
+      "id": "Q11",
+      "url": "https://uristy.ua/ua/question/150718",
+      "checked_at": "2026-11-13",
+      "status": "text_matches",
+      "quote_matches": true
+    },
+    {
+      "id": "Q12",
+      "url": "https://uristy.ua/ua/question/85198",
+      "checked_at": "2026-11-13",
+      "status": "text_matches",
+      "quote_matches": true
+    },
+    {
+      "id": "Q13",
+      "url": "https://uristy.ua/ua/question/88747",
+      "checked_at": "2026-11-13",
+      "status": "text_matches",
+      "quote_matches": true
+    },
+    {
+      "id": "Q14",
+      "url": "https://uristy.ua/ua/question/86889",
+      "checked_at": "2026-11-13",
+      "status": "text_matches",
+      "quote_matches": true
+    },
+    {
+      "id": "Q15",
+      "url": "https://uristy.ua/ua/question/137644",
+      "checked_at": "2026-11-13",
+      "status": "text_matches",
+      "quote_matches": true
+    },
+    {
+      "id": "Q16",
+      "url": "https://uristy.ua/ua/question/148831",
+      "checked_at": "2026-11-13",
+      "status": "text_matches",
+      "quote_matches": true
+    },
+    {
+      "id": "Q17",
+      "url": "https://uristy.ua/ua/question/140269",
+      "checked_at": "2026-11-13",
+      "status": "text_matches",
+      "quote_matches": true
+    },
+    {
+      "id": "Q18",
+      "url": "https://uristy.ua/ua/question/117494",
+      "checked_at": "2026-11-13",
+      "status": "text_matches",
+      "quote_matches": true
+    },
+    {
+      "id": "Q19",
+      "url": "https://uristy.ua/ua/question/84091",
+      "checked_at": "2026-11-13",
+      "status": "text_matches",
+      "quote_matches": true
+    },
+    {
+      "id": "Q20",
+      "url": "https://uristy.ua/ua/question/74762",
+      "checked_at": "2026-11-13",
+      "status": "text_matches",
+      "quote_matches": true
+    },
+    {
+      "id": "Q21",
+      "url": "https://uristy.ua/ua/question/76445",
+      "checked_at": "2026-11-13",
+      "status": "text_matches",
+      "quote_matches": true
+    },
+    {
+      "id": "Q22",
+      "url": "https://uristy.ua/ua/question/146096",
+      "checked_at": "2026-11-13",
+      "status": "text_matches",
+      "quote_matches": true
+    },
+    {
+      "id": "Q23",
+      "url": "https://uristy.ua/ua/question/103997",
+      "checked_at": "2026-11-13",
+      "status": "text_matches",
+      "quote_matches": true
+    },
+    {
+      "id": "Q24",
+      "url": "https://uristy.ua/ua/question/149767",
+      "checked_at": "2026-11-13",
+      "status": "text_matches",
+      "quote_matches": true
+    },
+    {
+      "id": "Q25",
+      "url": "https://uristy.ua/ua/question/148112",
+      "checked_at": "2026-11-13",
+      "status": "text_matches",
+      "quote_matches": true
+    },
+    {
+      "id": "Q26",
+      "url": "https://uristy.ua/ua/question/150466",
+      "checked_at": "2026-11-13",
+      "status": "text_matches",
+      "quote_matches": true
+    },
+    {
+      "id": "Q27",
+      "url": "https://texty.org.ua/articles/113734/kuryer-na-mylycyah-skilky-bihav-po-likaryah-odyn-poranenyj-boyec-infohrafika/",
+      "checked_at": "2026-11-13",
+      "status": "text_matches",
+      "quote_matches": true
+    },
+    {
+      "id": "Q28",
+      "url": "https://www.radiosvoboda.org/a/komisuvannya-zsu-vlk-medychna-sluzhba/32524541.html",
+      "checked_at": "2026-11-13",
+      "status": "text_matches",
+      "quote_matches": true
+    },
+    {
+      "id": "Q29",
+      "url": "https://www.radiosvoboda.org/a/komisuvannya-zsu-vlk-medychna-sluzhba/32524541.html",
+      "checked_at": "2026-11-13",
+      "status": "text_matches",
+      "quote_matches": true
+    },
+    {
+      "id": "Q30",
+      "url": "https://www.rbc.ua/rus/news/probig-15-km-gorah-protezi-istoriya-zahisnika-1751367301.html",
+      "checked_at": "2026-11-13",
+      "status": "text_matches",
+      "quote_matches": true
+    },
+    {
+      "id": "Q31",
+      "url": "https://www.village.com.ua/village/city/city-experience/350747-ya-proyshov-vlk-msek-i-reabilitatsiyu",
+      "checked_at": "2026-11-13",
+      "status": "text_matches",
+      "quote_matches": true
+    },
+    {
+      "id": "Q32",
+      "url": "https://www.village.com.ua/village/city/city-experience/350747-ya-proyshov-vlk-msek-i-reabilitatsiyu",
+      "checked_at": "2026-11-13",
+      "status": "text_matches",
+      "quote_matches": true
+    },
+    {
+      "id": "Q33",
+      "url": "https://zn.ua/ukr/war/tantsjurist-na-spetskhvili-shcho-robiti-pislja-poranennja-na-vijni.html",
+      "checked_at": "2026-11-13",
+      "status": "text_matches",
+      "quote_matches": true
+    },
+    {
+      "id": "Q34",
+      "url": "https://suspilne.media/chernihiv/1051401-podali-v-szc-poki-buv-na-protezuvanni-v-ssa-istoria-veterana-akij-suditsa-za-bojovi-ta-rozasnenna-uristiv/",
+      "checked_at": "2026-11-13",
+      "status": "text_matches",
+      "quote_matches": true
+    },
+    {
+      "id": "Q35",
+      "url": "https://www.radiosvoboda.org/a/rozpovid-paramedykyni-%D1%81%D1%81o/33000637.html",
+      "checked_at": "2026-11-13",
+      "status": "text_matches",
+      "quote_matches": true
+    },
+    {
+      "id": "Q36",
+      "url": "https://armyinform.com.ua/2025/01/06/dopovidayut-shho-tyazhkyj-a-vin-czygarku-kuryt-zabyntovanyj-i-posmihayetsya-yak-praczyuye-bataljonnyj-medpunkt/",
+      "checked_at": "2026-11-13",
+      "status": "text_matches",
+      "quote_matches": true
+    },
+    {
+      "id": "Q37",
+      "url": "https://www.radiosvoboda.org/a/sluzhba-suprovodu/33885462.html",
+      "checked_at": "2026-11-13",
+      "status": "text_matches",
+      "quote_matches": true
+    },
+    {
+      "id": "Q38",
+      "url": "https://suspilne.media/448059-nenormalno-zmusuvati-poranenih-hoditi-zbirati-dokumenti-masi-najem-pro-vijnu-vtratu-oka-princip-i-reformu-vlk/",
+      "checked_at": "2026-11-13",
+      "status": "text_matches",
+      "quote_matches": true
+    },
+    {
+      "id": "Q39",
+      "url": "https://te.20minut.ua/Podii/vlk-za-25-sekund-viznala-pridatnim-hocha-v-mene-buket-hvorob-pislya-po-12005231.html",
+      "checked_at": "2026-11-13",
+      "status": "text_matches",
+      "quote_matches": true
+    },
+    {
+      "id": "Q40",
+      "url": "https://vn.20minut.ua/Podii/vidrubali-palets-kuhonnim-nozhem-zvilneniy-z-polonu-pro-dopit-vagneriv-11787577.html",
+      "checked_at": "2026-11-13",
+      "status": "text_matches",
+      "quote_matches": true
+    },
+    {
+      "id": "Q41",
+      "url": "https://www.radiosvoboda.org/a/viyskovyy-khirurh-bohdan-zhuravel/33863785.html",
+      "checked_at": "2026-11-13",
+      "status": "text_matches",
+      "quote_matches": true
+    },
+    {
+      "id": "Q42",
+      "url": "https://mediaport.ua/hroshi-pislia-poranennia-iak-viyskovyy-z-kharkova-p-iatyy-rik-dobyvaietsia-vyplat/",
+      "checked_at": "2026-11-13",
+      "status": "text_matches",
+      "quote_matches": true
+    },
+    {
+      "id": "Q43",
+      "url": "https://www.gk-press.if.ua/borotba-pislya-vijni",
+      "checked_at": "2026-11-13",
+      "status": "text_matches",
+      "quote_matches": true
+    },
+    {
+      "id": "Q44",
+      "url": "https://www.gk-press.if.ua/borotba-pislya-vijni",
+      "checked_at": "2026-11-13",
+      "status": "text_matches",
+      "quote_matches": true
+    }
+  ],
+  "voice_scope": "44 exact excerpts matched current public bodies; 7 RSS date markers also match. Not representative; not independent confirmation of narrated events."
+}
