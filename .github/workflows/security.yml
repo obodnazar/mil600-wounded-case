@@ -22,13 +22,15 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
-          node-version: '26'
+          node-version: '26.8.2'
           cache: npm
           cache-dependency-path: prototype/package-lock.json
       - run: npm ci --ignore-scripts
       - run: npm run lint
       - run: npm test
       - run: npm run build
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
       - run: npm audit --audit-level=high
   codeql:
     runs-on: ubuntu-latest

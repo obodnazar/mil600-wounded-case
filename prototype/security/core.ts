@@ -50,8 +50,8 @@ export class Limiter {
   }
 }
 
-export type AuditAction = 'case_read' | 'clinical_read' | 'analytics_read' | 'event_validate';
-export type AuditResult = 'allowed' | 'denied' | 'validated_only' | 'duplicate';
+export type AuditAction = 'case_read' | 'clinical_read' | 'analytics_read' | 'event_validate' | 'session_read' | 'session_change' | 'simulator_run';
+export type AuditResult = 'allowed' | 'denied' | 'validated_only' | 'duplicate' | 'accepted' | 'pending';
 export interface AuditRecord {request_id: string; at: string; action: AuditAction; result: AuditResult; actor_tag: string; resource_tag: string}
 export interface AuditSink {write(record: AuditRecord): Promise<void>}
 export class FileAudit implements AuditSink {
@@ -87,13 +87,21 @@ const sourceTypes: Readonly<Record<string, readonly string[]>> = {
 export function signature(key: Buffer, h: Omit<SignatureHeaders, 'signature'>, raw: Buffer): string {
   return createHmac('sha256', key).update(`${h.keyId}\nPOST\n/api/integration/events\n${h.timestamp}\n${h.nonce}\n`).update(raw).digest('hex');
 }
+export function semanticDigest(event: EventEnvelope): string {
+  const canonical = (x: unknown): string => {
+    if (x === null || typeof x !== 'object') return JSON.stringify(x);
+    if (Array.isArray(x)) return '[' + x.map(canonical).join(',') + ']';
+    return '{' + Object.entries(x).sort(([a],[b])=>a.localeCompare(b,'en')).map(([k,v])=>JSON.stringify(k)+':'+canonical(v)).join(',') + '}';
+  };
+  return createHash('sha256').update(canonical(Object.fromEntries(Object.entries(event).filter(([name])=>name!=='event_id')))).digest('hex');
+}
 export class Ingress {
   private readonly nonces = new Map<string, number>();
   private readonly events = new Map<string, string>();
   private readonly versions = new Map<string, string>();
   constructor(private readonly keys: Map<string, SourceKey>, private readonly valid: (x: unknown) => boolean,
     private readonly windowMs = 300_000, private readonly capacity = 1000) {}
-  verify(raw: Buffer, h: SignatureHeaders, now: number): {event: EventEnvelope; duplicate: boolean} {
+  authenticate(raw: Buffer, h: SignatureHeaders, now: number): EventEnvelope {
     const key = this.keys.get(h.keyId);
     if (!key || !/^\d{10}$/.test(h.timestamp) || !/^[A-Za-z0-9_-]{16,80}$/.test(h.nonce) || !/^[a-f0-9]{64}$/.test(h.signature)) throw new Denied(401, 'invalid_signature');
     if (Math.abs(now - Number(h.timestamp) * 1000) > this.windowMs) throw new Denied(401, 'stale_signature');
@@ -117,21 +125,19 @@ export class Ingress {
       const recipients: Readonly<Record<string, readonly string[]>> = {'demo-sedo':['part'],'demo-vlk':['vlk'],'demo-finance':['finance'],'demo-service':['servicemember','part']};
       if (!recipients[key.source]?.includes(String(event.payload.recipient_kind))) throw new Denied(403,'source_scope_denied');
     }
-    // Канонічний digest не залежить від порядку JSON-ключів / транспортних nonce.
-    const canonical = (x: unknown): string => {
-      if (x === null || typeof x !== 'object') return JSON.stringify(x);
-      if (Array.isArray(x)) return '[' + x.map(canonical).join(',') + ']';
-      return '{' + Object.entries(x).sort(([a], [b]) => a.localeCompare(b, 'en')).map(([k,v]) => JSON.stringify(k)+':'+canonical(v)).join(',') + '}';
-    };
-    const semantic = Object.fromEntries(Object.entries(event).filter(([name]) => name !== 'event_id'));
-    const digest = createHash('sha256').update(canonical(semantic)).digest('hex');
+    this.nonces.set(nonce, now + this.windowMs * 2 + 1000);
+    return event;
+  }
+  verify(raw: Buffer, h: SignatureHeaders, now: number): {event: EventEnvelope; duplicate: boolean} {
+    const event=this.authenticate(raw,h,now);
+    const key=this.keys.get(h.keyId)!;
+    const digest=semanticDigest(event);
     const id = key.source + ':' + event.event_id;
     const version = JSON.stringify([key.source,event.source_stream,event.source_version,event.event_type]);
     const oldId = this.events.get(id), oldVersion = this.versions.get(version);
     if ((oldId && oldId !== digest) || (oldVersion && oldVersion !== digest)) throw new Denied(409, 'event_conflict');
     if (!oldId && this.events.size >= this.capacity) throw new Denied(429, 'ingress_capacity');
     // Покрити включну межу підпису з допустимим майбутнім timestamp.
-    this.nonces.set(nonce, now + this.windowMs * 2 + 1000);
     this.events.set(id, digest); this.versions.set(version, digest);
     return {event, duplicate: Boolean(oldId || oldVersion)};
   }

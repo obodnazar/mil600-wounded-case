@@ -1,2 +1,6 @@
 dist/
+public/
+.runtime/
+test-results/
+playwright-report/
 .audit/

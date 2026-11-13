@@ -7,5 +7,5 @@
     "outDir": "dist", "rootDir": ".", "types": ["node"],
     "skipLibCheck": true
   },
-  "include": ["security/**/*.ts", "security/**/*.json"]
+  "include": ["security/**/*.ts", "security/**/*.json", "server/**/*.ts", "shared/**/*.ts"]
 }
