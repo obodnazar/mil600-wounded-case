@@ -1,0 +1,11 @@
+{
+  "compilerOptions": {
+    "target": "ES2023", "module": "NodeNext", "moduleResolution": "NodeNext",
+    "strict": true, "noUncheckedIndexedAccess": true, "exactOptionalPropertyTypes": true,
+    "noUnusedLocals": true, "noUnusedParameters": true,
+    "resolveJsonModule": true, "esModuleInterop": true,
+    "outDir": "dist", "rootDir": ".", "types": ["node"],
+    "skipLibCheck": true
+  },
+  "include": ["security/**/*.ts", "security/**/*.json"]
+}
