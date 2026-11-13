@@ -21,10 +21,12 @@
 | [docs/02-brd.md](docs/02-brd.md) | BRD (крок I) |
 | [docs/03-as-is.md](docs/03-as-is.md) | AS IS процес для BPMN (крок I) |
 | [docs/bpmn/](docs/bpmn/) | BPMN AS IS: XML з DI, SVG, перевірки й межі моделі |
-| [docs/decisions.md](docs/decisions.md) | Затвердження фаз 1, 4, 2, 3; фаза 5 на затвердженні |
+| [docs/decisions.md](docs/decisions.md) | Затвердження фаз 1, 4, 2, 3, 5; фаза 6 на затвердженні |
 | [docs/04-feature-concept.md](docs/04-feature-concept.md) | Концепція функціоналу, джерела даних, архітектура (крок II) |
 | [docs/05-product-concept.md](docs/05-product-concept.md) | Фаза 5: цінність ролей, персони з доказами, сценарії, MVP / беклог MoSCoW, приймання, метрики й трасування |
 | [docs/reviews/phase-5.md](docs/reviews/phase-5.md) | Скептичне рев’ю концепції та виправлення перед PR |
+| [docs/architecture/](docs/architecture/) | Фаза 6: C4, ввід медиками, події, ERD, ролі, ADR і мінімальний демо-шлях |
+| [docs/reviews/phase-6.md](docs/reviews/phase-6.md) | Рев’ю архітектури й виправлення |
 | [docs/ai-use.md](docs/ai-use.md) | Примітка про використання ШІ (вимога курсу) |
 | [AGENTS.md](AGENTS.md), [docs/codex-task.md](docs/codex-task.md) | Правила і завдання для ШІ-агента (Codex), 9 фаз |
 | [regulation/](regulation/) | Фаза 3: 21 перевірений акт і конспекти з редакціями |
