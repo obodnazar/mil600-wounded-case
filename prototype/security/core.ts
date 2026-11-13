@@ -50,7 +50,7 @@ export class Limiter {
   }
 }
 
-export type AuditAction = 'case_read' | 'clinical_read' | 'analytics_read' | 'event_validate' | 'session_read' | 'session_change' | 'simulator_run';
+export type AuditAction = 'case_read' | 'clinical_read' | 'analytics_read' | 'event_validate' | 'session_read' | 'session_change' | 'simulator_run' | 'command';
 export type AuditResult = 'allowed' | 'denied' | 'validated_only' | 'duplicate' | 'accepted' | 'pending';
 export interface AuditRecord {request_id: string; at: string; action: AuditAction; result: AuditResult; actor_tag: string; resource_tag: string}
 export interface AuditSink {write(record: AuditRecord): Promise<void>}
@@ -74,15 +74,16 @@ export interface EventEnvelope {
   schema_version: 'case-event/1'; event_id: string; event_type: string; source_system: string;
   source_record_ref: string; source_stream: string; source_version: string; source_order: number | null;
   subject_ref: string; incident_ref: string | null; episode_ref: string | null;
-  occurred_at: string; recorded_at: string; payload: Record<string, unknown>;
+  occurred_at: string; recorded_at: string; supersedes_version?: string; payload: Record<string, unknown>;
 }
 export interface SignatureHeaders {keyId: string; timestamp: string; nonce: string; signature: string}
 const sourceTypes: Readonly<Record<string, readonly string[]>> = {
-  'demo-mis':['medical.primary_recorded','care.admitted','care.transferred','care.discharged','care.start_confirmed','document.prepared','document.corrected','document.withdrawn'],
-  'demo-sedo':['document.prepared','document.issued','document.corrected','document.withdrawn','document.received','referral.issued'],
+  'demo-mis':['source.sync_gap','medical.primary_recorded','care.admitted','care.transferred','care.discharged','care.start_confirmed','document.prepared','document.corrected','document.withdrawn'],
+  'demo-sedo':['document.sent','document.prepared','document.issued','document.corrected','document.withdrawn','document.received','referral.issued'],
   'demo-vlk':['vlk.package_received','vlk.package_returned','vlk.decision_recorded','document.received'],
   'demo-finance':['finance.package_received','finance.status_recorded','document.received'],
-  'demo-service':['service.action_confirmed','document.received']
+  'demo-service':['service.action_confirmed','document.received'],
+  'demo-civil-mis':['care.admitted','care.transferred','care.discharged','document.prepared']
 };
 export function signature(key: Buffer, h: Omit<SignatureHeaders, 'signature'>, raw: Buffer): string {
   return createHmac('sha256', key).update(`${h.keyId}\nPOST\n/api/integration/events\n${h.timestamp}\n${h.nonce}\n`).update(raw).digest('hex');
@@ -118,7 +119,7 @@ export class Ingress {
     if (event.source_system !== key.source || !key.types.has(event.event_type) || !key.subjects.has(event.subject_ref)) throw new Denied(403, 'source_scope_denied');
     if (!sourceTypes[key.source]?.includes(event.event_type)) throw new Denied(403,'source_scope_denied');
     if (event.payload.document_kind !== undefined) {
-      const kinds = key.source === 'demo-mis' ? ['primary_medical_card','medical_summary'] : ['trauma_certificate','referral'];
+      const kinds = key.source === 'demo-mis' ? ['primary_medical_card','medical_summary','hospital_stay_certificate',...(event.event_type==='document.prepared'?['trauma_certificate']:[])] : key.source==='demo-civil-mis'?['medical_summary','hospital_stay_certificate']:['trauma_certificate','referral'];
       if (!kinds.includes(String(event.payload.document_kind))) throw new Denied(403,'source_scope_denied');
     }
     if (event.event_type === 'document.received') {
@@ -150,10 +151,10 @@ export function safeAggregate(counts: readonly number[], minimum = 5): Record<st
   return {status: 'synthetic_fixed_snapshot', groups: counts, total: counts.reduce((a,b) => a+b, 0)};
 }
 
-export function requireDemoEnvironment(env: NodeJS.ProcessEnv): Map<string, Buffer> {
+export function requireDemoEnvironment(env: NodeJS.ProcessEnv, extraNames:readonly string[]=[]): Map<string, Buffer> {
   if (env.DEMO_MODE !== 'true' || env.NODE_ENV === 'production') throw new Error('demo_environment_required');
   const result = new Map<string, Buffer>();
-  for (const name of ['DEMO_MIS_HMAC_KEY','DEMO_SEDO_HMAC_KEY','DEMO_VLK_HMAC_KEY','DEMO_FINANCE_HMAC_KEY','DEMO_AUDIT_HMAC_KEY']) {
+  for (const name of ['DEMO_MIS_HMAC_KEY','DEMO_SEDO_HMAC_KEY','DEMO_VLK_HMAC_KEY','DEMO_FINANCE_HMAC_KEY','DEMO_AUDIT_HMAC_KEY',...extraNames]) {
     const value = env[name];
     if (!value || !/^[a-f0-9]{64}$/.test(value)) throw new Error('invalid_secret_configuration');
     result.set(name, Buffer.from(value, 'hex'));

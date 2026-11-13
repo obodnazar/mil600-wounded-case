@@ -1,15 +1,20 @@
 import {DatabaseSync, type SQLInputValue} from 'node:sqlite';
-import {readFileSync, mkdirSync, chmodSync} from 'node:fs';
+import {readFileSync, readdirSync, mkdirSync, chmodSync} from 'node:fs';
 import {dirname} from 'node:path';
 import {createHash,randomUUID} from 'node:crypto';
+import {applyEvent,ReviewRequired,requirements,sources,insert,command,task,type Command} from './domain.js';
+import {kyivDate} from './calendar.js';
+import {snapshot,cohort} from './metrics.js';
+import {extendView} from './views.js';
 import {auditRecord, Denied, semanticDigest, type AuditAction, type AuditResult, type EventEnvelope, type Session, type SignatureHeaders} from '../security/core.js';
 import type {AnalyticsView, CaseView, DemoProfile, DevView, StaffView} from '../shared/view.js';
-import {seed, DEMO_AS_OF, TRAUMA_CERTIFICATE} from './seed.js';
+import {seed, TRAUMA_CERTIFICATE} from './seed.js';
 
 type Row=Record<string,string|number|bigint|Uint8Array|null>;
 const text=(r:Row,k:string):string=>String(r[k]??'');
 export const hash=(s:string)=>createHash('sha256').update(s).digest('hex');
 const id=()=>`demo-${randomUUID()}`;
+const uid=id;
 const names:Record<string,string>={care:'Лікування',documents:'Оформлення документів',vlk:'Розгляд ВЛК',service_action:'Адміністративна дія',finance:'Розгляд виплати',completed:'Завершений етап',source_linked:'Подію еПМК долучено',administrative_open:'Потрібне медичне джерело'};
 const documentNames:Record<string,string>={primary_medical_card:'Первинний обліковий медичний документ (еПМК)',trauma_certificate:TRAUMA_CERTIFICATE};
 export class Store {
@@ -23,11 +28,27 @@ export class Store {
     if(path!==':memory:')chmodSync(path,0o600);
     this.db.exec('PRAGMA foreign_keys=ON; PRAGMA journal_mode=WAL; PRAGMA synchronous=FULL; PRAGMA busy_timeout=3000;');
     this.db.exec('CREATE TABLE IF NOT EXISTS schema_migration(version TEXT PRIMARY KEY,checksum TEXT NOT NULL) STRICT');
-    const sql=readFileSync(new URL('../../db/migrations/001-initial.sql',import.meta.url),'utf8'), checksum=hash(sql);
-    const migration=this.row('SELECT checksum FROM schema_migration WHERE version=?','001');
-    if(migration&&migration.checksum!==checksum)throw new Error('migration_checksum_mismatch');
-    if(!migration)this.transaction(()=>{this.db.exec(sql);this.run('INSERT INTO schema_migration VALUES (?,?)','001',checksum);});
+    const dir=new URL('../../db/migrations/',import.meta.url);
+    for(const file of readdirSync(dir).filter(f=>/^\d{3}-.*\.sql$/.test(f)).sort()){
+      const sql=readFileSync(new URL(file,dir),'utf8'), checksum=hash(sql),version=file.slice(0,3),migration=this.row('SELECT checksum FROM schema_migration WHERE version=?',version);
+      if(migration&&migration.checksum!==checksum)throw new Error('migration_checksum_mismatch');
+      if(!migration)this.transaction(()=>{this.db.exec(sql);this.run('INSERT INTO schema_migration VALUES (?,?)',version,checksum);});
+    }
     seed(this.db);
+    if(!this.row("SELECT id FROM demo_setting WHERE id='boot-8b'"))this.transaction(()=>{
+      const at='2026-01-01T00:00:00.000Z';
+      for(const person of this.rows("SELECT id FROM subject WHERE id LIKE 'demo-person-%'"))for(const source of sources){
+        if(!this.row('SELECT id FROM identity_link WHERE source_namespace=? AND source_subject_token=?',source,person.id??null))insert(this,'identity_link',{id:uid(),subject_id:person.id??null,source_namespace:source,source_subject_token:person.id??null,verification_state:'verified',proof_ref:'demo-independent-binding-'+source,valid_from:at,valid_to:null});
+      }
+      for(const c of this.rows('SELECT id,subject_id,incident_ref FROM wound_case')){
+        for(const source of sources)this.run('INSERT OR IGNORE INTO incident_link VALUES (?,?,?,?,?)',source,c.subject_id??null,c.incident_ref??'',c.id??null,'demo-independent-incident-binding');
+        this.run("UPDATE wound_case SET source_linked=CASE WHEN origin='medical_event' THEN 1 ELSE 0 END WHERE id=?",c.id??null);
+        for(const route of ['reward','ogd'])requirements(this,String(c.id),route,`demo-${route}-packet-`+String(c.id).slice(-2));
+      }
+      this.run('INSERT INTO analytics_snapshot VALUES (?,?)','demo-cohort-v1',JSON.stringify(snapshot()));
+      this.run('INSERT INTO analytics_snapshot VALUES (?,?)','demo-small',JSON.stringify(snapshot(cohort.slice(0,3))));
+      this.run("INSERT INTO demo_setting VALUES ('boot-8b','complete')");
+    });
   }
   row(sql:string,...values:SQLInputValue[]):Row|undefined{return this.db.prepare(sql).get(...values);}
   rows(sql:string,...values:SQLInputValue[]):Row[]{return this.db.prepare(sql).all(...values);}
@@ -61,26 +82,18 @@ export class Store {
       LEFT JOIN requirement_evidence e ON e.case_requirement_id=r.id LEFT JOIN document_ref d ON d.id=e.document_ref_id
       LEFT JOIN delivery l ON l.document_ref_id=d.id AND l.recipient_ref='demo-vlk' WHERE r.case_id=? ORDER BY r.document_kind`,caseId).map(r=>({title:documentNames[text(r,'document_kind')]??'Документ',state:r.status==='present'?'Технічно звірено':'Бракує',provenance:r.provenance==='manual_demo_copy'?'Навчальна копія':r.provenance?'Посилання джерела':'Очікуємо джерело',delivery:r.delivery_state==='received'?'Отримання ВЛК підтверджене':r.delivery_state==='sent'?'Надіслано; отримання не підтверджене':'Не передано'})):[];
     const episode=clinical?this.row('SELECT p.label FROM treatment_episode e JOIN demo_provider p ON p.id=e.provider_ref WHERE e.case_id=? AND e.end_date IS NULL ORDER BY e.start_date DESC LIMIT 1',caseId):undefined;
-    return {id:caseId,label:person?text(person,'demo_label'):'Навчальний учасник',status:names[text(c,'lifecycle_state')]??'Потребує уточнення',
+    return extendView(this,caseId,clinical,{id:caseId,label:person?text(person,'demo_label'):'Навчальний учасник',status:names[text(c,'lifecycle_state')]??'Потребує уточнення',
       nextAction:task?.kind==='confirm_receipt_date'?'Підтвердити дату отримання документа':'Перевірити стан оформлення документа',owner:'Служба супроводу',
       freshness:'Навчальний зріз · 13.11.2026',timeline,checklist,deadline:{anchor:deadline?text(deadline,'anchor_status'):'unknown',
         due:deadline?.due_date?text(deadline,'due_date'):null,followUp:deadline?.provisional_follow_up_date?text(deadline,'provisional_follow_up_date'):null,status:deadline?text(deadline,'status'):'unknown'},
-      care:episode?text(episode,'label'):null,finances:clinical?this.rows('SELECT payment_kind,period_start,current_status FROM financial_track WHERE case_id=? ORDER BY payment_kind',caseId).map(r=>({kind:text(r,'payment_kind'),period:text(r,'period_start'),status:text(r,'current_status')})):[]};
+      care:episode?text(episode,'label'):null,finances:clinical?this.rows('SELECT payment_kind,period_start,current_status FROM financial_track WHERE case_id=? ORDER BY payment_kind',caseId).map(r=>({kind:text(r,'payment_kind'),period:text(r,'period_start'),status:text(r,'current_status')})):[]});
   }
   staffView(session:Session):StaffView {
     if(session.role!=='commander'&&session.role!=='support')throw new Denied(403,'forbidden');
     return {profile:session.role,scope:'Призначена навчальна область',cases:[...session.caseIds].sort().map(c=>this.caseView(c,false))};
   }
-  analytics():AnalyticsView {
-    // BO ще не реалізовані: не публікуємо чисел / total / довільних зрізів під виглядом готового виміру.
-    return {status:'definitions_only',cohort:'demo-cohort-v1 · фіксований вигаданий набір',asOf:DEMO_AS_OF,minimum:5,metrics:[
-      {id:'BO-1',title:'Час до постанови ВЛК',value:'[TBD]',detail:'Медіана від підтвердженої дати поранення; відкриті кейси й невідомі дати окремо.',state:'planned'},
-      {id:'BO-2',title:'Пакети з поверненням',value:'[TBD]',detail:'Унікальні отримані пакети; ВЛК та ОГД окремо, з горизонтом спостереження.',state:'planned'},
-      {id:'BO-3',title:'Підтверджені зупинки виплат',value:'[TBD]',detail:'Лише підтверджена причина; нагадування не є зупинкою виплати.',state:'planned'},
-      {id:'BO-4',title:'Контекст звернень',value:'Окреме джерело',detail:'Зовнішній контекст, без висновку про ефект продукту чи індивідуальних скарг.',state:'context'},
-      {id:'BO-5',title:'Документи без кур’єра',value:'[TBD]',detail:'Усі потрібні документи в знаменнику; потрібне отримання визначеної версії ВЛК.',state:'planned'},
-      {id:'BO-6',title:'Навантаження супроводу',value:'[TBD]',detail:'Активні кейси / погоджений FTE й окремо фактичні хвилини роботи на кейс.',state:'planned'}]};
-  }
+  analytics():AnalyticsView {const row=this.row('SELECT payload FROM analytics_snapshot WHERE id=(SELECT value FROM demo_setting WHERE id=?)','analytics');if(!row)throw new Denied(503,'analytics_unavailable');return JSON.parse(String(row.payload)) as AnalyticsView;}
+  command(session:Session,input:Command,now:number){return command(this,session,input,now);}
   devView():DevView {return {fixture:'ЕПМК · один перевірений навчальний випадок',source:'МІС ЗСУ · симуляція',stages:['Типізована подія','HMAC і схема','Стійкий inbox','Кейс · задача · outbox'],
     pending:Number(this.row("SELECT COUNT(*) AS n FROM inbox_event WHERE processing_state!='applied'")?.n??0),accepted:Number(this.row('SELECT COUNT(*) AS n FROM inbox_event')?.n??0)};}
   accept(event:EventEnvelope,h:SignatureHeaders,now:number):{http:number;status:string;business_applied:boolean} {
@@ -92,34 +105,41 @@ export class Store {
       const digest=semanticDigest(event);
       const previous=this.rows('SELECT id,semantic_digest FROM inbox_event WHERE (source_system=? AND event_id=?) OR (source_system=? AND source_stream=? AND source_version=? AND event_type=?)',event.source_system,event.event_id,event.source_system,event.source_stream,event.source_version,event.event_type);
       if(previous.some(r=>r.semantic_digest!==digest)){
-        this.run('INSERT INTO review_item VALUES (?,?,?,?,?,?,?)',id(),null,previous[0]?.id??null,'event_conflict','demo-source-review','open',null);
+        const original=this.row('SELECT case_id FROM case_event WHERE inbox_event_id=? LIMIT 1',previous[0]?.id??null);
+        const scope=original?this.row("SELECT u.unit_ref FROM unit_assignment u JOIN wound_case c ON c.subject_id=u.subject_id WHERE c.id=? AND u.verification_state='verified' AND u.valid_to IS NULL",original.case_id??null):undefined;
+        this.run('INSERT INTO review_item VALUES (?,?,?,?,?,?,?)',id(),original?.case_id??null,previous[0]?.id??null,'event_conflict',scope?.unit_ref??'demo-source-review','open',null);
+        if(original)this.run("UPDATE wound_case SET freshness_state='conflict' WHERE id=?",original.case_id??null);
         this.audit('event_validate','denied',event.source_system,event.event_id,now);
         return {http:409,status:'event_conflict',business_applied:false};
       }
       if(previous.length){this.audit('event_validate','duplicate',event.source_system,event.event_id,now);return {http:200,status:'duplicate',business_applied:false};}
       if(Number(this.row('SELECT COUNT(*) AS n FROM inbox_event')?.n??0)>=1000)throw new Denied(429,'ingress_capacity');
       const inbox=id(),at=new Date(now).toISOString();
-      const link=this.row("SELECT subject_id FROM identity_link WHERE source_namespace=? AND source_subject_token=? AND verification_state='verified' AND valid_from<=? AND (valid_to IS NULL OR valid_to>?)",event.source_system,event.subject_ref,at,at);
-      const earlier=this.row('SELECT id FROM inbox_event WHERE source_system=? AND source_stream=?',event.source_system,event.source_stream);
-      const applicable=event.event_type==='medical.primary_recorded'&&link&&event.incident_ref&&!earlier;
-      const state=applicable?'applied':!link||!event.incident_ref||earlier?'pending_review':'pending_8b';
-      this.run('INSERT INTO inbox_event VALUES (?,?,?,?,?,?,?,?,?,?,?)',inbox,event.source_system,event.event_id,event.source_stream,event.source_version,event.source_order,event.event_type,digest,at,JSON.stringify(event),state);
-      if(!applicable){
-        this.run('INSERT INTO review_item VALUES (?,?,?,?,?,?,?)',id(),null,inbox,state==='pending_8b'?'handler_pending_8b':'identity_incident_or_revision_review','demo-source-review','open',null);
-        this.audit('event_validate','pending',event.source_system,event.event_id,now);
-        return {http:202,status:state,business_applied:false};
+      this.run('INSERT INTO inbox_event VALUES (?,?,?,?,?,?,?,?,?,?,?)',inbox,event.source_system,event.event_id,event.source_stream,event.source_version,event.source_order,event.event_type,digest,at,JSON.stringify(event),'pending_review');
+      this.db.exec('SAVEPOINT domain_apply');
+      try {
+        applyEvent(this,event,inbox,now);
+        this.db.exec('RELEASE domain_apply');this.run("UPDATE inbox_event SET processing_state='applied' WHERE id=?",inbox);
+        this.audit('event_validate','accepted',event.source_system,event.event_id,now);
+        return {http:202,status:'accepted',business_applied:true};
+      }catch(error){
+        this.db.exec('ROLLBACK TO domain_apply');this.db.exec('RELEASE domain_apply');
+        if(!(error instanceof ReviewRequired))throw error;
+        const person=this.row("SELECT subject_id FROM identity_link WHERE source_namespace=? AND source_subject_token=? AND verification_state='verified' AND valid_from<=? AND (valid_to IS NULL OR valid_to>?)",event.source_system,event.subject_ref,at,at);
+        const c=person&&event.incident_ref?this.row("SELECT id FROM wound_case WHERE subject_id=? AND incident_namespace='demo-mis' AND incident_ref=?",person.subject_id??null,event.incident_ref):undefined;
+        const assignment=person?this.row("SELECT unit_ref FROM unit_assignment WHERE subject_id=? AND verification_state='verified' AND valid_from<=? AND (valid_to IS NULL OR valid_to>?)",person.subject_id??null,at,at):undefined;
+        insert(this,'review_item',{id:id(),case_id:c?.id??null,inbox_event_id:inbox,reason_code:error.reason,assigned_scope:assignment?.unit_ref??'demo-source-review',state:'open',resolution_event_ref:null});
+        if(c)this.run("UPDATE wound_case SET freshness_state='conflict' WHERE id=?",c.id??null);
+        this.audit('event_validate','pending',event.source_system,event.event_id,now);return {http:202,status:'pending_review',business_applied:false};
       }
-      let c=this.row('SELECT id,revision FROM wound_case WHERE subject_id=? AND incident_namespace=? AND incident_ref=?',link.subject_id??null,event.source_system,event.incident_ref);
-      if(!c){const caseId=id();this.run('INSERT INTO wound_case VALUES (?,?,?,?,?,?,?,?,?)',caseId,link.subject_id??null,event.source_system,event.incident_ref,'medical_event',null,'unknown','source_linked',1);c={id:caseId,revision:1};}
-      else this.run("UPDATE wound_case SET lifecycle_state=CASE WHEN lifecycle_state='administrative_open' THEN 'source_linked' ELSE lifecycle_state END,revision=revision+1 WHERE id=?",c.id??null);
-      const caseId=text(c,'id'),ce=id();
-      this.run('INSERT INTO case_event VALUES (?,?,?,?,?,?,?,?,?,?,?)',ce,caseId,inbox,null,event.event_type,event.occurred_at,event.recorded_at,event.source_system,event.source_version,'simulated_source',null);
-      const assignment=this.row("SELECT unit_ref FROM unit_assignment WHERE subject_id=? AND verification_state='verified' AND valid_from<=? AND (valid_to IS NULL OR valid_to>?)",link.subject_id??null,at,at);
-      this.run('INSERT OR IGNORE INTO task VALUES (?,?,?,?,?,?,?,?,?)',id(),caseId,'confirm_receipt_date','support',assignment?.unit_ref??'demo-source-review','open',null,'demo-primary:'+caseId,null);
-      this.run('INSERT INTO outbox VALUES (?,?,?,?,?,?,?,?,?)',id(),ce,'project_case','demo-local-projection',event.source_system+':'+event.event_id,JSON.stringify({case_id:caseId}),0,at,'pending');
-      this.audit('event_validate','accepted',event.source_system,event.event_id,now);
-      return {http:202,status:'accepted',business_applied:true};
     });
+  }
+  refreshDeadlines(now:number):void {
+    this.transaction(()=>{for(const d of this.rows("SELECT id,case_id,calculation_revision FROM deadline WHERE anchor_status='confirmed' AND applicability_state='applicable' AND due_date<?",kyivDate(new Date(now).toISOString()))){
+      const trigger='demo-deadline:'+String(d.id)+':'+String(d.calculation_revision);
+      if(this.row('SELECT id FROM task WHERE case_id=? AND trigger_ref=?',d.case_id??null,trigger))continue;
+      task(this,String(d.case_id),'review_deadline','support',trigger);this.audit('event_validate','allowed','demo-calendar',String(d.id),now,'worker');
+    }});
   }
   dispatchLocalOutbox():void {
     this.transaction(()=>{
