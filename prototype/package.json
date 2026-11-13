@@ -1,25 +1,35 @@
 {
-  "name": "mil600-security-foundation",
+  "name": "mil600-wounded-case-demo",
   "version": "0.0.0",
   "private": true,
   "type": "module",
   "engines": {
-    "node": ">=24"
+    "node": ">=26.8.2 <27"
   },
   "scripts": {
-    "build": "tsc -p tsconfig.json",
-    "test": "npm run build && node --test dist/security/*.test.js",
-    "lint": "eslint security"
+    "build": "tsc -p tsconfig.json && tsc -p tsconfig.ui.json && vite build",
+    "test": "npm run build && node --test dist/security/*.test.js dist/server/*.test.js",
+    "lint": "eslint security server shared ui e2e",
+    "dev": "npm run build && node dist/server/main.js",
+    "start": "node dist/server/main.js",
+    "test:e2e": "playwright test",
+    "demo:reset": "node dist/server/reset.js"
   },
   "dependencies": {
     "ajv": "8.20.0",
-    "ajv-formats": "3.0.1"
+    "ajv-formats": "3.0.1",
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
   },
   "devDependencies": {
+    "@playwright/test": "1.65.0",
     "@types/node": "26.6.6",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
     "eslint": "10.14.0",
     "typescript": "6.0.3",
-    "typescript-eslint": "8.72.2"
+    "typescript-eslint": "8.72.2",
+    "vite": "8.3.8"
   },
   "overrides": {
     "minimatch": "11.0.1"

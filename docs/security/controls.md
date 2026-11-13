@@ -2,7 +2,9 @@
 
 **2026-11-13 · локальне синтетичне ядро; не завершений MVP.** Код — [core.ts](../../prototype/security/core.ts), [HTTP adapter](../../prototype/security/server.ts), [машинна схема](../../prototype/security/event.schema.json), [негативні тести](../../prototype/security/security.test.ts), [CI](../../.github/workflows/security.yml). Немає публічного deployment або реальних інтеграцій.
 
-## Каталог контролів
+**Доповнення 8а:** контроль ядра нижче описує фазу 7; [сервер app](../../prototype/server/app.ts) і [Store](../../prototype/server/store.ts) тепер додають persistent inbox / nonce / transactional audit, browser sessions / CSRF / Origin / Host, self-only CSP для UI. [Межі та перевірки](../prototype-8a.md), [ADR 0008](../architecture/adr/0008-demo-stack-and-physical-schema.md). ASVS-реєстр фази 7 не підвищено автоматично до повного app L2.
+
+## Каталог контролів фази 7
 
 | ID | Реалізовано / доказ | Що ще обов’язково |
 |---|---|---|
