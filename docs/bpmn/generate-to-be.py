@@ -82,11 +82,11 @@ event(main,'Start_Injury','startEvent','Поранення',160,150,'Medical')
 gate(main,'Fork_CareCase','',270,143,'Medical',True)
 node(main,'Sub_Care','subProcess','Чинна допомога, лікування, переведення',420,118,220,100,'Medical')
 event(main,'End_Care','endEvent','Клінічна гілка',690,150,'Medical')
-node(main,'Sub_Intake','subProcess','еПМК АБО адміністративна ініціація; особа + випадок',420,365,250,100,'System')
+node(main,'Sub_Intake','subProcess','Основний: еПМК з МІС ЗСУ; адмінзапит — лише резерв',420,365,250,100,'System')
 gate(main,'Gateway_NewCase','Новий кейс?',760,390,'System')
 event(main,'End_Joined','endEvent','Долучено до наявного; задачі не дублюються',930,390,'System')
 gate(main,'Fork_Admin','',830,490,'System',True)
-node(main,'Sub_Certificate','subProcess','Довідка: скласти → видати → отримати',940,640,220,100,'Unit')
+node(main,'Sub_Certificate','subProcess','Довідка про обставини травми (додаток 5 до Наказу №402): скласти → видати → отримати',940,640,220,100,'Unit')
 event(main,'End_Certificate','endEvent','Отримання цієї версії підтверджено',1210,672,'Unit')
 node(main,'Sub_VLK','subProcess','Належне направлення → пакет → рішення ВЛК',1250,900,230,100,'VLK')
 gate(main,'Fork_AfterVLK','',1580,925,'VLK',True)
@@ -101,8 +101,8 @@ event(main,'Timer_Long','boundaryEvent','Контроль до 4 календа�
 e=el(nodes['Timer_Long']['el'],'bpmn:timerEventDefinition',id='TimerDef_Long');el(e,'bpmn:timeDate','long_treatment_review_at')
 node(main,'Task_LongReview','userTask','Медик / супровід: перевірити актуальність і організувати належний огляд',790,145,220,80,'Medical')
 event(main,'End_LongReview','endEvent','Без санкцій від таймера',1110,167,'Medical')
-event(main,'Timer_Certificate','boundaryEvent','Контроль застосовного строку',1040,722,'Unit',attachedToRef='Sub_Certificate',cancelActivity='false')
-e=el(nodes['Timer_Certificate']['el'],'bpmn:timerEventDefinition',id='TimerDef_Certificate');el(e,'bpmn:timeDate','certificate_due_at')
+event(main,'Timer_Certificate','boundaryEvent','Контроль строку документа',1040,722,'Unit',attachedToRef='Sub_Certificate',cancelActivity='false')
+e=el(nodes['Timer_Certificate']['el'],'bpmn:timerEventDefinition',id='TimerDef_Certificate');el(e,'bpmn:timeDate','certificate_follow_up_at')
 node(main,'Task_CertReview','userTask','Супровід: перевірити стан / дату; уточнити в автора',1330,650,200,80,'Unit')
 event(main,'End_CertReview','endEvent','Без автоматичної відмови',1600,672,'Unit')
 chain(main,['Start_Injury','Fork_CareCase','Sub_Care','End_Care'])
@@ -122,7 +122,7 @@ flow(main,'F_LongAlert','Timer_Long','Task_LongReview',points=[(538,238),(538,27
 chain(main,['Task_LongReview','End_LongReview'])
 flow(main,'F_CertAlert','Timer_Certificate','Task_CertReview',points=[(1058,758),(1058,800),(1430,800),(1430,730)])
 chain(main,['Task_CertReview','End_CertReview'])
-note(main,'Note_Timers','Таймер вмикається лише за відомої застосовної дати. Невідома дата → задача уточнення. 4 місяці — від початку лікування; переведення не скидає її. 5 днів для визначеного випадку N16 — від отримання документа військовим.',120,1370,1230,95)
+note(main,'Note_Timers','4 календарні місяці — від початку лікування, переведення не скидає її. N16: 5 днів лише за дій противника, від отримання документа військовослужбовцем. Внесення еПМК — лише орієнтир «дату отримання підтвердити»; юридичний строк до підтвердження невідомий. Без санкцій.',120,1370,1230,95)
 note(main,'Note_Trust','Усі читання / дії: серверна роль + scope + поля; оригінали в джерелах. Немає входу бійця → призначений супровід. Родина не отримує доступ автоматично. Немає події ≠ немає лікування / права. Демо — лише вигадані дані.',1400,1370,850,95)
 
 # Деталі допомоги: звичайні медичні дії, поза автоматизацією продукту.
@@ -143,9 +143,9 @@ chain(care,['Care_Documents','Care_End'])
 note(care,'Care_Note','Кейс отримує лише дозволені мінімальні події / посилання. Медики не вводять ті самі клінічні дані в новий застосунок; реальні адаптери залежать від власників. N01, N04, N05; ADR 0001, 0003–0005.',1650,150,350,200)
 
 intake=diagram('intake',nodes['Sub_Intake']['el'],'Ініціація • дві альтернативи • адміністративний кейс не створює медичного факту',2100,800)
-event(intake,'Intake_Med','intermediateCatchEvent','Погоджена подія еПМК',90,130)
+event(intake,'Intake_Med','intermediateCatchEvent','Основний: еПМК з МІС ЗСУ',90,130)
 el(nodes['Intake_Med']['el'],'bpmn:messageEventDefinition',id='MessageDef_IntakeMed')
-event(intake,'Intake_Admin','intermediateCatchEvent','Запит належного командира / супроводу',90,350)
+event(intake,'Intake_Admin','intermediateCatchEvent','Резерв: запит належного командира / супроводу за недоступної еПМК / події',90,350)
 el(nodes['Intake_Admin']['el'],'bpmn:messageEventDefinition',id='MessageDef_IntakeAdmin')
 gate(intake,'Intake_Merge','',300,220)
 node(intake,'Intake_Validate','serviceTask','Сервер: повноваження, мінімальний конверт, джерело',420,205)
@@ -175,23 +175,23 @@ intake['flows']=[(id,[(x+230,y) for x,y in pts],(lb[0]+230,*lb[1:]) if lb else N
 intake['notes']=[(id,text,(box[0]+230,*box[1:])) for id,text,box in intake['notes']]
 intake['width']=2400
 event(intake,'Intake_Start','startEvent','',40,227)
-node(intake,'Intake_WaitFirst','eventBasedGateway','Перший дозволений вхід',140,220,50,50)
+node(intake,'Intake_WaitFirst','eventBasedGateway','Основний сигнал; адміністративний резерв за потреби',140,220,50,50)
 chain(intake,['Intake_Start','Intake_WaitFirst'])
 flow(intake,'Intake_WaitMed','Intake_WaitFirst','Intake_Med',points=[(165,220),(165,148),(320,148)])
 flow(intake,'Intake_WaitAdmin','Intake_WaitFirst','Intake_Admin',points=[(165,270),(165,368),(320,368)])
 
-cert=diagram('certificate',nodes['Sub_Certificate']['el'],'Довідка • підготовка, видача, надсилання та отримання різні • F03–F04',2070,430)
+cert=diagram('certificate',nodes['Sub_Certificate']['el'],'Довідка про обставини травми (додаток 5 до Наказу №402) • підготовка / видача / передача / отримання',2070,430)
 event(cert,'Cert_Start','startEvent','',60,202)
-spec=[('Anchor','serviceTask','Сервіс: правило + якір; невідоме → задача уточнення'),
-      ('Prepare','userTask','Начальник медслужби: скласти довідку'),
-      ('Issue','userTask','Командир: видати довідку за повноваженнями'),
+spec=[('Anchor','serviceTask','Сервіс: лише дії противника; отримання підтверджене → строк; інакше орієнтир / уточнення'),
+      ('Prepare','userTask','Начальник медслужби: скласти документ'),
+      ('Issue','userTask','Командир: видати складений начальником медслужби документ'),
       ('Send','userTask','Належний відправник: передати чинним дозволеним каналом'),
       ('Receipt','receiveTask','Очікувати підтвердження отримання адресатом саме цієї версії'),
       ('Record','serviceTask','Сервіс: зафіксувати отримувача / версію / час; оновити вимоги')]
 for i,(id,typ,name) in enumerate(spec):node(cert,'Cert_'+id,typ,name,150+i*280,180,220,80)
 event(cert,'Cert_End','endEvent','Версія отримана',1900,202)
 chain(cert,['Cert_Start']+['Cert_'+s[0] for s in spec]+['Cert_End'])
-note(cert,'Cert_Note','N16 ст.260: для визначеного випадку 5 днів рахуються від отримання військовим первинного медичного облікового документа (за відсутності — довідки закладу), не від поранення / створення еПМК. Невідомий якір → null і уточнення; таймер нічого не санкціонує. Оригінал ≠ фото / OCR. Виправлена версія потребує нового отримання.',150,310,1810,90)
+note(cert,'Cert_Note','N16 ст.260: лише коли травма від дій противника. 5 днів на складання / направлення від отримання військовослужбовцем первинного облікового медичного документа (еПМК); за відсутності — довідки про перебування в закладі. Внесення еПМК — орієнтир: «дату отримання підтвердити». Юридичний due_date до підтвердження null; без санкцій. Видає командир, складає начальник медслужби.',150,310,1810,90)
 
 vlk=diagram('vlk',nodes['Sub_VLK']['el'],'ВЛК • технічний чекліст не блокує направлення • клінічне рішення залишається ВЛК',3130,620)
 event(vlk,'VLK_Start','startEvent','',50,202)
@@ -334,7 +334,8 @@ for d in diagrams:
             if n['id']=='Timer_Certificate':lb=(860,760,180,45)
             if n['id']=='End_Certificate':lb=(1210,740,160,45)
             if n['id']=='End_Joined':lb=(930,440,210,48)
-            if n['id']=='Intake_WaitFirst':lb=(20,100,190,40)
+            if n['id']=='Intake_WaitFirst':lb=(0,80,245,60)
+            if n['id']=='Intake_Admin':lb=(250,395,265,90)
             if n['id']=='Control_Duplicate':lb=(930,450,180,40)
             l=el(s,'bpmndi:BPMNLabel');el(l,'dc:Bounds',x=lb[0],y=lb[1],width=lb[2],height=lb[3])
     for id,text,box in d['notes']:

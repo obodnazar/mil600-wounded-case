@@ -102,15 +102,15 @@
     <bpmn:endEvent id="End_Care" name="Клінічна гілка">
       <bpmn:incoming>F_Sub_Care_End_Care</bpmn:incoming>
     </bpmn:endEvent>
-    <bpmn:subProcess id="Sub_Intake" name="еПМК АБО адміністративна ініціація; особа + випадок">
+    <bpmn:subProcess id="Sub_Intake" name="Основний: еПМК з МІС ЗСУ; адмінзапит — лише резерв">
       <bpmn:incoming>F_ToIntake</bpmn:incoming>
       <bpmn:outgoing>F_Sub_Intake_Gateway_NewCase</bpmn:outgoing>
-      <bpmn:intermediateCatchEvent id="Intake_Med" name="Погоджена подія еПМК">
+      <bpmn:intermediateCatchEvent id="Intake_Med" name="Основний: еПМК з МІС ЗСУ">
         <bpmn:incoming>Intake_WaitMed</bpmn:incoming>
         <bpmn:outgoing>Intake_MedMerge</bpmn:outgoing>
         <bpmn:messageEventDefinition id="MessageDef_IntakeMed" />
       </bpmn:intermediateCatchEvent>
-      <bpmn:intermediateCatchEvent id="Intake_Admin" name="Запит належного командира / супроводу">
+      <bpmn:intermediateCatchEvent id="Intake_Admin" name="Резерв: запит належного командира / супроводу за недоступної еПМК / події">
         <bpmn:incoming>Intake_WaitAdmin</bpmn:incoming>
         <bpmn:outgoing>Intake_AdminMerge</bpmn:outgoing>
         <bpmn:messageEventDefinition id="MessageDef_IntakeAdmin" />
@@ -174,7 +174,7 @@
       <bpmn:startEvent id="Intake_Start" name="">
         <bpmn:outgoing>F_Intake_Start_Intake_WaitFirst</bpmn:outgoing>
       </bpmn:startEvent>
-      <bpmn:eventBasedGateway id="Intake_WaitFirst" name="Перший дозволений вхід">
+      <bpmn:eventBasedGateway id="Intake_WaitFirst" name="Основний сигнал; адміністративний резерв за потреби">
         <bpmn:incoming>F_Intake_Start_Intake_WaitFirst</bpmn:incoming>
         <bpmn:outgoing>Intake_WaitMed</bpmn:outgoing>
         <bpmn:outgoing>Intake_WaitAdmin</bpmn:outgoing>
@@ -203,21 +203,21 @@
       <bpmn:outgoing>F_ToVLK</bpmn:outgoing>
       <bpmn:outgoing>F_ToReward</bpmn:outgoing>
     </bpmn:parallelGateway>
-    <bpmn:subProcess id="Sub_Certificate" name="Довідка: скласти → видати → отримати">
+    <bpmn:subProcess id="Sub_Certificate" name="Довідка про обставини травми (додаток 5 до Наказу №402): скласти → видати → отримати">
       <bpmn:incoming>F_ToCert</bpmn:incoming>
       <bpmn:outgoing>F_Sub_Certificate_End_Certificate</bpmn:outgoing>
       <bpmn:startEvent id="Cert_Start" name="">
         <bpmn:outgoing>F_Cert_Start_Cert_Anchor</bpmn:outgoing>
       </bpmn:startEvent>
-      <bpmn:serviceTask id="Cert_Anchor" name="Сервіс: правило + якір; невідоме → задача уточнення">
+      <bpmn:serviceTask id="Cert_Anchor" name="Сервіс: лише дії противника; отримання підтверджене → строк; інакше орієнтир / уточнення">
         <bpmn:incoming>F_Cert_Start_Cert_Anchor</bpmn:incoming>
         <bpmn:outgoing>F_Cert_Anchor_Cert_Prepare</bpmn:outgoing>
       </bpmn:serviceTask>
-      <bpmn:userTask id="Cert_Prepare" name="Начальник медслужби: скласти довідку">
+      <bpmn:userTask id="Cert_Prepare" name="Начальник медслужби: скласти документ">
         <bpmn:incoming>F_Cert_Anchor_Cert_Prepare</bpmn:incoming>
         <bpmn:outgoing>F_Cert_Prepare_Cert_Issue</bpmn:outgoing>
       </bpmn:userTask>
-      <bpmn:userTask id="Cert_Issue" name="Командир: видати довідку за повноваженнями">
+      <bpmn:userTask id="Cert_Issue" name="Командир: видати складений начальником медслужби документ">
         <bpmn:incoming>F_Cert_Prepare_Cert_Issue</bpmn:incoming>
         <bpmn:outgoing>F_Cert_Issue_Cert_Send</bpmn:outgoing>
       </bpmn:userTask>
@@ -244,10 +244,10 @@
       <bpmn:sequenceFlow id="F_Cert_Receipt_Cert_Record" sourceRef="Cert_Receipt" targetRef="Cert_Record" />
       <bpmn:sequenceFlow id="F_Cert_Record_Cert_End" sourceRef="Cert_Record" targetRef="Cert_End" />
       <bpmn:textAnnotation id="Cert_Note">
-        <bpmn:text>N16 ст.260: для визначеного випадку 5 днів рахуються від отримання військовим первинного медичного облікового документа (за відсутності — довідки закладу), не від поранення / створення еПМК. Невідомий якір → null і уточнення; таймер нічого не санкціонує. Оригінал ≠ фото / OCR. Виправлена версія потребує нового отримання.</bpmn:text>
+        <bpmn:text>N16 ст.260: лише коли травма від дій противника. 5 днів на складання / направлення від отримання військовослужбовцем первинного облікового медичного документа (еПМК); за відсутності — довідки про перебування в закладі. Внесення еПМК — орієнтир: «дату отримання підтвердити». Юридичний due_date до підтвердження null; без санкцій. Видає командир, складає начальник медслужби.</bpmn:text>
       </bpmn:textAnnotation>
       <bpmn:textAnnotation id="Title_certificate">
-        <bpmn:text>Довідка • підготовка, видача, надсилання та отримання різні • F03–F04</bpmn:text>
+        <bpmn:text>Довідка про обставини травми (додаток 5 до Наказу №402) • підготовка / видача / передача / отримання</bpmn:text>
       </bpmn:textAnnotation>
     </bpmn:subProcess>
     <bpmn:endEvent id="End_Certificate" name="Отримання цієї версії підтверджено">
@@ -694,10 +694,10 @@
     <bpmn:endEvent id="End_LongReview" name="Без санкцій від таймера">
       <bpmn:incoming>F_Task_LongReview_End_LongReview</bpmn:incoming>
     </bpmn:endEvent>
-    <bpmn:boundaryEvent id="Timer_Certificate" name="Контроль застосовного строку" attachedToRef="Sub_Certificate" cancelActivity="false">
+    <bpmn:boundaryEvent id="Timer_Certificate" name="Контроль строку документа" attachedToRef="Sub_Certificate" cancelActivity="false">
       <bpmn:outgoing>F_CertAlert</bpmn:outgoing>
       <bpmn:timerEventDefinition id="TimerDef_Certificate">
-        <bpmn:timeDate>certificate_due_at</bpmn:timeDate>
+        <bpmn:timeDate>certificate_follow_up_at</bpmn:timeDate>
       </bpmn:timerEventDefinition>
     </bpmn:boundaryEvent>
     <bpmn:userTask id="Task_CertReview" name="Супровід: перевірити стан / дату; уточнити в автора">
@@ -731,7 +731,7 @@
     <bpmn:sequenceFlow id="F_CertAlert" sourceRef="Timer_Certificate" targetRef="Task_CertReview" />
     <bpmn:sequenceFlow id="F_Task_CertReview_End_CertReview" sourceRef="Task_CertReview" targetRef="End_CertReview" />
     <bpmn:textAnnotation id="Note_Timers">
-      <bpmn:text>Таймер вмикається лише за відомої застосовної дати. Невідома дата → задача уточнення. 4 місяці — від початку лікування; переведення не скидає її. 5 днів для визначеного випадку N16 — від отримання документа військовим.</bpmn:text>
+      <bpmn:text>4 календарні місяці — від початку лікування, переведення не скидає її. N16: 5 днів лише за дій противника, від отримання документа військовослужбовцем. Внесення еПМК — лише орієнтир «дату отримання підтвердити»; юридичний строк до підтвердження невідомий. Без санкцій.</bpmn:text>
     </bpmn:textAnnotation>
     <bpmn:textAnnotation id="Note_Trust">
       <bpmn:text>Усі читання / дії: серверна роль + scope + поля; оригінали в джерелах. Немає входу бійця → призначений супровід. Родина не отримує доступ автоматично. Немає події ≠ немає лікування / права. Демо — лише вигадані дані.</bpmn:text>
@@ -1083,7 +1083,7 @@
       <bpmndi:BPMNShape id="DI_Intake_Admin" bpmnElement="Intake_Admin">
         <dc:Bounds x="320" y="350" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="250" y="396" width="190" height="58" />
+          <dc:Bounds x="250" y="395" width="265" height="90" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="DI_Intake_Merge" bpmnElement="Intake_Merge" isMarkerVisible="true">
@@ -1128,7 +1128,7 @@
       <bpmndi:BPMNShape id="DI_Intake_WaitFirst" bpmnElement="Intake_WaitFirst">
         <dc:Bounds x="140" y="220" width="50" height="50" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="20" y="100" width="190" height="40" />
+          <dc:Bounds x="0" y="80" width="245" height="60" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="DI_Intake_Note" bpmnElement="Intake_Note">
