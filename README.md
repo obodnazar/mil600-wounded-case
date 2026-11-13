@@ -21,7 +21,7 @@
 | [docs/02-brd.md](docs/02-brd.md) | BRD (крок I) |
 | [docs/03-as-is.md](docs/03-as-is.md) | AS IS процес для BPMN (крок I) |
 | [docs/bpmn/](docs/bpmn/) | BPMN AS IS і TO BE: XML з DI, SVG, перевірки й межі моделей |
-| [docs/decisions.md](docs/decisions.md) | Затвердження фаз 1, 4, 2, 3, 5, 6, TO BE та 7; 8а на затвердженні |
+| [docs/decisions.md](docs/decisions.md) | Затвердження фаз 1, 4, 2, 3, 5, 6, TO BE, 7 та 8а; 8б на затвердженні |
 | [docs/04-feature-concept.md](docs/04-feature-concept.md) | Концепція функціоналу, джерела даних, архітектура (крок II) |
 | [docs/05-product-concept.md](docs/05-product-concept.md) | Фаза 5: цінність ролей, персони з доказами, сценарії, MVP / беклог MoSCoW, приймання, метрики й трасування |
 | [docs/reviews/phase-5.md](docs/reviews/phase-5.md) | Скептичне рев’ю концепції та виправлення перед PR |
@@ -30,6 +30,7 @@
 | [docs/06-to-be.md](docs/06-to-be.md) | TO BE для кроку II: огляд, деталі, AS IS → TO BE, F / AC і межі |
 | [docs/reviews/phase-9-to-be.md](docs/reviews/phase-9-to-be.md) | Рев’ю лише дострокового пакета BPMN, не всієї фази 9 |
 | [docs/prototype-8a.md](docs/prototype-8a.md) | 8а: перші чотири екрани, готовність F / AC, стек і лінія відсікання |
+| [docs/prototype-8b.md](docs/prototype-8b.md) | 8б: повний синтетичний D1, AC01–AC10, докази й межі |
 | [prototype/README.md](prototype/README.md) | Локальний запуск, демо-ролі, перевірки й скриншоти |
 | [docs/security/](docs/security/) | Фаза 7: загрози, OPSEC, ризики, ASVS / нормативка та перевірюване ядро захисту |
 | [docs/reviews/phase-7.md](docs/reviews/phase-7.md) | Рев’ю фази 7 і докази / межі |

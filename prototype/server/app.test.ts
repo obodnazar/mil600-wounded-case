@@ -116,7 +116,7 @@ test('8а DB: verified identity/assignment overlap rejected; distinct incidents 
   assert.throws(()=>f.store.run("INSERT INTO unit_assignment VALUES ('demo-bad','demo-person-01','demo-unit-2','2026-11-01',NULL,'demo-proof','verified')"));
   f.store.run("INSERT INTO identity_link VALUES ('demo-pending','demo-person-02','demo-mis','demo-person-01','pending','demo-proof','2026-11-01',NULL)");assert.throws(()=>f.store.run("UPDATE identity_link SET verification_state='verified' WHERE id='demo-pending'"));
   f.store.run("INSERT INTO unit_assignment VALUES ('demo-pending-assignment','demo-person-01','demo-unit-2','2026-11-01',NULL,'demo-proof','pending')");assert.throws(()=>f.store.run("UPDATE unit_assignment SET verification_state='verified' WHERE id='demo-pending-assignment'"));
-  f.store.run("INSERT INTO wound_case VALUES ('demo-new','demo-person-01','demo-mis','demo-another-incident','administrative_request',NULL,'unknown','administrative_open',1)");assert.equal(f.store.row("SELECT COUNT(*) AS n FROM wound_case WHERE subject_id='demo-person-01'")?.n,2);
+  f.store.run("INSERT INTO wound_case(id,subject_id,incident_namespace,incident_ref,origin,injury_date,injury_date_assurance,lifecycle_state,revision) VALUES ('demo-new','demo-person-01','demo-mis','demo-another-incident','administrative_request',NULL,'unknown','administrative_open',1)");assert.equal(f.store.row("SELECT COUNT(*) AS n FROM wound_case WHERE subject_id='demo-person-01'")?.n,2);
 }));
 test('8а: foreign database is refused before any schema/data mutation',async()=>use(async f=>{
   const path=join(f.dir,'foreign.sqlite'),db=new DatabaseSync(path);db.exec('CREATE TABLE sentinel(value TEXT); INSERT INTO sentinel VALUES (\'keep\')');db.close();

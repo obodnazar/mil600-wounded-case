@@ -1,0 +1,44 @@
+import type {EventEnvelope} from '../security/core.js';
+export interface Fixture {id:string;title:string;event:EventEnvelope}
+const token=(s:string)=>s.replaceAll('_','-');
+const at='2026-11-13T10:00:00.000Z';
+function make(id:string,title:string,type:string,source:string,payload:Record<string,unknown>,extra:Partial<EventEnvelope>={}):Fixture{return {id,title,event:{schema_version:'case-event/1',event_id:'demo-fixture-'+token(id),event_type:type,source_system:source,source_record_ref:'demo-record-'+token(id),source_stream:'demo-stream-'+token(id),source_version:'v1',source_order:null,subject_ref:'demo-person-01',incident_ref:'demo-incident-01',episode_ref:null,occurred_at:at,recorded_at:at,payload,...extra}};}
+const proof='demo-source-proof';const document=(ref:string,kind:string,version='v1')=>({document_ref:ref,document_kind:kind,document_version:version,evidence_ref:proof});
+const packet=(route:string,ref:string,revision='v1')=>({route,packet_ref:ref,packet_revision:revision,recipient_ref:'demo-vlk',confirmed_at:at,reason_code:'received',evidence_ref:proof});
+function finance(id:string,kind:string,status:string,period='2026-11'):Fixture{return make(id,`${kind==='reward'?'Винагорода':'ОГД'} · ${status} · ${period}`,'finance.status_recorded','demo-finance',{kind,packet_ref:period==='2026-11'?`demo-${kind}-packet-01`:`demo-${kind}-oct-01`,period,status,reason_code:['returned','denied'].includes(status)?'documents_needed':'confirmed_scope',decision_ref:'demo-decision-'+token(id),evidence_ref:proof,...(status==='denied'?{previous_decision_ref:`demo-decision-${kind}-returned`}:status==='execution_partial'?{previous_decision_ref:`demo-decision-${kind}-approved`}:status==='execution_confirmed'?{previous_decision_ref:`demo-decision-${kind}-execution-partial`}:{})});}
+export const fixtures:Fixture[]=[
+ make('primary','D1.1 · еПМК від МІС ЗСУ','medical.primary_recorded','demo-mis',{document_kind:'primary_medical_card',document_version:'v1',enemy_action:'yes',applicability_evidence_ref:proof,injury_date:'2026-10-20',injury_evidence_ref:proof},{source_record_ref:'demo-primary-d1',recorded_at:'2026-11-09T10:00:00Z',occurred_at:'2026-10-20T10:00:00Z'}),
+ make('admit','D1.2 · надходження','care.admitted','demo-mis',{provider_ref:'demo-provider-1',date:'2026-11-01',evidence_ref:proof},{episode_ref:'demo-d1-episode-a'}),
+ make('care-start','D1.2 · підтверджений початок лікування','care.start_confirmed','demo-mis',{provider_ref:'demo-provider-1',date:'2026-10-21',care_applicable:true,evidence_ref:proof},{episode_ref:'demo-d1-episode-a'}),
+ make('care-unknown','S6 · невідома дата лікування','care.start_confirmed','demo-mis',{provider_ref:'demo-provider-1',date:null,care_applicable:true,evidence_ref:proof},{subject_ref:'demo-person-03',incident_ref:'demo-incident-03',episode_ref:'demo-unknown-episode'}),
+ make('transfer','D1.2 · переведення','care.transferred','demo-mis',{provider_ref:'demo-provider-2',date:'2026-11-02',previous_episode_ref:'demo-d1-episode-a',evidence_ref:proof},{episode_ref:'demo-d1-episode-b'}),
+ make('civil','S2 · погоджений цивільний канал (мок)','care.transferred','demo-civil-mis',{provider_ref:'demo-provider-3',date:'2026-11-03',previous_episode_ref:'demo-d1-episode-b',evidence_ref:proof,source_channel:'agreed_demo_901'},{episode_ref:'demo-d1-episode-c'}),
+ make('civil-summary','S3 · виписка цивільного джерела','document.prepared','demo-civil-mis',{...document('demo-civil-summary','medical_summary'),source_channel:'agreed_demo_901'}),
+ make('discharge','S2 · виписка із закладу','care.discharged','demo-civil-mis',{provider_ref:'demo-provider-3',date:'2026-11-04',evidence_ref:proof,source_channel:'agreed_demo_901'},{episode_ref:'demo-d1-episode-c'}),
+ make('patient-receipt','D1.2 · отримання еПМК військовослужбовцем','document.received','demo-service',{document_ref:'demo-primary-d1',document_version:'v1',recipient_ref:'demo-person-01',recipient_kind:'servicemember',received_at:'2026-11-10T12:00:00Z',evidence_ref:proof}),
+ make('certificate-prepared','D1.3 · медслужба склала документ','document.prepared','demo-mis',document('demo-certificate-d1','trauma_certificate')),
+ make('certificate-issued','D1.3 · СЕДО підтвердила видачу командиром','document.issued','demo-sedo',document('demo-certificate-d1','trauma_certificate')),
+ make('certificate-sent','D1.3 · СЕДО підтвердила відправлення','document.sent','demo-sedo',{document_ref:'demo-certificate-d1',document_version:'v1',recipient_ref:'demo-vlk',recipient_kind:'vlk',sent_at:at,evidence_ref:proof}),
+ make('certificate-received','D1.3 · ВЛК підтвердила отримання версії','document.received','demo-vlk',{document_ref:'demo-certificate-d1',document_version:'v1',recipient_ref:'demo-vlk',recipient_kind:'vlk',received_at:at,evidence_ref:proof}),
+ make('certificate-corrected','S3 · виправлена версія, потрібна нова квитанція','document.corrected','demo-sedo',{...document('demo-certificate-d1','trauma_certificate','v2'),supersedes_document_version:'v1'}),
+ make('certificate-received-v2','S3 · отримання виправленої версії адресатом','document.received','demo-vlk',{document_ref:'demo-certificate-d1',document_version:'v2',recipient_ref:'demo-vlk',recipient_kind:'vlk',received_at:at,evidence_ref:proof}),
+ make('certificate-withdrawn','S3 · відкликання виправленої версії','document.withdrawn','demo-sedo',document('demo-certificate-d1','trauma_certificate','v2')),
+ make('referral','D1.5 · СЕДО підтвердила направлення','referral.issued','demo-sedo',{document_ref:'demo-referral-d1',document_version:'v1',issuer_ref:'demo-commander',evidence_ref:proof}),
+ make('vlk-received','D1.5 · ВЛК отримала пакет','vlk.package_received','demo-vlk',packet('vlk','demo-packet-01')),
+ make('vlk-returned','S4 · ВЛК адресувала зауваження автору','vlk.package_returned','demo-vlk',{...packet('vlk','demo-packet-01'),reason_code:'author_clarification'}),
+ make('vlk-resubmitted','S4 · ВЛК повторно отримала уточнену ревізію','vlk.package_received','demo-vlk',{...packet('vlk','demo-packet-01','v2'),supersedes_revision:'v1'}),
+ make('vlk-decision','D1.5 · ВЛК оформила постанову','vlk.decision_recorded','demo-vlk',{document_ref:'demo-vlk-decision-d1',document_version:'v1',service_code:'next_service_action',evidence_ref:proof}),
+ make('service-executed','D1.5 · виконання адміністративної дії','service.action_confirmed','demo-service',{action_ref:'demo-service-action',action_code:'service_action_completed',evidence_ref:proof}),
+ ...(['reward','ogd'] as const).flatMap(kind=>[
+  make(kind+'-packet',`D1 · ${kind} · пакет отримано`,'finance.package_received','demo-finance',{kind,packet_ref:`demo-${kind}-packet-01`,packet_revision:'v1',recipient_ref:'demo-finance',confirmed_at:at,period:'2026-11',evidence_ref:proof}),
+  ...['returned','denied','approved','execution_partial','execution_confirmed','unknown'].map(status=>finance(kind+'-'+status,kind,status)),
+  make(kind+'-oct-packet',`S5 · ${kind} · інший період`,'finance.package_received','demo-finance',{kind,packet_ref:`demo-${kind}-oct-01`,packet_revision:'v1',recipient_ref:'demo-finance',confirmed_at:at,period:'2026-10',evidence_ref:proof}),
+  ...(['returned','denied'] as const).map(prior=>{const f=finance(kind+'-approved-after-'+prior,kind,'approved');f.event.payload.previous_decision_ref=`demo-decision-${kind}-${prior}`;f.event.payload.decision_ref=`demo-decision-${kind}-approved`;return f;}),
+  finance(kind+'-oct-approved',kind,'approved','2026-10')]),
+ make('gap','S6 · джерело повідомило про пропущений сигнал','source.sync_gap','demo-mis',{expected_type:'care.start_confirmed',expected_stream:'demo-stream-gap-recovered',evidence_ref:proof}),
+ make('gap-recovered','S6 · пропущений сигнал відновлено','care.start_confirmed','demo-mis',{provider_ref:'demo-provider-1',date:'2026-10-21',care_applicable:true,evidence_ref:proof},{episode_ref:'demo-d1-episode-a'}),
+ make('reserve-hospital','S6 · довідка про перебування без еПМК','document.prepared','demo-mis',{...document('demo-hospital-reserve','hospital_stay_certificate'),enemy_action:'yes',applicability_evidence_ref:proof},{subject_ref:'demo-person-02',incident_ref:'demo-reserve-02'}),
+ make('reserve-hospital-receipt','S6 · отримання резервного документа військовослужбовцем','document.received','demo-service',{document_ref:'demo-hospital-reserve',document_version:'v1',recipient_ref:'demo-person-02',recipient_kind:'servicemember',received_at:at,evidence_ref:proof},{subject_ref:'demo-person-02',incident_ref:'demo-reserve-02'}),
+ make('reserve-primary','S1 · пізня еПМК для адміністративного резерву','medical.primary_recorded','demo-mis',{document_kind:'primary_medical_card',document_version:'v1'},{subject_ref:'demo-person-02',incident_ref:'demo-reserve-02'}),
+ make('uncertain','S1 · особа відома, випадок потребує звірки','medical.primary_recorded','demo-mis',{document_kind:'primary_medical_card',document_version:'v1'},{incident_ref:null}),
+];
