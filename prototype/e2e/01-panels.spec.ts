@@ -58,10 +58,10 @@ test('чотири панелі, серверні межі й стійкий п�
   await expect(page.getByRole('heading', {name: 'Мій кейс', exact: true})).toBeVisible();
   await expect(page.getByText('Дату отримання підтвердити', {exact: true})).toBeVisible();
   await expect(page.getByText(BANNER, {exact: true})).toBeVisible();
-  // Кейс 01 на старті не має постанови ВЛК: рядок ОГД із даних видно, і поруч — пояснення (ADR 0011).
+  // Кейс 01 на старті не має постанови ВЛК: ОГД ще не відстежується, видно лише пояснення (ADR 0011).
   const ogd = page.locator('.finance-route', {hasText: 'Одноразова грошова допомога'});
   await expect(ogd.getByText(OGD_AWAITS_VLK, {exact: true})).toBeVisible();
-  await expect(ogd.locator('.finance-period')).toHaveCount(1);
+  await expect(ogd.locator('.finance-period')).toHaveCount(0);
   await expect(page.locator('#finance')).toContainText('у навчальному прототипі їх окремо не змодельовано');
   await expect(page.locator('.finance-route', {hasText: 'Винагорода за час стаціонарного лікування'})).toHaveCount(1);
   await page.getByRole('link', {name: 'Що буде далі'}).click();
@@ -74,7 +74,7 @@ test('чотири панелі, серверні межі й стійкий п�
   const address = page.getByRole('region', {name: 'Що бачить частина'});
   await expect(address).toContainText(/Заклад лікування\s*Умовний заклад \d{2}/);
   await expect(address).toContainText(/Винагорода за час стаціонарного лікування · листопад 2026\s*на розгляді/);
-  await expect(address).toContainText('Одноразова грошова допомога (ОГД) · листопад 2026');
+  await expect(address).not.toContainText('Одноразова грошова допомога (ОГД) ·');
   await expect(address.getByText(OGD_AWAITS_VLK, {exact: true})).toBeVisible();
   const addressText = await address.innerText();
   expect(addressText).not.toMatch(MONEY);

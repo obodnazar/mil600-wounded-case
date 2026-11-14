@@ -1,4 +1,4 @@
-import {ensureRequirements, hasCurrentVlkDecision, recordSourceDocument} from '../documents.js';
+import {assertOgdAfterDecision, ensureRequirements, recordSourceDocument} from '../documents.js';
 import {RECIPIENT, ReviewRequired, optionalText, text, type EventContext, type Route} from '../model.js';
 import {packetProblem} from '../rules.js';
 import {hasOpenTask, openTask, resolveAwaitedCommand, resolveOpenTasksByTrigger, resolveTasks} from '../tasks.js';
@@ -45,7 +45,7 @@ export function applyReferralIssued({store, event, payload, caseId, caseEventId,
 export function applyPackageSignal({store, event, payload, caseId, caseEventId}: EventContext): void {
   const route = routeOf(event.source_system, payload);
   // ОГД розглядається лише після чинної постанови ВЛК (ADR 0011).
-  if (route === 'ogd' && !hasCurrentVlkDecision(store, caseId)) throw new ReviewRequired('ogd_before_vlk_decision');
+  if (route === 'ogd') assertOgdAfterDecision(store, caseId, [event.occurred_at, text(payload, 'confirmed_at')].filter(Boolean));
   const packet = text(payload, 'packet_ref');
   const revision = text(payload, 'packet_revision');
   const returned = event.event_type.endsWith('returned');
@@ -98,7 +98,9 @@ function routeOf(source: string, payload: Record<string, unknown>): Route {
  * й відкриває рівно одну нову дію. Постанова, старша за вже прийняту (затримана
  * доставка, інший потік), не стає чинною мовчки — вона йде на розбір.
  */
-export function applyVlkDecision({store, event, payload, caseId, caseEventId}: EventContext): void {
+const FUTURE_SKEW_MS = 5 * 60 * 1000;
+
+export function applyVlkDecision({store, event, payload, caseId, caseEventId, now}: EventContext): void {
   const accepted = store.exists(
     "SELECT packet_ref FROM route_packet WHERE case_id=? AND route='vlk' AND state='received'",
     caseId,
@@ -111,6 +113,8 @@ export function applyVlkDecision({store, event, payload, caseId, caseEventId}: E
   );
   const newest = Math.max(...earlier.map(row => Date.parse(String(row.occurred_at))).filter(Number.isFinite));
   if (Date.parse(event.occurred_at) < newest) throw new ReviewRequired('decision_older_than_current');
+  // Постанова, датована майбутнім, назавжди заблокувала б справжні пізніші рішення.
+  if (Date.parse(event.occurred_at) > now + FUTURE_SKEW_MS) throw new ReviewRequired('decision_in_future');
   recordSourceDocument(store, {
     caseId,
     source: event.source_system,

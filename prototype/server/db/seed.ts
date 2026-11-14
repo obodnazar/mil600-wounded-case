@@ -166,7 +166,7 @@ function seedCase(insert: Insert, index: number): void {
   });
   seedCertificateClock(insert, {index, n, caseId, unit});
   seedVlkChecklist(insert, {index, n, caseId});
-  seedFinance(insert, {index, n, caseId});
+  seedFinance(insert, {index, n, caseId}, stage);
   if (index % 4 === 0) {
     insert('review_item', {
       id: `demo-review-${n}`,
@@ -293,8 +293,32 @@ function seedVlkChecklist(insert: Insert, {index, n, caseId}: CaseSeed): void {
   }
 }
 
-function seedFinance(insert: Insert, {index, n, caseId}: CaseSeed): void {
-  for (const kind of ['reward', 'ogd']) {
+/** Стадії, на яких у вигаданих даних уже є постанова ВЛК. */
+const DECIDED_STAGES: readonly string[] = ['service_action', 'finance', 'completed'];
+
+/**
+ * Винагорода за стаціонар є в кожному кейсі; ОГД і постанова ВЛК — лише там, де стадія вже
+ * після постанови (ADR 0011: ОГД розглядається тільки після чинної постанови ВЛК).
+ */
+function seedFinance(insert: Insert, {index, n, caseId}: CaseSeed, stage: string): void {
+  const decided = DECIDED_STAGES.includes(stage);
+  if (decided) {
+    insert('case_event', {
+      id: `demo-seed-vlk-decision-${n}`,
+      case_id: caseId,
+      inbox_event_id: null,
+      command_id: null,
+      event_type: 'vlk.decision_recorded',
+      occurred_at: '2026-11-05T09:00:00.000Z',
+      recorded_at: '2026-11-05T09:05:00.000Z',
+      source_ref: 'demo-vlk',
+      source_version: 'seed-v1',
+      assurance: 'synthetic_seed',
+      supersedes_id: null,
+      minimal_payload: JSON.stringify({service_code: 'next_service_action'}),
+    });
+  }
+  for (const kind of decided ? ['reward', 'ogd'] : ['reward']) {
     const returned = kind === 'ogd' && index % 4 === 0;
     insert('financial_track', {
       id: `demo-finance-${kind}-${n}`,

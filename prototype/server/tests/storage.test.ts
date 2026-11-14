@@ -60,7 +60,7 @@ test('БД: чужі докази, непідтверджений строк, н
     assert.throws(() => store.run("UPDATE deadline SET due_date='2026-11-15' WHERE id='demo-deadline-01'"));
     assert.throws(() => store.run("UPDATE deadline SET anchor_event_id='demo-receipt-anchor-02' WHERE id='demo-deadline-01'"));
     assert.throws(() => store.run("UPDATE task SET deadline_id='demo-deadline-02' WHERE id='demo-task-01'"));
-    assert.throws(() => store.run("UPDATE financial_track SET current_status='executed' WHERE id='demo-finance-ogd-01'"));
+    assert.throws(() => store.run("UPDATE financial_track SET current_status='executed' WHERE id='demo-finance-reward-01'"));
     store.audit('case_read', 'allowed', 'demo-actor', 'demo-case', NOW);
     assert.throws(() => store.run("UPDATE audit_entry SET result_code='allowed'"));
     assert.throws(() => store.run('DELETE FROM audit_entry'));

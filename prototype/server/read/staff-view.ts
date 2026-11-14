@@ -1,7 +1,9 @@
 import {Denied, type Session} from '../../security/core.js';
 import type {ActionAvailability, CommandAction, StaffCaseView, StaffProfile, StaffView} from '../../shared/api.js';
 import type {Store} from '../db/store.js';
-import {RESERVE_BASE_CASE, SUPPORT_ONLY_TASKS, commandBlocker, isSupportOnlyReview} from '../domain/preconditions.js';
+import {
+  RESERVE_BASE_CASE, commandBlocker, commanderFreshness, isSupportOnlyReview, isSupportOnlyTask,
+} from '../domain/preconditions.js';
 import {caseSummary, currentFacility, financeTracks, milestones} from './case-view.js';
 
 /** Дії над кейсом, доступність яких службова панель показує наперед. */
@@ -29,8 +31,9 @@ export function staffCaseView(store: Store, role: StaffProfile, caseId: string):
   // Командир бачить службовий мінімум: без задач і розборів про виплати та лікування.
   const visible = role === 'commander'
     ? {
-        tasks: summary.tasks.filter(task => !SUPPORT_ONLY_TASKS.has(task.kind)),
+        tasks: summary.tasks.filter(task => !isSupportOnlyTask(store, task.id, task.kind)),
         reviews: summary.reviews.filter(review => !isSupportOnlyReview(store, review.id)),
+        freshness: commanderFreshness(store, caseId, summary.freshness, summary.lastSourceAt),
       }
     : {};
   const marks = milestones(store, caseId);

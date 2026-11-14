@@ -128,12 +128,29 @@ export function hasIssuedCertificate(store: Store, caseId: string): boolean {
  * Без неї ОГД не розглядається (ADR 0011).
  */
 export function hasCurrentVlkDecision(store: Store, caseId: string): boolean {
+  return currentVlkDecisionAt(store, caseId) !== null;
+}
+
+/** Момент чинної позитивної постанови ВЛК (мс) або null, якщо її немає чи останнє слово ВЛК — уточнення. */
+export function currentVlkDecisionAt(store: Store, caseId: string): number | null {
   const latest = store.row(
-    `SELECT json_extract(minimal_payload,'$.service_code') AS code FROM case_event
+    `SELECT json_extract(minimal_payload,'$.service_code') AS code,occurred_at FROM case_event
       WHERE case_id=? AND event_type='vlk.decision_recorded' ORDER BY rowid DESC LIMIT 1`,
     caseId,
   );
-  return latest !== undefined && latest.code !== 'clarification_needed';
+  if (!latest || latest.code === 'clarification_needed') return null;
+  const at = Date.parse(String(latest.occurred_at));
+  return Number.isFinite(at) ? at : null;
+}
+
+/**
+ * ОГД розглядається лише після чинної постанови ВЛК (ADR 0011): подія ОГД без постанови або
+ * датована раніше за неї (затримана чи повторна доставка) не застосовується — вона йде на розбір.
+ */
+export function assertOgdAfterDecision(store: Store, caseId: string, eventTimes: readonly string[]): void {
+  const decidedAt = currentVlkDecisionAt(store, caseId);
+  const earlier = eventTimes.some(time => Date.parse(time) < (decidedAt ?? Infinity));
+  if (decidedAt === null || earlier) throw new ReviewRequired('ogd_before_vlk_decision');
 }
 
 /** Довідку склала медслужба, але видачу ще не підтверджено. */

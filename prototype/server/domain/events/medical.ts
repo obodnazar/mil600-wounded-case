@@ -1,7 +1,8 @@
 import type {Store} from '../../db/store.js';
 import {refreshCertificateClock, saveCareControl} from '../deadlines.js';
 import {ensureRequirements, recordSourceDocument} from '../documents.js';
-import {ReviewRequired, newId, optionalText, text, type EventContext, type Route} from '../model.js';
+import {kyivDate} from '../calendar.js';
+import {ReviewRequired, isoTime, newId, optionalText, text, type EventContext, type Route} from '../model.js';
 import {asEnemyAction, mergeCareApplicability, mergeEnemyAction} from '../rules.js';
 import {openTask, resolveTasks} from '../tasks.js';
 
@@ -100,10 +101,19 @@ export function applyCareStartConfirmed(context: EventContext): void {
       throw new ReviewRequired('care_anchor_correction_unproven');
     }
   }
+  assertPlausibleCareStart(context, date);
   const applicability = mergeCareApplicability(caseRow.care_applicability, payload.care_applicable);
   if (applicability.conflict) throw new ReviewRequired('care_applicability_change_unproven');
   const careApplicable = applicability.value === 'applicable' ? true : applicability.value === 'not_applicable' ? false : null;
   saveCareControl(store, caseId, caseEventId, date, careApplicable);
+}
+
+/** Початок лікування не може бути в майбутньому чи раніше за підтверджену дату поранення. */
+function assertPlausibleCareStart({caseRow, now}: EventContext, date: string | null): void {
+  if (!date) return;
+  if (date > kyivDate(isoTime(now))) throw new ReviewRequired('care_start_in_future');
+  const injury = caseRow.injury_date_assurance === 'confirmed' ? caseRow.injury_date : null;
+  if (typeof injury === 'string' && date < injury) throw new ReviewRequired('care_start_before_injury');
 }
 
 /** Виписка закриває поточний епізод; наступний заклад не вигадується. */

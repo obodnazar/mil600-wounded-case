@@ -1,4 +1,4 @@
-import type {CommandAction, DemoProfile, UnavailableReason} from '../../shared/api.js';
+import type {CommandAction, DemoProfile, Freshness, UnavailableReason} from '../../shared/api.js';
 import type {Store} from '../db/store.js';
 import {hasIssuedCertificate, hasPreparedCertificate} from './documents.js';
 import {hasPendingRequest} from './tasks.js';
@@ -24,6 +24,33 @@ export const SUPPORT_ONLY_REVIEWS: ReadonlySet<string> = new Set([
 ]);
 
 export const SUPPORT_ONLY_TASKS: ReadonlySet<string> = new Set(['clarify_finance', 'clarify_care_start']);
+
+/** Задача про виплати чи лікування: за видом або, для нагадування про строк, за правилом лікування. */
+export function isSupportOnlyTask(store: Store, taskId: string, kind: string): boolean {
+  if (SUPPORT_ONLY_TASKS.has(kind)) return true;
+  if (kind !== 'review_deadline') return false;
+  return store.exists(
+    `SELECT t.id FROM task t JOIN deadline d ON d.case_id=t.case_id AND d.rule_version_id='demo-rule-care'
+      WHERE t.id=? AND t.trigger_ref LIKE 'demo-deadline:'||d.id||':%'`,
+    taskId,
+  );
+}
+
+/**
+ * Свіжість кейсу для командира без прихованих від нього розборів і задач: інакше «є суперечність»
+ * чи «дані не оновлено» видавали б стан виплат або лікування, з яким командир нічого не може зробити.
+ */
+export function commanderFreshness(
+  store: Store, caseId: string, freshness: Freshness, lastSourceAt: string | null,
+): Freshness {
+  if (freshness !== 'conflict' && freshness !== 'stale') return freshness;
+  const reviews = store.rows("SELECT id FROM review_item WHERE case_id=? AND state='open'", caseId);
+  if (reviews.some(review => !isSupportOnlyReview(store, String(review.id)))) return 'conflict';
+  const gap = store.exists("SELECT id FROM task WHERE case_id=? AND status='open' AND kind='reconcile_missing_event'", caseId);
+  if (gap) return 'stale';
+  // Без видимих проблем: «актуально», якщо джерела вже щось підтверджували, інакше — початковий стан.
+  return lastSourceAt ? 'fresh' : 'unknown';
+}
 
 /**
  * Розбір стосується виплат чи лікування — за кодом причини або за типом події, якої він

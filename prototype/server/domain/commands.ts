@@ -228,7 +228,7 @@ const requestClarification: Effect = ({store, input, caseId, caseEventId}) => {
  * явно підтверджує кейс. Інші причини розбору вручну не закриваються — їх
  * має розв’язати належне джерело.
  */
-const resolveReview: Effect = ({store, input, caseId, caseEventId, now}) => {
+const resolveReview: Effect = ({store, input, caseId, caseEventId, now, role}) => {
   const review = store.row("SELECT * FROM review_item WHERE id=? AND state='open'", input.option ?? '');
   const inScope = review !== undefined && store.exists(
     `SELECT u.id FROM unit_assignment u JOIN wound_case c ON c.subject_id=u.subject_id
@@ -238,6 +238,8 @@ const resolveReview: Effect = ({store, input, caseId, caseEventId, now}) => {
   if (!review || !inScope || review.reason_code !== 'missing_incident') {
     throw new Denied(409, 'source_review_required');
   }
+  // Розбір фінансової чи медичної події командир не бачить — і застосувати його не може.
+  if (role === 'commander' && isSupportOnlyReview(store, String(review.id))) throw new Denied(403, 'command_forbidden');
   const inbox = store.row('SELECT minimal_envelope FROM inbox_event WHERE id=?', review.inbox_event_id);
   if (!inbox) throw new Denied(404, 'not_found');
   const event = JSON.parse(String(inbox.minimal_envelope)) as EventEnvelope;

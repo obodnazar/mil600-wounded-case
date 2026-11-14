@@ -132,9 +132,9 @@ test('RR-09: чинність постанови порівнює моменти
       event.payload.document_ref = id;
       if (clarify) event.payload.service_code = 'clarification_needed';
     });
-    await h.accepted(decision('demo-decision-offset', '2026-11-13T23:00:00+05:00'));
-    await h.accepted(decision('demo-decision-clarify-20', '2026-11-13T20:00:00Z', true));
-    await h.pending(decision('demo-decision-positive-19', '2026-11-13T19:00:00Z'));
+    await h.accepted(decision('demo-decision-offset', '2026-11-13T15:00:00+05:00'));
+    await h.accepted(decision('demo-decision-clarify-1130', '2026-11-13T11:30:00Z', true));
+    await h.pending(decision('demo-decision-positive-11', '2026-11-13T11:00:00Z'));
     assert.equal(lastReason(h), 'decision_older_than_current');
     assert.equal(milestones(h).vlkDecision, 'clarification_needed');
   }));

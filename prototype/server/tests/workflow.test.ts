@@ -337,7 +337,7 @@ test('AC05/10: різні дії ролей; неповний перелік н�
     assert.equal((await h.command('refer_vlk')).status, 409);
 
     await h.accepted('referral');
-    assert.equal(h.count("SELECT COUNT(*) AS n FROM case_event WHERE event_type='vlk.decision_recorded'"), 0);
+    assert.equal(h.count("SELECT COUNT(*) AS n FROM case_event WHERE case_id=? AND event_type='vlk.decision_recorded'", CASE), 0);
     assert.equal((await h.command('refer_vlk')).status, 409);
 
     h.store.run("UPDATE unit_assignment SET valid_to='2026-11-12T12:00:00Z' WHERE id='demo-assignment-01'");
@@ -430,7 +430,7 @@ test('AC06: виконання без рішення та рішення з не
     // Статус без отриманого пакета не приймається.
     await h.pending('ogd-approved');
     // Винагорода не чекає на постанову ВЛК: постанови в кейсі немає.
-    assert.equal(h.count("SELECT COUNT(*) AS n FROM case_event WHERE event_type='vlk.decision_recorded'"), 0);
+    assert.equal(h.count("SELECT COUNT(*) AS n FROM case_event WHERE case_id=? AND event_type='vlk.decision_recorded'", CASE), 0);
   }));
 
 test('AC09: прогалина зберігає підтвердження; чужий сигнал її не закриває, потрібний — відновлює', () =>
