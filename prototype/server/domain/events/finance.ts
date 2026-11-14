@@ -34,8 +34,11 @@ export function applyFinanceStatus({store, event, payload, caseId, caseEventId}:
   });
   if (problem) throw new ReviewRequired(problem);
 
-  // Невідомий сигнал не стирає підтверджене рішення: лише відкриває уточнення.
-  if (status === 'unknown' && prior?.decision_ref) {
+  // Невідомий сигнал — не рішення: він нічого не стирає й не записує посилання на рішення,
+  // лише позначає дані неоновленими й відкриває уточнення. Якщо періоду ще немає,
+  // з’являється рядок «стан невідомий» без рішення.
+  if (status === 'unknown') {
+    if (!prior) insertUnknownTrack({store, event, caseId, kind, periodStart, packetRef, reason: text(payload, 'reason_code')});
     openTask(store, caseId, 'clarify_finance', 'support', `demo-finance-unknown:${kind}:${period}`, caseEventId);
     return;
   }
@@ -60,7 +63,7 @@ export function applyFinanceStatus({store, event, payload, caseId, caseEventId}:
     event.source_version, packetRef, event.source_system, event.occurred_at,
   );
 
-  if (['returned', 'denied', 'unknown'].includes(status)) {
+  if (['returned', 'denied'].includes(status)) {
     openTask(store, caseId, 'clarify_finance', 'support', `demo-finance:${kind}:${period}:${status}`, caseEventId);
     return;
   }
@@ -69,4 +72,32 @@ export function applyFinanceStatus({store, event, payload, caseId, caseEventId}:
       WHERE case_id=? AND kind='clarify_finance' AND (trigger_ref LIKE ? OR trigger_ref LIKE ?)`,
     caseId, `demo-finance:${kind}:${period}:%`, `demo-finance-unknown:${kind}:${period}`,
   );
+}
+
+interface UnknownTrack {
+  store: EventContext['store'];
+  event: EventContext['event'];
+  caseId: string;
+  kind: string;
+  periodStart: string;
+  packetRef: string;
+  reason: string;
+}
+
+function insertUnknownTrack({store, event, caseId, kind, periodStart, packetRef, reason}: UnknownTrack): void {
+  store.insert('financial_track', {
+    id: newId(),
+    case_id: caseId,
+    payment_kind: kind,
+    period_start: periodStart,
+    period_end: monthEnd(periodStart),
+    current_status: 'unknown',
+    reason_code: reason || 'not_available',
+    decision_ref: null,
+    execution_ref: null,
+    source_version: event.source_version,
+    packet_ref: packetRef,
+    source_system: event.source_system,
+    decision_at: null,
+  });
 }

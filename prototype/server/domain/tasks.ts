@@ -22,6 +22,13 @@ export function ownerScope(store: Store, caseId: string): string {
 export function openTask(
   store: Store, caseId: string, kind: TaskKind, owner: OwnerRole, trigger: string, openedByEvent: string | null = null,
 ): void {
+  // Унікальність у схемі включає область; після переведення особи той самий тригер
+  // не має відкривати другу задачу в новій області.
+  const known = store.exists(
+    'SELECT id FROM task WHERE case_id=? AND trigger_ref=? AND kind=? AND owner_role=?',
+    caseId, trigger, kind, owner,
+  );
+  if (known) return;
   store.run(
     `INSERT OR IGNORE INTO task(id,case_id,kind,owner_role,owner_scope,status,trigger_ref,opened_by_event)
      VALUES (?,?,?,?,?,'open',?,?)`,
@@ -39,12 +46,19 @@ export function resolveTasks(store: Store, caseId: string, kind: TaskKind, resol
 
 /** Запит командира подано, а джерело його ще не підтвердило. */
 export function hasPendingRequest(store: Store, caseId: string, action: 'issue_certificate' | 'refer_vlk'): boolean {
-  return store.exists(
-    `SELECT t.id FROM task t
+  return pendingRequestAt(store, caseId, action) !== null;
+}
+
+/** Коли записано ще не підтверджений запит командира (ISO) або null, якщо такого запиту немає. */
+export function pendingRequestAt(store: Store, caseId: string, action: 'issue_certificate' | 'refer_vlk'): string | null {
+  const request = store.row(
+    `SELECT e.recorded_at FROM task t
        JOIN case_event e ON e.command_id=t.trigger_ref AND e.case_id=t.case_id
-      WHERE t.case_id=? AND t.kind='await_source_confirmation' AND t.status='open' AND e.event_type=?`,
+      WHERE t.case_id=? AND t.kind='await_source_confirmation' AND t.status='open' AND e.event_type=?
+      ORDER BY e.rowid DESC LIMIT 1`,
     caseId, `command.${action}`,
   );
+  return request ? String(request.recorded_at) : null;
 }
 
 /** Закриває лише відкриті задачі виду з певним тригером або префіксом тригера. */

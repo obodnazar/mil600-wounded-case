@@ -1,7 +1,7 @@
 import {Denied, type Session} from '../../security/core.js';
 import type {ActionAvailability, CommandAction, StaffCaseView, StaffProfile, StaffView} from '../../shared/api.js';
 import type {Store} from '../db/store.js';
-import {RESERVE_BASE_CASE, commandBlocker} from '../domain/preconditions.js';
+import {RESERVE_BASE_CASE, SUPPORT_ONLY_REVIEWS, SUPPORT_ONLY_TASKS, commandBlocker} from '../domain/preconditions.js';
 import {caseSummary} from './case-view.js';
 
 /** Дії над кейсом, доступність яких службова панель показує наперед. */
@@ -25,8 +25,17 @@ function availability(store: Store, role: StaffProfile, caseId: string, action: 
  * у цьому DTO немає взагалі — їх не можна випадково показати.
  */
 export function staffCaseView(store: Store, role: StaffProfile, caseId: string): StaffCaseView {
+  const summary = caseSummary(store, caseId, {staff: true});
+  // Командир бачить службовий мінімум: без задач і розборів про виплати та лікування.
+  const visible = role === 'commander'
+    ? {
+        tasks: summary.tasks.filter(task => !SUPPORT_ONLY_TASKS.has(task.kind)),
+        reviews: summary.reviews.filter(review => !SUPPORT_ONLY_REVIEWS.has(review.reason)),
+      }
+    : {};
   return {
-    ...caseSummary(store, caseId, {staff: true}),
+    ...summary,
+    ...visible,
     actions: CASE_ACTIONS.map(action => availability(store, role, caseId, action)),
   };
 }

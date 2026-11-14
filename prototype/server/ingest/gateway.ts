@@ -78,7 +78,13 @@ function tryApply(store: Store, event: EventEnvelope, inboxId: string, now: numb
 
 /** Порушення обмеження БД чи некоректне значення — теж причина розбору, а не втрата події. */
 function reviewReason(error: unknown): string {
-  return error instanceof ReviewRequired ? error.reason : 'unprocessable_event';
+  if (error instanceof ReviewRequired) return error.reason;
+  // Порушення обмеження БД чи некоректне значення в даних джерела (наприклад, неможлива дата) —
+  // проблема даних, а не коду: подія лишається на розборі. Помилки програми (TypeError тощо)
+  // не маскуються: транзакція відкочується, і назовні йде 503.
+  const sqlite = typeof error === 'object' && error !== null && (error as {code?: unknown}).code === 'ERR_SQLITE_ERROR';
+  if (sqlite || error instanceof Denied) return 'unprocessable_event';
+  throw error;
 }
 
 function accepted(store: Store, event: EventEnvelope, inboxId: string, now: number): IngestOutcome {

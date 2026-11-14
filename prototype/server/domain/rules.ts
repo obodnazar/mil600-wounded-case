@@ -78,6 +78,15 @@ export function mergeEnemyAction(current: EnemyAction, incoming: EnemyAction): {
   return {value: current, conflict: true};
 }
 
+/** Те саме правило для застосовності контролю лікування (`care_applicable` у події). */
+export function mergeCareApplicability(current: unknown, incoming: unknown): {value: Applicability; conflict: boolean} {
+  const known = (value: unknown): EnemyAction =>
+    value === 'applicable' || value === true ? 'yes' : value === 'not_applicable' || value === false ? 'no' : 'unknown';
+  const merged = mergeEnemyAction(known(current), known(incoming));
+  const value: Applicability = merged.value === 'yes' ? 'applicable' : merged.value === 'no' ? 'not_applicable' : 'unknown';
+  return {value, conflict: merged.conflict};
+}
+
 /* ───────────── Контроль строку лікування ───────────── */
 
 export interface CareControl {

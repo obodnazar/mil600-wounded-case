@@ -10,6 +10,20 @@ import {hasPendingRequest} from './tasks.js';
  */
 
 export const RESERVE_BASE_CASE = 'demo-case-02';
+
+/**
+ * Розбори й задачі, що розкривають стан виплат чи лікування. Їх веде служба супроводу;
+ * командирові вони не показуються, і закривати такі розбори командир не може.
+ * Тимчасове обережне рішення аудиту 2026-11-14 до рішення команди про службову проєкцію.
+ */
+export const SUPPORT_ONLY_REVIEWS: ReadonlySet<string> = new Set([
+  'finance_without_packet_receipt', 'financial_revision_order_unknown', 'execution_regression',
+  'execution_without_approval', 'completed_period_revision_review', 'packet_period_mismatch', 'unknown_finance_route',
+  'care_anchor_correction_unproven', 'care_applicability_change_unproven', 'unknown_episode_or_provider',
+  'episode_mismatch', 'transfer_predecessor_missing', 'admission_conflict', 'episode_case_mismatch',
+]);
+
+export const SUPPORT_ONLY_TASKS: ReadonlySet<string> = new Set(['clarify_finance', 'clarify_care_start']);
 export const RESERVE_CASE = 'demo-reserve-case';
 
 const COMMANDER_ONLY: readonly CommandAction[] = ['issue_certificate', 'refer_vlk'];

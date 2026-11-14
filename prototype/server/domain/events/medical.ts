@@ -2,7 +2,7 @@ import type {Store} from '../../db/store.js';
 import {refreshCertificateClock, saveCareControl} from '../deadlines.js';
 import {ensureRequirements, recordSourceDocument} from '../documents.js';
 import {ReviewRequired, newId, optionalText, text, type EventContext, type Route} from '../model.js';
-import {asEnemyAction, mergeEnemyAction} from '../rules.js';
+import {asEnemyAction, mergeCareApplicability, mergeEnemyAction} from '../rules.js';
 import {openTask, resolveTasks} from '../tasks.js';
 
 const ROUTES: readonly Route[] = ['vlk', 'reward', 'ogd'];
@@ -19,6 +19,9 @@ export function applyPrimaryRecorded({store, event, payload, caseRow, caseId, ca
   const injuryDate = optionalText(payload, 'injury_date');
   const enemyAction = mergeEnemyAction(asEnemyAction(caseRow.enemy_action), asEnemyAction(payload.enemy_action));
   if (enemyAction.conflict) throw new ReviewRequired('applicability_change_unproven');
+  // Підтверджена дата поранення не змінюється мовчки новою версією запису.
+  const confirmedInjury = caseRow.injury_date_assurance === 'confirmed' ? caseRow.injury_date : null;
+  if (confirmedInjury && injuryDate && injuryDate !== confirmedInjury) throw new ReviewRequired('injury_date_change_unproven');
   store.run(
     `UPDATE wound_case SET
        source_linked=1,
@@ -78,6 +81,8 @@ function requireEpisodeAndProvider({store, event, payload}: EventContext): void 
 /**
  * Підтверджений початок безперервного лікування — єдиний якір чотиримісячного контролю.
  * Інша дата без доказу, що вона виправляє попередній запис, іде на розбір і нічого не зрушує.
+ * Підтверджена застосовність контролю не знижується до «невідомо» подією без цього поля;
+ * суперечність «застосовується ↔ не застосовується» теж іде на розбір.
  */
 export function applyCareStartConfirmed(context: EventContext): void {
   requireEpisodeAndProvider(context);
@@ -95,7 +100,10 @@ export function applyCareStartConfirmed(context: EventContext): void {
       throw new ReviewRequired('care_anchor_correction_unproven');
     }
   }
-  saveCareControl(store, caseId, caseEventId, date, payload.care_applicable);
+  const applicability = mergeCareApplicability(caseRow.care_applicability, payload.care_applicable);
+  if (applicability.conflict) throw new ReviewRequired('care_applicability_change_unproven');
+  const careApplicable = applicability.value === 'applicable' ? true : applicability.value === 'not_applicable' ? false : null;
+  saveCareControl(store, caseId, caseEventId, date, careApplicable);
 }
 
 /** Виписка закриває поточний епізод; наступний заклад не вигадується. */
@@ -148,5 +156,11 @@ export function applyCareArrival(context: EventContext): void {
       assurance: date ? 'confirmed' : 'unknown',
     });
   }
-  store.run("UPDATE wound_case SET current_episode=?,lifecycle_state='care' WHERE id=?", event.episode_ref, caseId);
+  // Подія лікування оновлює епізод, але не відкочує стадію кейсу назад (наприклад, з дії за постановою ВЛК).
+  store.run(
+    `UPDATE wound_case SET current_episode=?,
+       lifecycle_state=CASE WHEN lifecycle_state IN ('administrative_open','source_linked') THEN 'care' ELSE lifecycle_state END
+     WHERE id=?`,
+    event.episode_ref, caseId,
+  );
 }

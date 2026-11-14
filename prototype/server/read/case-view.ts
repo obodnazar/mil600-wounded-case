@@ -201,7 +201,8 @@ function milestones(store: Store, caseId: string): CaseMilestones {
     referral: referralIssued ? 'issued' : hasPendingRequest(store, caseId, 'refer_vlk') ? 'requested' : 'none',
     vlkPacket: packet ? (packet.state === 'returned' ? 'returned' : 'received') : 'none',
     vlkDecision: !decision ? 'none' : decision.service_code === 'clarification_needed' ? 'clarification_needed' : 'recorded',
-    serviceAction: actionAwaited ? 'awaited' : executed ? 'confirmed' : 'none',
+    // За чинного запиту ВЛК на уточнення попереднє виконання вже не є виконанням чинної постанови.
+    serviceAction: actionAwaited ? 'awaited' : executed && decision?.service_code !== 'clarification_needed' ? 'confirmed' : 'none',
   };
 }
 

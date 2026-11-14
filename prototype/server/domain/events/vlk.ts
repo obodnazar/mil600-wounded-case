@@ -1,7 +1,8 @@
 import {ensureRequirements, recordSourceDocument} from '../documents.js';
 import {RECIPIENT, ReviewRequired, optionalText, text, type EventContext, type Route} from '../model.js';
 import {packetProblem} from '../rules.js';
-import {hasPendingRequest, openTask, resolveAwaitedCommand, resolveOpenTasksByTrigger, resolveTasks} from '../tasks.js';
+import {hasOpenTask, openTask, resolveAwaitedCommand, resolveOpenTasksByTrigger, resolveTasks} from '../tasks.js';
+import {assertConfirmsPendingRequest} from './documents.js';
 
 /**
  * Маршрут ВЛК: направлення → прийняття пакета → постанова → виконання.
@@ -12,11 +13,12 @@ const CLARIFY_TRIGGER = 'demo-vlk-decision-clarify:';
 
 /**
  * Джерело підтвердило направлення. Без ще не підтвердженого запиту належного командира
- * воно не приймається: один запит — одне підтвердження.
+ * воно не приймається: один запит — одне підтвердження; підтвердження, що надійшло
+ * раніше за запит, цього запиту не підтверджує.
  */
 export function applyReferralIssued({store, event, payload, caseId, caseEventId}: EventContext): void {
-  const requested = hasPendingRequest(store, caseId, 'refer_vlk');
-  if (payload.issuer_ref !== 'demo-commander' || !requested) throw new ReviewRequired('referral_needs_command');
+  if (payload.issuer_ref !== 'demo-commander') throw new ReviewRequired('referral_needs_command');
+  assertConfirmsPendingRequest(store, event, caseId, 'refer_vlk', 'referral_needs_command');
   resolveAwaitedCommand(store, caseId, 'command.refer_vlk');
   recordSourceDocument(store, {
     caseId,
@@ -83,10 +85,11 @@ function routeOf(source: string, payload: Record<string, unknown>): Route {
 }
 
 /**
- * Постанову ВЛК оформлено — це ще не виконання. Чинною є лише остання постанова:
+ * Постанову ВЛК оформлено — це ще не виконання. Чинною є найпізніша за часом постанова:
  * запит на уточнення скасовує відкриту дію за попередньою позитивною постановою;
  * нова позитивна постанова закриває уточнення та дію за попередньою постановою
- * й відкриває рівно одну нову дію.
+ * й відкриває рівно одну нову дію. Постанова, старша за вже прийняту (затримана
+ * доставка, інший потік), не стає чинною мовчки — вона йде на розбір.
  */
 export function applyVlkDecision({store, event, payload, caseId, caseEventId}: EventContext): void {
   const accepted = store.exists(
@@ -94,6 +97,14 @@ export function applyVlkDecision({store, event, payload, caseId, caseEventId}: E
     caseId,
   );
   if (!accepted) throw new ReviewRequired('decision_without_packet_receipt');
+  const newest = store.row(
+    `SELECT MAX(occurred_at) AS at FROM case_event
+      WHERE case_id=? AND event_type='vlk.decision_recorded' AND id!=?`,
+    caseId, caseEventId,
+  );
+  if (newest?.at && Date.parse(event.occurred_at) < Date.parse(String(newest.at))) {
+    throw new ReviewRequired('decision_older_than_current');
+  }
   recordSourceDocument(store, {
     caseId,
     source: event.source_system,
@@ -132,5 +143,7 @@ export function applyServiceActionConfirmed({store, event, caseId}: EventContext
   if (latest?.occurred_at && Date.parse(event.occurred_at) < Date.parse(String(latest.occurred_at))) {
     throw new ReviewRequired('service_before_current_decision');
   }
+  // Друге виконання тієї самої дії не приймається мовчки.
+  if (!hasOpenTask(store, caseId, 'next_service_action')) throw new ReviewRequired('service_without_open_action');
   resolveTasks(store, caseId, 'next_service_action', 'source_execution_confirmed');
 }

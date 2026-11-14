@@ -214,7 +214,8 @@ function allowedDocumentKinds(source: string, eventType: string): readonly strin
     return eventType === 'document.prepared' ? [...medical, 'trauma_certificate'] : medical;
   }
   if (source === 'demo-civil-mis') return ['medical_summary', 'hospital_stay_certificate'];
-  return ['trauma_certificate', 'referral'];
+  // Довідку про обставини травми складає лише медслужба (demo-mis); інші джерела її видають чи передають.
+  return eventType === 'document.prepared' ? ['referral'] : ['trauma_certificate', 'referral'];
 }
 
 export function signature(key: Buffer, signed: Omit<SignatureHeaders, 'signature'>, raw: Buffer): string {

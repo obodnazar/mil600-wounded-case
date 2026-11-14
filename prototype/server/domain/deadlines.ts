@@ -93,7 +93,7 @@ export function refreshCertificateClock(store: Store, caseId: string, anchorEven
   }
 }
 
-/** Фіксує початок і застосовність контролю лікування; повертає, чи потрібне уточнення. */
+/** Фіксує початок і застосовність контролю лікування й за потреби відкриває задачу уточнення. */
 export function saveCareControl(
   store: Store, caseId: string, anchorEventId: string, startDate: string | null, careApplicable: unknown,
 ): void {

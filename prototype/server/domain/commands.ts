@@ -8,7 +8,7 @@ import {attachEvidence} from './documents.js';
 import {applyEvent} from './events/apply.js';
 import {refreshFreshness} from './freshness.js';
 import {ReviewRequired, SOURCE_SYSTEMS, newId} from './model.js';
-import {RESERVE_BASE_CASE, RESERVE_CASE, commandBlocker, isManualTask} from './preconditions.js';
+import {RESERVE_BASE_CASE, RESERVE_CASE, SUPPORT_ONLY_REVIEWS, commandBlocker, isManualTask} from './preconditions.js';
 import {openTask, ownerScope} from './tasks.js';
 
 /**
@@ -45,6 +45,7 @@ interface CommandContext {
   caseId: string;
   caseEventId: string;
   now: number;
+  role: DemoProfile;
 }
 
 type Effect = (context: CommandContext) => void;
@@ -83,7 +84,7 @@ export function executeCommand(store: Store, session: Session, input: CommandReq
       occurredAt: new Date(now).toISOString(),
       commandId: input.id,
     });
-    EFFECTS[input.action]({store, input, caseId, caseEventId, now});
+    EFFECTS[input.action]({store, input, caseId, caseEventId, now, role: session.role});
     enqueueProjection(store, caseId, caseEventId, `command:${input.id}`);
 
     const outcome: CommandResult = {status: 'recorded', case_id: caseId, source_confirmed: false};
@@ -256,7 +257,7 @@ const resolveReview: Effect = ({store, input, caseId, caseEventId, now}) => {
  * знову й причина не зникне — розбір відкриється повторно.
  * Невизначений випадок закривається лише явним підтвердженням (resolve_review).
  */
-const closeReview: Effect = ({store, input, caseId, caseEventId}) => {
+const closeReview: Effect = ({store, input, caseId, caseEventId, role}) => {
   const review = store.row(
     "SELECT id,case_id,reason_code,assigned_scope FROM review_item WHERE id=? AND state='open'",
     input.option ?? '',
@@ -269,6 +270,9 @@ const closeReview: Effect = ({store, input, caseId, caseEventId}) => {
   );
   if (!review || (!ownCase && !ownScope) || review.reason_code === 'missing_incident') {
     throw new Denied(409, 'review_not_closable');
+  }
+  if (role === 'commander' && SUPPORT_ONLY_REVIEWS.has(String(review.reason_code))) {
+    throw new Denied(403, 'command_forbidden');
   }
   store.run(
     "UPDATE review_item SET state='resolved',resolution_event_ref=? WHERE id=?",

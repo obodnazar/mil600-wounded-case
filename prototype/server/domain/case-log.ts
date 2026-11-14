@@ -51,8 +51,3 @@ export function enqueueProjection(store: Store, caseId: string, caseEventId: str
     state: 'pending',
   });
 }
-
-/** Чи є в журналі кейсу дія користувача цього типу (наприклад, запит командира). */
-export function hasCaseEvent(store: Store, caseId: string, type: string): boolean {
-  return store.exists('SELECT id FROM case_event WHERE case_id=? AND event_type=?', caseId, type);
-}
