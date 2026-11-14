@@ -25,26 +25,17 @@ CHANGED_MARKDOWN = (
     "research/pain-map.md", "research/voices-method.md",
 )
 
-# Ручні винятки з правила «новіше = дата публікації в межах 12 місяців до зрізу».
-# Це рішення фази 2, а не висновок із даних. Аудит 2026-11-14 кодування не змінював,
-# але виняток має бути видимим: скрипт друкує його у виводі (`manual_exceptions`)
-# разом із тим, як змінилися б частоти за самим правилом дати.
-#
-# Q33: матеріал опубліковано 2026-04-18 (у межах вікна), але голос віднесено до
-# історичних як «завершений минулий досвід»; цитований уривок при цьому описує
-# оформлення довідки в теперішньому часі. Через цей виняток у новішій частині
-# C2 = 0; за правилом дати публікації було б C2 = 1. Для Q43 (спір завершено)
-# і Q42 (поранення 2022 року) такого винятку немає. Питання команді — див.
-# research/voices-method.md, «Ручні рішення кодування, винесені на команду».
-MANUAL_HISTORICAL = {
-    "Q33": "нове інтерв'ю про минулий досвід; рішення фази 2, питання команді",
-}
+# Правило зрізу: «новіше = дата публікації в межах 12 місяців до зрізу», без ручних
+# винятків. До 2026-11-14 тут був виняток MANUAL_HISTORICAL для Q33 (рішення фази 2);
+# його скасовано рішенням 2026-11-14 (Назар делегував, ухвалив Claude в межах аудиту):
+# Q33 опубліковано 2026-04-18, тож він новіший, як Q42 і Q43. Див. research/voices-method.md,
+# «Ручні рішення кодування, винесені на команду».
 
 # Чого цей скрипт не перевіряє (друкується у виводі).
 NOT_CHECKED = (
     "наявність цитати в першоджерелі (SHA-256 рахується з voices.md)",
     "доступність джерел та істинність описаних подій",
-    "числа в прозі: 7 / 19 / 18, 15 медіасторінок, 10 = 4 + 3 + 2 + 1",
+    "числа в прозі: 7 / 19 / 18, 15 медіасторінок, 11 = 4 + 3 + 2 + 1 + 1",
     "типи авторів, полярність, повтори авторів, персональні дані",
     "тематичну доречність голосу (напр. Q25 — мобілізаційна ВЛК)",
 )
@@ -119,8 +110,8 @@ def main():
         pub = date.fromisoformat(record["published_at"])
         require(pub <= checked and record["checked_at"] == checked.isoformat(),
                 f"Майбутня дата / інший зріз: {key}")
-        # Правило — дата публікації; відхилення дозволені лише з MANUAL_HISTORICAL.
-        expected_old = pub < cutoff or key in MANUAL_HISTORICAL
+        # Правило — лише дата публікації (ручних винятків немає з 2026-11-14).
+        expected_old = pub < cutoff
         require(record["historical"] == expected_old, f"Вік свідчення {key}")
         require(urlsplit(record["url"]).scheme == "https", f"URL {key}")
         require(not {"quote", "name", "nickname", "author_id"}.intersection(record),
@@ -212,33 +203,6 @@ def main():
                         f"Немає якоря {relative}: {target}")
             links_checked += 1
 
-    # Ручні винятки: показати, що саме винесено вручну і що дало б правило дати.
-    manual_exceptions = []
-    for key, reason in sorted(MANUAL_HISTORICAL.items()):
-        record = by_id[key]
-        by_date_recent = date.fromisoformat(record["published_at"]) >= cutoff
-        require(by_date_recent and record["historical"],
-                f"Виняток {key} більше не потрібен: приберіть його з MANUAL_HISTORICAL")
-        cluster = record["cluster"]
-        wounded = record["cohort"] == "поранення / службова травма"
-        recent_total = sum(not item["historical"] for item in records)
-        recent_wounded = sum(not item["historical"]
-                             and item["cohort"] == "поранення / службова травма"
-                             for item in records)
-        manual_exceptions.append({
-            "id": key, "published_at": record["published_at"],
-            "coded_as": "historical", "by_publication_date_rule": "recent",
-            "reason": reason, "cluster": cluster,
-            "effect_if_rule_applied": {
-                f"{cluster}_recent": [strata["recent"][cluster], strata["recent"][cluster] + 1],
-                f"{cluster}_historical": [strata["historical"][cluster],
-                                          strata["historical"][cluster] - 1],
-                "recent_total": [recent_total, recent_total + 1],
-                "recent_wounded": [recent_wounded, recent_wounded + int(wounded)],
-            },
-            "status": "питання команді, аудит 2026-11-14; кодування не змінено",
-        })
-
     print(json.dumps({
         "status": "ok", "records": len(records),
         "source_groups": len(source_words), "strata": strata,
@@ -246,7 +210,7 @@ def main():
         "max_quoted_words_per_source": max(source_words.values()),
         "quoted_words_in_other_docs": extra_quoted_words,
         "local_links_checked": links_checked,
-        "manual_exceptions": manual_exceptions,
+        "manual_exceptions": [],
         "not_checked": list(NOT_CHECKED),
     }, ensure_ascii=False, indent=2))
 

@@ -466,7 +466,7 @@
       "url": "https://zn.ua/ukr/war/tantsjurist-na-spetskhvili-shcho-robiti-pislja-poranennja-na-vijni.html",
       "source_group": "zn",
       "polarity": "біль",
-      "historical": true,
+      "historical": false,
       "quote_sha256": "f01cdcdf21bd4932b79cf956ee0e5316a01bdfefda260878647b9773773359f4",
       "locator": "пряма мова співрозмовника в матеріалі"
     },
