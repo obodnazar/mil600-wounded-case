@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
-"""Локальна перевірка реєстру, частот, цитування та посилань фази 2."""
+"""Локальна перевірка реєстру, частот, цитування та посилань фази 2.
+
+Межі (уточнення аудиту 2026-11-14). Скрипт працює без мережі й перевіряє лише
+внутрішню узгодженість файлів. Він НЕ звіряє цитати з першоджерелами: SHA-256
+рахується з тексту самого voices.md, тому ловить тільки пізнішу зміну цитати.
+Перелік того, що не перевіряється, друкується у виводі в полі `not_checked`.
+"""
 
 from collections import Counter, defaultdict
 from datetime import date, datetime
@@ -18,6 +24,35 @@ CHANGED_MARKDOWN = (
     "docs/reviews/phase-2.md", "research/voices.md",
     "research/pain-map.md", "research/voices-method.md",
 )
+
+# Ручні винятки з правила «новіше = дата публікації в межах 12 місяців до зрізу».
+# Це рішення фази 2, а не висновок із даних. Аудит 2026-11-14 кодування не змінював,
+# але виняток має бути видимим: скрипт друкує його у виводі (`manual_exceptions`)
+# разом із тим, як змінилися б частоти за самим правилом дати.
+#
+# Q33: матеріал опубліковано 2026-04-18 (у межах вікна), але голос віднесено до
+# історичних як «завершений минулий досвід»; цитований уривок при цьому описує
+# оформлення довідки в теперішньому часі. Через цей виняток у новішій частині
+# C2 = 0; за правилом дати публікації було б C2 = 1. Для Q43 (спір завершено)
+# і Q42 (поранення 2022 року) такого винятку немає. Питання команді — див.
+# research/voices-method.md, «Ручні рішення кодування, винесені на команду».
+MANUAL_HISTORICAL = {
+    "Q33": "нове інтерв'ю про минулий досвід; рішення фази 2, питання команді",
+}
+
+# Чого цей скрипт не перевіряє (друкується у виводі).
+NOT_CHECKED = (
+    "наявність цитати в першоджерелі (SHA-256 рахується з voices.md)",
+    "доступність джерел та істинність описаних подій",
+    "числа в прозі: 7 / 19 / 18, 15 медіасторінок, 10 = 4 + 3 + 2 + 1",
+    "типи авторів, полярність, повтори авторів, персональні дані",
+    "тематичну доречність голосу (напр. Q25 — мобілізаційна ВЛК)",
+)
+
+# Дослівні уривки з тих самих джерел в інших документах теж споживають ліміт
+# «25 слів на групу джерела». Рахуємо «…» від трьох слів у рядках, що посилаються
+# на URL із реєстру.
+QUOTE_LIMIT_EXTRA_FILES = ("docs/01-problem.md",)
 
 
 def require(condition, message):
@@ -84,7 +119,8 @@ def main():
         pub = date.fromisoformat(record["published_at"])
         require(pub <= checked and record["checked_at"] == checked.isoformat(),
                 f"Майбутня дата / інший зріз: {key}")
-        expected_old = pub < cutoff or key == "Q33"
+        # Правило — дата публікації; відхилення дозволені лише з MANUAL_HISTORICAL.
+        expected_old = pub < cutoff or key in MANUAL_HISTORICAL
         require(record["historical"] == expected_old, f"Вік свідчення {key}")
         require(urlsplit(record["url"]).scheme == "https", f"URL {key}")
         require(not {"quote", "name", "nickname", "author_id"}.intersection(record),
@@ -104,6 +140,18 @@ def main():
                 f"Уривок карти не збігається з цитатою {key}")
         source_words[by_id[key]["source_group"]] += len(fragment.split())
     require(len(fragments) == 8, "Змінився склад уривків: перевірте ліміт вручну")
+    group_by_url = {record["url"]: record["source_group"] for record in records}
+    extra_quoted_words = 0
+    for relative in QUOTE_LIMIT_EXTRA_FILES:
+        for line in (ROOT / relative).read_text().splitlines():
+            groups = {group for url, group in group_by_url.items() if url in line}
+            if len(groups) != 1:
+                continue
+            group = next(iter(groups))
+            for fragment in re.findall(r"«([^»]+)»", line):
+                if len(fragment.split()) >= 3:
+                    source_words[group] += len(fragment.split())
+                    extra_quoted_words += len(fragment.split())
     require(all(count <= 25 for count in source_words.values()),
             f"Сумарний ліміт джерела: {dict(source_words)}")
 
@@ -164,12 +212,42 @@ def main():
                         f"Немає якоря {relative}: {target}")
             links_checked += 1
 
+    # Ручні винятки: показати, що саме винесено вручну і що дало б правило дати.
+    manual_exceptions = []
+    for key, reason in sorted(MANUAL_HISTORICAL.items()):
+        record = by_id[key]
+        by_date_recent = date.fromisoformat(record["published_at"]) >= cutoff
+        require(by_date_recent and record["historical"],
+                f"Виняток {key} більше не потрібен: приберіть його з MANUAL_HISTORICAL")
+        cluster = record["cluster"]
+        wounded = record["cohort"] == "поранення / службова травма"
+        recent_total = sum(not item["historical"] for item in records)
+        recent_wounded = sum(not item["historical"]
+                             and item["cohort"] == "поранення / службова травма"
+                             for item in records)
+        manual_exceptions.append({
+            "id": key, "published_at": record["published_at"],
+            "coded_as": "historical", "by_publication_date_rule": "recent",
+            "reason": reason, "cluster": cluster,
+            "effect_if_rule_applied": {
+                f"{cluster}_recent": [strata["recent"][cluster], strata["recent"][cluster] + 1],
+                f"{cluster}_historical": [strata["historical"][cluster],
+                                          strata["historical"][cluster] - 1],
+                "recent_total": [recent_total, recent_total + 1],
+                "recent_wounded": [recent_wounded, recent_wounded + int(wounded)],
+            },
+            "status": "питання команді, аудит 2026-11-14; кодування не змінено",
+        })
+
     print(json.dumps({
         "status": "ok", "records": len(records),
         "source_groups": len(source_words), "strata": strata,
         "cohorts_recent_historical_total": dict(cohorts),
         "max_quoted_words_per_source": max(source_words.values()),
+        "quoted_words_in_other_docs": extra_quoted_words,
         "local_links_checked": links_checked,
+        "manual_exceptions": manual_exceptions,
+        "not_checked": list(NOT_CHECKED),
     }, ensure_ascii=False, indent=2))
 
 

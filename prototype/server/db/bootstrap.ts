@@ -1,7 +1,7 @@
 import type {Store} from './store.js';
 import {SOURCE_SYSTEMS, newId} from '../domain/model.js';
 import {ensureRequirements} from '../domain/documents.js';
-import {COHORT, SMALL_COHORT, computeSnapshot} from '../read/analytics.js';
+import {COHORT, SMALL_COHORT, SNAPSHOT_LABELS, computeSnapshot} from '../read/analytics.js';
 
 const BOOT_MARKER = 'boot-8b';
 const BINDING_FROM = '2026-01-01T00:00:00.000Z';
@@ -16,8 +16,10 @@ export function bootstrap(store: Store): void {
   store.transaction(() => {
     bindPeopleToSources(store);
     bindCasesToSources(store);
-    store.run('INSERT INTO analytics_snapshot VALUES (?,?)', 'demo-cohort-v1', JSON.stringify(computeSnapshot(COHORT)));
-    store.run('INSERT INTO analytics_snapshot VALUES (?,?)', 'demo-small', JSON.stringify(computeSnapshot(SMALL_COHORT)));
+    const main = computeSnapshot(COHORT);
+    const small = computeSnapshot(SMALL_COHORT, 5, SNAPSHOT_LABELS['demo-small']);
+    store.run('INSERT INTO analytics_snapshot VALUES (?,?)', 'demo-cohort-v1', JSON.stringify(main));
+    store.run('INSERT INTO analytics_snapshot VALUES (?,?)', 'demo-small', JSON.stringify(small));
     store.run('INSERT INTO demo_setting VALUES (?,?)', BOOT_MARKER, 'complete');
   });
 }

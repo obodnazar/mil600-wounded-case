@@ -66,7 +66,10 @@ try {
  for(const e of result.exports) {
    assert.deepEqual(e.warnings,[],e.name);
    const file=e.name==='overview'?'to-be':'to-be-'+e.name;
-   await writeFile(resolve(here,file+'.svg'),e.svg);
+   // bpmn-js генерує випадкові id маркерів; нормалізуємо їх, щоб повторний експорт не змінював файли.
+   const markerIds=[...new Set(e.svg.match(/marker-[0-9a-z]{20,}/g)||[])];
+   const stableSvg=markerIds.reduce((s,id,i)=>s.replaceAll(id,'marker-'+file+'-'+i),e.svg);
+   await writeFile(resolve(here,file+'.svg'),stableSvg);
    if(qaOutput) {
      const p=await browser.newPage({viewport:{width:3300,height:1700},deviceScaleFactor:1});
      await p.setContent('<html><body style="margin:0;background:white">'+e.svg+'</body></html>');

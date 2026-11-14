@@ -480,5 +480,7 @@ test('AC08/10: фіксований зріз не рухається від D1; 
     const small = (await (await h.get('/api/analytics')).json()) as AnalyticsView;
     const computed = small.metrics.filter(metric => metric.id !== 'BO-4');
     assert(computed.every(metric => metric.value === 'Приховано' && metric.state === 'suppressed'));
+    // Малий приклад підписаний як малий, а не як основна когорта.
+    assert.equal(small.cohort, 'Навчальний приклад малої групи (demo-small)');
     assert.equal(small.metrics.find(metric => metric.id === 'BO-4')?.state, 'context');
   }));

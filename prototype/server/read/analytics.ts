@@ -216,7 +216,7 @@ function supportWorkload(rows: CohortRow[], fte: number | null): MetricDraft {
     id: 'BO-6',
     title: 'Навантаження супроводу',
     value: known
-      ? `${active / fte} кейсів на ставку · ${Math.round((minutes / logged.length) * 10) / 10} хв/кейс`
+      ? `${oneDecimal(active / fte)} кейсів на ставку · ${oneDecimal(minutes / logged.length)} хв/кейс`
       : 'Недостатньо даних',
     detail:
       'Активні кейси / погоджена вигадана кількість ставок супроводу; окремо вигадані хвилини з обліку роботи / ' +
@@ -229,10 +229,20 @@ function supportWorkload(rows: CohortRow[], fte: number | null): MetricDraft {
 }
 
 /** Обчислює незмінний зріз показників для когорти. */
-export function computeSnapshot(rows: CohortRow[] = COHORT, fte: number | null = 5): AnalyticsView {
+const oneDecimal = (value: number): number => Math.round(value * 10) / 10;
+
+/** Підпис зрізу: малий приклад не видається за основну когорту. */
+export const SNAPSHOT_LABELS: Readonly<Record<AnalyticsSnapshotId, string>> = {
+  'demo-cohort-v1': 'Основний фіксований вигаданий зріз (demo-cohort-v1)',
+  'demo-small': 'Навчальний приклад малої групи (demo-small)',
+};
+
+export function computeSnapshot(
+  rows: CohortRow[] = COHORT, fte: number | null = 5, label: string = SNAPSHOT_LABELS['demo-cohort-v1'],
+): AnalyticsView {
   return {
     status: 'synthetic_fixed_snapshot',
-    cohort: 'Окремий фіксований вигаданий зріз (demo-cohort-v1)',
+    cohort: label,
     asOf: '2026-11-13T12:00:00.000Z',
     minimum: MIN_GROUP,
     metrics: [

@@ -232,7 +232,7 @@
     <bpmn:endEvent id="End_NoOGD" name="ОГД не подається в цьому сценарії">
       <bpmn:incoming>F_OGDNo</bpmn:incoming>
     </bpmn:endEvent>
-    <bpmn:task id="Task_OGDPackage" name="Підготувати окремий пакет ОГД; ЕКОПФО за потреби*">
+    <bpmn:task id="Task_OGDPackage" name="Підготувати окремий пакет ОГД; рішення ЕКОПФО / довідка МСЕК*">
       <bpmn:documentation>D1: МОУ, 2026-06-02; перевірено 2026-11-13. Опис джерела та межі — ../03-as-is.md. ЕКОПФО — окреме оцінювання, не дія ВЛК. У схемі показано отримання належних результатів для пакета, не саме оцінювання. ОГД при інвалідності не є єдиним видом ОГД.</bpmn:documentation>
       <bpmn:incoming>F_OGDYes</bpmn:incoming>
       <bpmn:incoming>F_FinRepair</bpmn:incoming>
@@ -522,7 +522,7 @@
       <bpmndi:BPMNShape id="DI_End_Service" bpmnElement="End_Service">
         <dc:Bounds x="4020" y="1257" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="3950" y="1305" width="190" height="55" />
+          <dc:Bounds x="3900" y="1305" width="190" height="55" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="DI_Gateway_OGD" bpmnElement="Gateway_OGD" isMarkerVisible="true">
@@ -691,7 +691,7 @@
         <di:waypoint x="1650" y="225" />
         <di:waypoint x="1750" y="225" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1660" y="580" width="50" height="25" />
+          <dc:Bounds x="1598" y="620" width="46" height="25" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="DI_F_CertReward" bpmnElement="F_CertReward">
@@ -876,9 +876,7 @@
         <di:waypoint x="3980" y="1830" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="DI_F_FinCheck" bpmnElement="F_FinCheck">
-        <di:waypoint x="4090" y="1880" />
-        <di:waypoint x="4130" y="1880" />
-        <di:waypoint x="4130" y="1885" />
+        <di:waypoint x="4090" y="1885" />
         <di:waypoint x="4160" y="1885" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="DI_F_FinRepair" bpmnElement="F_FinRepair">

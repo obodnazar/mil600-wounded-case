@@ -1,6 +1,7 @@
 {
-  "as_of": "2026-11-13",
-  "scope": "Затверджений синтетичний прототип; не production-приймання",
+  "as_of": "2026-11-14",
+  "scope": "Обсяг F01–F10 / AC01–AC10, затверджений для синтетичного прототипу 8б (2026-11-13); не production-приймання",
+  "evidence_note": "2026-11-14 прототип переписано в межах незалежного аудиту; докази перев’язано на тести нової структури. Перелік указує, які тести перевіряють вимогу, а не те, що вони пройшли: запуск і результати — у prototype/README.md. Переписану версію команда ще не затверджувала. Тека prototype/e2e ще доповнюється, тому названа цілком.",
   "rows": [
     {
       "feature": "F01",
@@ -12,7 +13,8 @@
       ],
       "as_is": [
         "Start_Injury",
-        "Task_Primary"
+        "Task_Primary",
+        "Task_Collect"
       ],
       "to_be": [
         "Sub_Intake",
@@ -29,17 +31,18 @@
         "0005"
       ],
       "scenarios": [
-        "S1"
+        "S1",
+        "S8"
       ],
       "metrics": [
         "BO-1"
       ],
       "evidence": [
-        "prototype/server/workflow.test.ts",
-        "prototype/server/app.test.ts"
+        "prototype/server/tests/workflow.test.ts",
+        "prototype/server/tests/ingest.test.ts"
       ],
-      "proof": "резерв → пізня еПМК; повтор; невизначений випадок / чужа особа",
-      "state": "accepted_synthetic_demo"
+      "proof": "резерв без входу бійця → пізня еПМК у той самий кейс; повтор без дубля; невизначений випадок чекає явної звірки; новий перевірений випадок без вигаданої дати й без гранта",
+      "state": "accepted_8b_scope_evidence_relinked_2026-11-14"
     },
     {
       "feature": "F02",
@@ -68,6 +71,7 @@
         "0004"
       ],
       "scenarios": [
+        "S1",
         "S2",
         "S8"
       ],
@@ -76,10 +80,10 @@
         "BO-6"
       ],
       "evidence": [
-        "prototype/server/workflow.test.ts"
+        "prototype/server/tests/workflow.test.ts"
       ],
-      "proof": "лікування / переведення / виписка, gap / recovery, source та timestamps",
-      "state": "accepted_synthetic_demo"
+      "proof": "AC02: кожен крок таймлайна має джерело, час і реального власника наступної дії або явну її відсутність; переведення й виписка; прогалина зберігає підтвердження, відновлює її лише потрібний сигнал",
+      "state": "accepted_8b_scope_evidence_relinked_2026-11-14"
     },
     {
       "feature": "F03",
@@ -110,17 +114,19 @@
         "0004"
       ],
       "scenarios": [
-        "S3"
+        "S3",
+        "S4"
       ],
       "metrics": [
         "BO-2",
         "BO-5"
       ],
       "evidence": [
-        "prototype/server/workflow.test.ts"
+        "prototype/server/tests/workflow.test.ts",
+        "prototype/server/tests/regressions.test.ts"
       ],
-      "proof": "галерея / wrong kind / копія; v2 без старої квитанції; withdrawal",
-      "state": "accepted_synthetic_demo"
+      "proof": "складено ≠ видано ≠ надіслано ≠ отримано; нова версія без старої квитанції; відкликання; фіксована галерея, копія ≠ оригінал; переліки за маршрутом і пакетом з версією правила",
+      "state": "accepted_8b_scope_evidence_relinked_2026-11-14"
     },
     {
       "feature": "F04",
@@ -153,6 +159,7 @@
         "0006"
       ],
       "scenarios": [
+        "S3",
         "S6"
       ],
       "metrics": [
@@ -160,11 +167,12 @@
         "BO-3"
       ],
       "evidence": [
-        "prototype/server/calendar.ts",
-        "prototype/server/workflow.test.ts"
+        "prototype/server/tests/rules.test.ts",
+        "prototype/server/tests/workflow.test.ts",
+        "prototype/server/tests/regressions.test.ts"
       ],
-      "proof": "отримання еПМК / лікарняний резерв; calendar months / DST; worker без санкцій",
-      "state": "accepted_synthetic_demo"
+      "proof": "п’ять днів лише після підтвердженого отримання й за дій противника; лікарняний резерв без еПМК; чотири календарні місяці, кінець місяця й перехід часу; worker створює лише задачу людині; підтверджений строк не стирається й не зсувається мовчки",
+      "state": "accepted_8b_scope_evidence_relinked_2026-11-14"
     },
     {
       "feature": "F05",
@@ -200,11 +208,13 @@
         "BO-1"
       ],
       "evidence": [
-        "prototype/server/workflow.test.ts",
-        "prototype/e2e/panels.spec.ts"
+        "prototype/server/tests/workflow.test.ts",
+        "prototype/server/tests/regressions.test.ts",
+        "prototype/server/tests/http-access.test.ts",
+        "prototype/e2e"
       ],
-      "proof": "супровід не направляє замість командира; неповний перелік не блок; повернення / нова ревізія",
-      "state": "accepted_synthetic_demo"
+      "proof": "супровід не видає й не направляє замість командира; неповний перелік не блокує направлення; повернений пакет → нова ревізія; постанова й виконання — різні події; одна дія на чинну постанову",
+      "state": "accepted_8b_scope_evidence_relinked_2026-11-14"
     },
     {
       "feature": "F06",
@@ -216,6 +226,7 @@
       ],
       "as_is": [
         "SubProcess_Reward",
+        "Task_OGDPackage",
         "SubProcess_OGD"
       ],
       "to_be": [
@@ -243,11 +254,12 @@
         "BO-3"
       ],
       "evidence": [
-        "prototype/server/workflow.test.ts",
-        "prototype/e2e/panels.spec.ts"
+        "prototype/server/tests/workflow.test.ts",
+        "prototype/server/tests/rules.test.ts",
+        "prototype/e2e"
       ],
-      "proof": "винагорода до ВЛК; returned / denied / approved / partial / executed; інший період",
-      "state": "accepted_synthetic_demo"
+      "proof": "винагорода до постанови ВЛК; повернення / відмова / схвалення / часткове / підтверджене виконання не зливаються; інший період окремо; виконання без рішення й недоведений попередник — на розбір",
+      "state": "accepted_8b_scope_evidence_relinked_2026-11-14"
     },
     {
       "feature": "F07",
@@ -268,6 +280,7 @@
       ],
       "norms": [
         "N18",
+        "N04",
         "N09"
       ],
       "adrs": [
@@ -275,17 +288,19 @@
         "0005"
       ],
       "scenarios": [
+        "S2",
         "S7"
       ],
       "metrics": [
         "BO-6"
       ],
       "evidence": [
-        "prototype/server/workflow.test.ts",
-        "prototype/server/app.ts"
+        "prototype/server/tests/workflow.test.ts",
+        "prototype/server/tests/http-access.test.ts",
+        "prototype/e2e"
       ],
-      "proof": "гайд без сесії; супровід / звернення родини без нового grant",
-      "state": "accepted_synthetic_demo"
+      "proof": "резерв і звернення родини без нового гранта чи сесії; загальний гайд доступний без сесії й без ролі",
+      "state": "accepted_8b_scope_evidence_relinked_2026-11-14"
     },
     {
       "feature": "F08",
@@ -322,12 +337,13 @@
         "BO-6"
       ],
       "evidence": [
-        "prototype/server/metrics.ts",
-        "prototype/server/workflow.test.ts",
-        "prototype/e2e/panels.spec.ts"
+        "prototype/server/tests/rules.test.ts",
+        "prototype/server/tests/workflow.test.ts",
+        "prototype/server/tests/storage.test.ts",
+        "prototype/e2e"
       ],
-      "proof": "формули / знаменники / unknown; insufficient / small / complementary; fixed snapshot",
-      "state": "accepted_synthetic_demo"
+      "proof": "показники BO з когорти: знаменники, невідоме, поріг, порожній знаменник; мала й доповнювальна група приховані; фіксований зріз незмінний; аналітик без рядків і фільтрів",
+      "state": "accepted_8b_scope_evidence_relinked_2026-11-14"
     },
     {
       "feature": "F09",
@@ -340,7 +356,8 @@
       "as_is": [
         "Task_Primary",
         "Task_Notify",
-        "Task_Decision"
+        "Task_Decision",
+        "SubProcess_OGD"
       ],
       "to_be": [
         "Control_Validate",
@@ -375,12 +392,13 @@
         "BO-6"
       ],
       "evidence": [
+        "prototype/server/tests/ingest.test.ts",
         "prototype/security/security.test.ts",
-        "prototype/server/app.test.ts",
-        "prototype/server/workflow.test.ts"
+        "prototype/server/tests/workflow.test.ts",
+        "prototype/server/tests/regressions.test.ts"
       ],
-      "proof": "один gateway / HMAC / strict schema; replay / restart dedupe / atomic rollback",
-      "state": "accepted_synthetic_demo"
+      "proof": "один шлюз: підпис, строга схема, політика джерела; повтор і рестарт без дубля; відкат при збої аудиту; конфлікт і подія раніше за попередника — на розбір; симулятор іде тим самим шляхом",
+      "state": "accepted_8b_scope_evidence_relinked_2026-11-14"
     },
     {
       "feature": "F10",
@@ -418,12 +436,13 @@
       ],
       "metrics": [],
       "evidence": [
+        "prototype/server/tests/http-access.test.ts",
         "prototype/security/security.test.ts",
-        "prototype/server/app.test.ts",
-        "prototype/e2e/panels.spec.ts"
+        "prototype/server/tests/workflow.test.ts",
+        "prototype/e2e"
       ],
-      "proof": "403 / 404 / current grant; audit / CSRF; lost response / retry / role cache; банер",
-      "state": "accepted_synthetic_demo"
+      "proof": "403 клініці, 404 чужому кейсу, чинний грант на кожен запит; CSRF / Origin / метод; аудит відмов без ідентифікаторів; збій аудиту відкочує команду; ліміти 413 / 429; банер на всіх панелях",
+      "state": "accepted_8b_scope_evidence_relinked_2026-11-14"
     }
   ]
 }

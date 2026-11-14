@@ -126,6 +126,8 @@ test('AC08: показники BO обчислюються з когорти; з
   const empty = computeSnapshot([]).metrics.filter(item => item.id !== 'BO-4');
   assert(empty.every(item => item.state === 'insufficient' && item.value === 'Недостатньо даних'));
   assert.equal(metric(computeSnapshot(COHORT, null), 'BO-6').state, 'insufficient');
+  // Частка округлюється до десятих, а не показує неокруглений дріб.
+  assert.equal(metric(computeSnapshot(COHORT, 7), 'BO-6').value, '4.3 кейсів на ставку · 10 хв/кейс');
   const noDates = computeSnapshot(COHORT.map(row => ({...row, injury: null})));
   assert.equal(metric(noDates, 'BO-1').state, 'insufficient');
 

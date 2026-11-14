@@ -1,5 +1,18 @@
 {
   "as_of": "2026-11-13",
+  "audit": {
+    "checked_at": "2026-11-14",
+    "note": "Незалежна звірка реквізитів із картками й текстами ВРУ: status, edition_basis, audit_* додано аудитом; checked_at — дата первинної перевірки фази 3. Для записів LEG1 підстава редакції внесена лише там, де її зафіксував аудит.",
+    "registry_gaps": [
+      {
+        "act": "Постанова КМУ №948 від 2024-08-20 «Деякі питання впровадження діяльності служб супроводу…» (Порядок організації діяльності служб супроводу); зміни — постанова КМУ №423 від 2026-04-01 (п.6-1), постанова №1025 від 2025-08-22 [перевірити]",
+        "url": "https://zakon.rada.gov.ua/laws/show/948-2024-%D0%BF",
+        "why": "На її виконання видано наказ МОУ №59 (N18); п.3 Порядку визначає основні завдання служб супроводу",
+        "checked": "первинний текст і зміни №423 прочитано на kmu.gov.ua 2026-11-14; консолідовану редакцію ВРУ не звірено",
+        "decision": "[питання команді, аудит 2026-11-14]: реєстр із 21 акта неповний; чи додавати акт як N22 — вирішує команда"
+      }
+    ]
+  },
   "sources": [
     {
       "id": "N01",
@@ -9,7 +22,11 @@
       "adopted_at": "2008-08-14",
       "edition_at": "2026-10-09",
       "url": "https://zakon.rada.gov.ua/laws/show/z1109-08",
-      "checked_at": "2026-11-13"
+      "checked_at": "2026-11-13",
+      "status": "чинний",
+      "audit_checked_at": "2026-11-14",
+      "audit_stream": "LEG1",
+      "edition_basis": "z1281-26"
     },
     {
       "id": "N02",
@@ -19,7 +36,10 @@
       "adopted_at": "2025-02-27",
       "edition_at": "2025-02-27",
       "url": "https://zakon.rada.gov.ua/laws/show/z0329-25",
-      "checked_at": "2026-11-13"
+      "checked_at": "2026-11-13",
+      "status": "чинний",
+      "audit_checked_at": "2026-11-14",
+      "audit_stream": "LEG1"
     },
     {
       "id": "N03",
@@ -29,7 +49,10 @@
       "adopted_at": "2025-01-03",
       "edition_at": "2025-02-28",
       "url": "https://zakon.rada.gov.ua/laws/show/z0027-25",
-      "checked_at": "2026-11-13"
+      "checked_at": "2026-11-13",
+      "status": "чинний",
+      "audit_checked_at": "2026-11-14",
+      "audit_stream": "LEG1"
     },
     {
       "id": "N04",
@@ -39,7 +62,10 @@
       "adopted_at": "2024-12-31",
       "edition_at": "2025-05-23",
       "url": "https://zakon.rada.gov.ua/laws/show/z0076-25",
-      "checked_at": "2026-11-13"
+      "checked_at": "2026-11-13",
+      "status": "чинний",
+      "audit_checked_at": "2026-11-14",
+      "audit_stream": "LEG1"
     },
     {
       "id": "N05",
@@ -49,7 +75,17 @@
       "adopted_at": "1991-12-20",
       "edition_at": "2026-08-06",
       "url": "https://zakon.rada.gov.ua/laws/show/2011-12",
-      "checked_at": "2026-11-13"
+      "checked_at": "2026-11-13",
+      "status": "чинний",
+      "edition_basis": "4931-IX",
+      "audit_checked_at": "2026-11-14",
+      "audit_stream": "LEG2",
+      "audit_scope": "ст.9, 10-1, 16–16-4; наступна редакція 2026-11-24 (підстава 4954-IX) — зміст не звірено",
+      "next_edition": {
+        "date": "2026-11-24",
+        "basis": "4954-IX",
+        "content_checked": false
+      }
     },
     {
       "id": "N06",
@@ -59,7 +95,12 @@
       "adopted_at": "2022-02-28",
       "edition_at": "2026-07-10",
       "url": "https://zakon.rada.gov.ua/laws/show/168-2022-%D0%BF",
-      "checked_at": "2026-11-13"
+      "checked_at": "2026-11-13",
+      "status": "чинний",
+      "edition_basis": "882-2026-п",
+      "audit_checked_at": "2026-11-14",
+      "audit_stream": "LEG2",
+      "audit_scope": "п.1–2-1, зокрема пп.1-2, 1-3"
     },
     {
       "id": "N07",
@@ -69,7 +110,12 @@
       "adopted_at": "2013-12-25",
       "edition_at": "2025-08-31",
       "url": "https://zakon.rada.gov.ua/laws/show/975-2013-%D0%BF",
-      "checked_at": "2026-11-13"
+      "checked_at": "2026-11-13",
+      "status": "чинний",
+      "edition_basis": "1000-2025-п",
+      "audit_checked_at": "2026-11-14",
+      "audit_stream": "LEG2",
+      "audit_scope": "повний текст, 32 пункти"
     },
     {
       "id": "N08",
@@ -79,7 +125,10 @@
       "adopted_at": "2025-06-17",
       "edition_at": "2025-06-17",
       "url": "https://zakon.rada.gov.ua/laws/show/4497-20",
-      "checked_at": "2026-11-13"
+      "checked_at": "2026-11-13",
+      "status": "чинний",
+      "audit_checked_at": "2026-11-14",
+      "audit_stream": "LEG1"
     },
     {
       "id": "N09",
@@ -89,7 +138,10 @@
       "adopted_at": "2010-06-01",
       "edition_at": "2025-06-14",
       "url": "https://zakon.rada.gov.ua/laws/show/2297-17",
-      "checked_at": "2026-11-13"
+      "checked_at": "2026-11-13",
+      "status": "чинний",
+      "audit_checked_at": "2026-11-14",
+      "audit_stream": "LEG1"
     },
     {
       "id": "N10",
@@ -99,7 +151,10 @@
       "adopted_at": "1992-03-25",
       "edition_at": "2026-08-06",
       "url": "https://zakon.rada.gov.ua/laws/show/2232-12",
-      "checked_at": "2026-11-13"
+      "checked_at": "2026-11-13",
+      "status": "чинний",
+      "audit_checked_at": "2026-11-14",
+      "audit_stream": "LEG1"
     },
     {
       "id": "N11",
@@ -109,7 +164,10 @@
       "adopted_at": "1992-11-19",
       "edition_at": "2026-02-11",
       "url": "https://zakon.rada.gov.ua/laws/show/2801-12",
-      "checked_at": "2026-11-13"
+      "checked_at": "2026-11-13",
+      "status": "чинний",
+      "audit_checked_at": "2026-11-14",
+      "audit_stream": "LEG1"
     },
     {
       "id": "N12",
@@ -119,7 +177,12 @@
       "adopted_at": "2003-05-22",
       "edition_at": "2023-12-31",
       "url": "https://zakon.rada.gov.ua/laws/show/851-15",
-      "checked_at": "2026-11-13"
+      "checked_at": "2026-11-13",
+      "status": "чинний",
+      "edition_basis": "2801-IX",
+      "audit_checked_at": "2026-11-14",
+      "audit_stream": "LEG2",
+      "audit_scope": "ст.5–8, 10–13"
     },
     {
       "id": "N13",
@@ -129,7 +192,12 @@
       "adopted_at": "2017-10-05",
       "edition_at": "2024-12-18",
       "url": "https://zakon.rada.gov.ua/laws/show/2155-19",
-      "checked_at": "2026-11-13"
+      "checked_at": "2026-11-13",
+      "status": "чинний",
+      "edition_basis": "3911-IX",
+      "audit_checked_at": "2026-11-14",
+      "audit_stream": "LEG2",
+      "audit_scope": "ст.17–18"
     },
     {
       "id": "N14",
@@ -139,7 +207,12 @@
       "adopted_at": "1994-07-05",
       "edition_at": "2025-04-20",
       "url": "https://zakon.rada.gov.ua/laws/show/80/94-%D0%B2%D1%80",
-      "checked_at": "2026-11-13"
+      "checked_at": "2026-11-13",
+      "status": "чинний",
+      "edition_basis": "4336-IX",
+      "audit_checked_at": "2026-11-14",
+      "audit_stream": "LEG2",
+      "audit_scope": "ст.8, ст.13 п.1-1"
     },
     {
       "id": "N15",
@@ -149,7 +222,12 @@
       "adopted_at": "2025-06-18",
       "edition_at": "2026-04-21",
       "url": "https://zakon.rada.gov.ua/laws/show/712-2025-%D0%BF",
-      "checked_at": "2026-11-13"
+      "checked_at": "2026-11-13",
+      "status": "чинний",
+      "edition_basis": "493-2026-п",
+      "audit_checked_at": "2026-11-14",
+      "audit_stream": "LEG2",
+      "audit_scope": "пп.1–5 постанови; пп.1, 4–8 Порядку авторизації"
     },
     {
       "id": "N16",
@@ -159,7 +237,10 @@
       "adopted_at": "1999-03-24",
       "edition_at": "2026-03-18",
       "url": "https://zakon.rada.gov.ua/laws/show/548-14",
-      "checked_at": "2026-11-13"
+      "checked_at": "2026-11-13",
+      "status": "чинний",
+      "audit_checked_at": "2026-11-14",
+      "audit_stream": "LEG1"
     },
     {
       "id": "N17",
@@ -169,7 +250,12 @@
       "adopted_at": "2023-08-23",
       "edition_at": "2023-08-23",
       "url": "https://zakon.rada.gov.ua/laws/show/901-2023-%D0%BF",
-      "checked_at": "2026-11-13"
+      "checked_at": "2026-11-13",
+      "status": "чинний",
+      "edition_basis": "прийняття, без змін",
+      "audit_checked_at": "2026-11-14",
+      "audit_stream": "LEG2",
+      "audit_scope": "пп.1–11"
     },
     {
       "id": "N18",
@@ -179,7 +265,12 @@
       "adopted_at": "2025-01-29",
       "edition_at": "2025-01-29",
       "url": "https://zakon.rada.gov.ua/laws/show/z0213-25",
-      "checked_at": "2026-11-13"
+      "checked_at": "2026-11-13",
+      "status": "чинний",
+      "edition_basis": "прийняття, без змін; реєстрація в Мін’юсті 2025-02-12 №213/43619",
+      "audit_checked_at": "2026-11-14",
+      "audit_stream": "LEG2",
+      "audit_scope": "повний текст Положення (PDF mod.gov.ua)"
     },
     {
       "id": "N19",
@@ -189,7 +280,11 @@
       "adopted_at": "2024-07-30",
       "edition_at": "2026-07-31",
       "url": "https://zakon.rada.gov.ua/laws/show/879-2024-%D0%BF",
-      "checked_at": "2026-11-13"
+      "checked_at": "2026-11-13",
+      "status": "чинний",
+      "audit_checked_at": "2026-11-14",
+      "audit_stream": "LEG1",
+      "note": "Слово «Армія+» вилучено з назви постанови постановою КМУ №1010 від 2025-08-20; Положення діє в редакції цієї постанови. Назву запису збережено як робочу."
     },
     {
       "id": "N20",
@@ -199,7 +294,10 @@
       "adopted_at": "2018-04-25",
       "edition_at": "2026-07-16",
       "url": "https://zakon.rada.gov.ua/laws/show/411-2018-%D0%BF",
-      "checked_at": "2026-11-13"
+      "checked_at": "2026-11-13",
+      "status": "чинний",
+      "audit_checked_at": "2026-11-14",
+      "audit_stream": "LEG1"
     },
     {
       "id": "N21",
@@ -209,7 +307,12 @@
       "adopted_at": "2018-06-07",
       "edition_at": "2026-06-30",
       "url": "https://zakon.rada.gov.ua/laws/show/z0745-18",
-      "checked_at": "2026-11-13"
+      "checked_at": "2026-11-13",
+      "status": "чинний",
+      "edition_basis": "z0955-26",
+      "audit_checked_at": "2026-11-14",
+      "audit_stream": "LEG2",
+      "audit_scope": "розд.XXXIV пп.8–17"
     }
   ]
 }
