@@ -40,12 +40,14 @@ test('D1 у браузері: команди ролей, джерела, два 
 
   await openPanel(page, 'Симулятор');
   await sendFixtures(page, D1.vlkAndOgd);
-  await expect(page.locator('.demo-path__event svg')).toHaveCount(24);
+  await expect(page.locator('.demo-path__event svg')).toHaveCount(23);
   await snapshot(page, 'simulator-after-d1-desktop');
 
   await openPanel(page, 'Мій кейс');
-  await expect(page.getByText('Виконання підтверджене джерелом', {exact: true})).toHaveCount(2);
-  await expect(page.getByText('Схвалено; виконання ще не підтверджене', {exact: true})).toHaveCount(1);
+  // Винагорода — виконання за періодом; ОГД — одна виплата з юридичними кроками (ADR 0013).
+  await expect(page.getByText('Виконання підтверджене джерелом', {exact: true})).toHaveCount(1);
+  await expect(page.getByText('Виплату здійснено — підтвердило джерело', {exact: true})).toHaveCount(1);
+  await expect(page.locator('.ogd-steps .confirmation.is-confirmed')).toHaveCount(4);
   await expect(page.locator('main')).not.toContainText(/кошти отримано|виплачено/i);
   await expect(page.locator('.finance-route')).toHaveCount(2);
   // Після постанови ВЛК пояснення-очікування зникає: ОГД уже розглядається.
@@ -53,7 +55,7 @@ test('D1 у браузері: команди ролей, джерела, два 
 
   const documents = page.getByRole('group', {name: 'Перелік документів'});
   await expect(documents.getByRole('button', {name: 'ВЛК', exact: true})).toHaveAttribute('aria-pressed', 'true');
-  await documents.getByRole('button', {name: 'ОГД · жовтень 2026'}).click();
+  await documents.getByRole('button', {name: 'ОГД', exact: true}).click();
   await expect(page.locator('.document')).toHaveCount(2);
   await snapshot(page, 'd1-patient-desktop');
 

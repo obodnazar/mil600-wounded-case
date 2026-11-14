@@ -5,11 +5,12 @@ import {EmptyState} from '../../components/EmptyState';
 import {ExternalLink} from '../../components/ExternalLink';
 import {Icon} from '../../components/Icon';
 import {StatusPill} from '../../components/StatusPill';
-import {FINANCE_KIND_LABELS, FINANCE_STATES, financeReasonLabel, SOURCE_LABELS} from '../../content/labels';
+import {FINANCE_KIND_LABELS, FINANCE_STATES, financeReasonLabel, financeState, SOURCE_LABELS} from '../../content/labels';
 import {
   FINANCE_NOTE,
   OGD_DECISION_NOTE,
   OGD_NOTE,
+  OGD_OUT_OF_SCOPE_NOTE,
   OGD_REFERENCE,
   PAYMENTS_VLK_RULE,
   REWARD_NOTE,
@@ -24,7 +25,7 @@ function Confirmation({label, confirmed}: {label: string; confirmed: boolean}) {
     <li className={confirmed ? 'confirmation is-confirmed' : 'confirmation'}>
       <Icon name={confirmed ? 'check' : 'clock'} size={16} />
       <span>
-        {label}: {confirmed ? 'підтверджене джерелом' : 'не підтверджене'}
+        {label}: {confirmed ? 'підтверджено джерелом' : 'не підтверджено'}
       </span>
     </li>
   );
@@ -53,6 +54,38 @@ function FinancePeriod({track}: {track: FinanceTrackView}) {
   );
 }
 
+/** Кроки ОГД за Порядком №975 (ADR 0013); крок пройдено, лише коли його підтвердило джерело. */
+const OGD_STEPS: readonly {label: string; reached: readonly FinanceTrackView['status'][]}[] = [
+  {label: 'Документи подано до уповноваженого органу', reached: ['under_review', 'returned', 'conclusion_prepared', 'approved', 'denied', 'execution_confirmed']},
+  {label: 'Висновок уповноваженого органу за місцем служби', reached: ['conclusion_prepared', 'approved', 'denied', 'execution_confirmed']},
+  {label: 'Рішення розпорядника бюджетних коштів', reached: ['approved', 'denied', 'execution_confirmed']},
+  {label: 'Виплату здійснено', reached: ['execution_confirmed']},
+];
+
+function OgdPayment({track}: {track: FinanceTrackView}) {
+  const state = financeState('ogd', track.status);
+  return (
+    <div className="finance-period finance-period--single">
+      <p className="finance-period__month">Одноразова виплата</p>
+      <StatusPill tone={state.tone}>{state.label}</StatusPill>
+      <ol className="finance-period__confirmations ogd-steps">
+        {OGD_STEPS.map(step => (
+          <Confirmation key={step.label} label={step.label} confirmed={step.reached.includes(track.status)} />
+        ))}
+      </ol>
+      <p className="finance-period__meta">
+        {financeReasonLabel(track.reason)} · {SOURCE_LABELS[track.source]}
+      </p>
+      {track.clarificationOpen && (
+        <p className="finance-period__flag">
+          <Icon name="message" size={16} />
+          Супровід уточнює стан ОГД
+        </p>
+      )}
+    </div>
+  );
+}
+
 interface FinanceColumnProps {
   kind: FinanceTrackView['kind'];
   tracks: FinanceTrackView[];
@@ -69,7 +102,13 @@ function FinanceColumn({kind, tracks, vlkDecision}: FinanceColumnProps) {
         <h3>{FINANCE_KIND_LABELS[kind]}</h3>
       </header>
       {kind === 'ogd' && <OgdAwaitsVlk vlkDecision={vlkDecision} />}
-      {tracks.length > 0 ? (
+      {kind === 'ogd' && tracks[0] ? (
+        <OgdPayment track={tracks[0]} />
+      ) : kind === 'ogd' ? (
+        <EmptyState icon="finance" title="Даних про ОГД ще немає">
+          Джерело ще не передавало даних про ОГД.
+        </EmptyState>
+      ) : tracks.length > 0 ? (
         <ul className="finance-route__periods">
           {tracks.map(track => (
             <FinancePeriod key={track.periodStart} track={track} />
@@ -86,6 +125,7 @@ function FinanceColumn({kind, tracks, vlkDecision}: FinanceColumnProps) {
         <details className="disclosure">
           <summary>Що варто знати про ОГД</summary>
           <p>{OGD_NOTE}</p>
+          <p>{OGD_OUT_OF_SCOPE_NOTE}</p>
           <p>{OGD_DECISION_NOTE}</p>
           <p>
             <ExternalLink href={OGD_REFERENCE.href}>{OGD_REFERENCE.label}</ExternalLink>
@@ -98,7 +138,7 @@ function FinanceColumn({kind, tracks, vlkDecision}: FinanceColumnProps) {
 
 const KINDS: readonly FinanceTrackView['kind'][] = ['reward', 'ogd'];
 
-/** Два окремі фінансові маршрути; у кожному — окремі періоди. ОГД — лише після постанови ВЛК. */
+/** Два окремі фінансові маршрути: винагорода — за періодами, ОГД — одна виплата після постанови ВЛК. */
 export function FinanceSection({view}: {view: PatientCaseView}) {
   return (
     <Section
@@ -107,7 +147,7 @@ export function FinanceSection({view}: {view: PatientCaseView}) {
       title="Окремі фінансові маршрути"
       lead={PAYMENTS_VLK_RULE}
       collapsible
-      summary={`Періодів: ${view.finances.length}`}
+      summary={`Маршрутів із даними: ${new Set(view.finances.map(track => track.kind)).size}`}
     >
       <div className="finance-grid">
         {KINDS.map(kind => (

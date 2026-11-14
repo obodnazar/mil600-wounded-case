@@ -25,7 +25,7 @@ async function acceptAll(h: Harness, ids: string[]): Promise<void> {
   for (const id of ids) await h.accepted(id);
 }
 
-test('D1: повний шлях — винагорода до ВЛК, ОГД окремо, інший період лишається незакритим', () =>
+test('D1: повний шлях — винагорода до ВЛК, ОГД після постанови однією виплатою', () =>
   withHarness(async h => {
     await acceptAll(h, ['primary', 'admit', 'care-start', 'transfer', 'patient-receipt', 'certificate-prepared']);
     await h.login('commander');
@@ -41,20 +41,17 @@ test('D1: повний шлях — винагорода до ВЛК, ОГД о�
     assert.equal((await h.command('refer_vlk')).status, 200);
     await acceptAll(h, [
       'referral', 'vlk-received', 'vlk-decision', 'service-executed',
-      'ogd-packet', 'ogd-returned', 'ogd-approved-after-returned', 'ogd-execution_partial', 'ogd-execution_confirmed',
-      'ogd-oct-packet', 'ogd-oct-approved',
+      'ogd-packet', 'ogd-returned', 'ogd-packet-v2', 'ogd-conclusion', 'ogd-approved', 'ogd-execution_confirmed',
     ]);
     const tracks = h.store.rows(
-      'SELECT payment_kind,period_start,current_status FROM financial_track WHERE case_id=? ORDER BY payment_kind,period_start',
+      'SELECT payment_kind,current_status FROM financial_track WHERE case_id=? ORDER BY payment_kind,period_start',
       CASE,
     );
-    assert.deepEqual(tracks.map(row => [row.payment_kind, row.period_start, row.current_status]), [
-      ['ogd', '2026-10-01', 'approved'],
-      ['ogd', '2026-11-01', 'execution_confirmed'],
-      ['reward', '2026-11-01', 'execution_confirmed'],
+    // ОГД — один рядок без періодів (ADR 0013).
+    assert.deepEqual(tracks.map(row => [row.payment_kind, row.current_status]), [
+      ['ogd', 'execution_confirmed'],
+      ['reward', 'execution_confirmed'],
     ]);
-    // Схвалений інший період не має доказу виконання.
-    assert.equal(finance(h, 'ogd', '2026-10-01').executionConfirmed, false);
 
     // Повтор першої події не додає кейс, подію, задачу, outbox чи документ.
     const before = h.sizes();
@@ -399,34 +396,55 @@ test('ADR 0011: ОГД лише після чинної постанови ВЛ�
     await h.accepted(variant('ogd-packet', 'demo-ogd-after-decision'));
   }));
 
-test('AC06: повернення, відмова, схвалення, часткове й повне виконання не зливаються', () =>
+test('AC06 (ADR 0013): ОГД — повернення, повторне подання, висновок, рішення, виплата; часткової виплати немає', () =>
   withHarness(async h => {
     await acceptAll(h, ['vlk-received', 'vlk-decision', 'ogd-packet', 'ogd-returned']);
     assert.deepEqual([finance(h, 'ogd').status, finance(h, 'ogd').clarificationOpen], ['returned', true]);
-    await h.accepted('ogd-denied');
-    assert.equal(finance(h, 'ogd').status, 'denied');
-    await h.accepted('ogd-approved-after-denied');
+    await h.accepted('ogd-packet-v2');
+    assert.equal(finance(h, 'ogd').status, 'under_review');
+    await h.accepted('ogd-conclusion');
+    assert.deepEqual([finance(h, 'ogd').status, finance(h, 'ogd').executionConfirmed], ['conclusion_prepared', false]);
+    await h.accepted('ogd-approved');
     assert.deepEqual(
       [finance(h, 'ogd').status, finance(h, 'ogd').decisionConfirmed, finance(h, 'ogd').executionConfirmed, finance(h, 'ogd').clarificationOpen],
       ['approved', true, false, false],
     );
-    await h.accepted('ogd-execution_partial');
-    assert.deepEqual([finance(h, 'ogd').status, finance(h, 'ogd').executionConfirmed], ['execution_partial', true]);
 
-    // Невідомий сигнал не стирає підтверджене часткове виконання.
+    // Невідомий сигнал не стирає підтверджене рішення.
     await h.accepted('ogd-unknown');
-    assert.equal(finance(h, 'ogd').status, 'execution_partial');
+    assert.equal(finance(h, 'ogd').status, 'approved');
     assert.equal(finance(h, 'ogd').clarificationOpen, true);
     assert.equal(freshness(h), 'stale');
     await h.accepted('ogd-execution_confirmed');
     assert.equal(finance(h, 'ogd').status, 'execution_confirmed');
     assert.equal(freshness(h), 'fresh');
+    // Часткової виплати ОГД немає — на розбір.
+    await h.pending(variant('ogd-execution_confirmed', 'demo-ogd-partial', event => {
+      event.payload.status = 'execution_partial';
+    }));
+    assert.equal(h.reviewReasons().at(-1), 'ogd_single_payment');
+    // Рішення без висновку уповноваженого органу не приймається.
+    await h.pending(variant('ogd-approved', 'demo-ogd-approved-without-conclusion', event => {
+      event.payload.previous_decision_ref = 'demo-decision-ogd-execution-confirmed';
+    }));
+    assert.equal(h.reviewReasons().at(-1), 'ogd_decision_without_conclusion');
+    // Другий пакет ОГД у тому самому кейсі — на розбір: виплата одноразова.
+    await h.pending('ogd-second-packet');
+    assert.equal(h.reviewReasons().at(-1), 'ogd_single_payment');
+    assert.equal(h.count("SELECT COUNT(*) AS n FROM financial_track WHERE case_id=? AND payment_kind='ogd'", CASE), 1);
 
     // Подія винагороди з пакетом ОГД не змішує маршрути.
     const mixed = fixtureEvent('reward-approved');
     mixed.payload.packet_ref = 'demo-ogd-packet-01';
     await h.pending(mixed);
     assert.equal(finance(h, 'reward').status, 'under_review');
+  }));
+
+test('AC06 (ADR 0013): відмова в призначенні ОГД — після висновку; відкриває уточнення', () =>
+  withHarness(async h => {
+    await acceptAll(h, ['vlk-received', 'vlk-decision', 'ogd-packet', 'ogd-returned', 'ogd-packet-v2', 'ogd-conclusion']);
+    await h.accepted('ogd-denied');
+    assert.deepEqual([finance(h, 'ogd').status, finance(h, 'ogd').clarificationOpen], ['denied', true]);
   }));
 
 test('AC06: виконання без рішення та рішення з недоведеним попередником не перезаписують підтверджене', () =>

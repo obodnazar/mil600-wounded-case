@@ -191,6 +191,8 @@ export type FinanceStatus =
   | 'returned'
   | 'denied'
   | 'approved'
+  /** ОГД: уповноважений орган за місцем служби підготував висновок (ADR 0013). */
+  | 'conclusion_prepared'
   | 'execution_partial'
   | 'execution_confirmed'
   | 'unknown';

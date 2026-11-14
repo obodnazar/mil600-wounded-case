@@ -1,5 +1,5 @@
 import type {CaseMilestones, PatientCaseView} from '../../../shared/api';
-import {FINANCE_STATES, MILESTONES, ROUTE_LABELS, UNKNOWN, type Tone} from '../../content/labels';
+import {financeRowLabel, financeState, MILESTONES, UNKNOWN, type Tone} from '../../content/labels';
 import {formatDay, formatMonth} from '../../lib/dates';
 
 /** Один рядок блоку «Що підтверджено, а що невідомо». */
@@ -32,8 +32,8 @@ function milestoneFact<K extends keyof CaseMilestones>(milestones: CaseMilestone
 function financeFacts(view: PatientCaseView): Fact[] {
   if (view.finances.length === 0) return [fact('finance', 'Виплати', UNKNOWN, 'unknown')];
   return view.finances.map(track => {
-    const state = FINANCE_STATES[track.status];
-    const label = `${ROUTE_LABELS[track.kind]} · ${formatMonth(track.periodStart) ?? 'період невідомий'}`;
+    const state = financeState(track.kind, track.status);
+    const label = financeRowLabel(track.kind, formatMonth(track.periodStart));
     return fact(`finance-${track.kind}-${track.periodStart}`, label, state.short, state.tone);
   });
 }

@@ -147,6 +147,18 @@ export function financeTransitionProblem(prior: FinanceState | null, signal: Fin
   return null;
 }
 
+/**
+ * ОГД — одна одноразова виплата (ADR 0013, Порядок №975): документи подано → висновок
+ * уповноваженого органу → рішення розпорядника бюджетних коштів → виплату здійснено.
+ * Часткового виконання немає; рішення без висновку не приймається.
+ */
+export function ogdTransitionProblem(prior: FinanceState | null, signal: FinanceSignal): string | null {
+  if (signal.status === 'execution_partial') return 'ogd_single_payment';
+  const decision = signal.status === 'approved' || signal.status === 'denied';
+  if (decision && prior?.status !== 'conclusion_prepared') return 'ogd_decision_without_conclusion';
+  return financeTransitionProblem(prior, signal);
+}
+
 /* ───────────── Ревізії пакета ───────────── */
 
 export interface PacketState {

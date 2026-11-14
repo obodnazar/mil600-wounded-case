@@ -79,6 +79,14 @@ export function applyPackageSignal({store, event, payload, caseId, caseEventId}:
   const packet = text(payload, 'packet_ref');
   const revision = text(payload, 'packet_revision');
   const returned = event.event_type.endsWith('returned');
+  // Винагорода рахується за періодами — пакет без періоду не застосовується.
+  if (route === 'reward' && !optionalText(payload, 'period')) throw new ReviewRequired('finance_period_missing');
+  // ОГД одноразова (ADR 0013): другий пакет ОГД у тому самому кейсі не приймається.
+  if (route === 'ogd' && store.exists(
+    "SELECT packet_ref FROM route_packet WHERE case_id=? AND route='ogd' AND packet_ref<>?", caseId, packet,
+  )) {
+    throw new ReviewRequired('ogd_single_payment');
+  }
   const prior = store.row(
     'SELECT revision,period FROM route_packet WHERE case_id=? AND route=? AND packet_ref=?',
     caseId, route, packet,
@@ -105,9 +113,16 @@ export function applyPackageSignal({store, event, payload, caseId, caseEventId}:
        state=excluded.state`,
     caseId, route, packet, revision, text(payload, 'confirmed_at'),
     text(payload, 'reason_code') || 'received', returned ? 'returned' : 'received',
-    optionalText(payload, 'period'),
+    route === 'reward' ? optionalText(payload, 'period') : null,
   );
   ensureRequirements(store, caseId, route, packet, revision);
+  // Доопрацьовані документи ОГД подано повторно: повернення більше не є поточним станом.
+  if (route === 'ogd' && !returned) {
+    store.run(
+      "UPDATE financial_track SET current_status='under_review' WHERE case_id=? AND payment_kind='ogd' AND current_status='returned'",
+      caseId,
+    );
+  }
   if (route === 'vlk' && !returned) resolveTasks(store, caseId, 'await_vlk_receipt', 'packet_received');
   if (returned) {
     openTask(store, caseId, 'clarify_author', 'support', `demo-return:${route}:${packet}:${revision}`, caseEventId);

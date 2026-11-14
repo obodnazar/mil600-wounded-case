@@ -101,10 +101,9 @@ export const D1 = {
     'service-executed',
     'ogd-packet',
     'ogd-returned',
-    'ogd-approved-after-returned',
-    'ogd-execution_partial',
+    'ogd-packet-v2',
+    'ogd-conclusion',
+    'ogd-approved',
     'ogd-execution_confirmed',
-    'ogd-oct-packet',
-    'ogd-oct-approved',
   ],
 } as const;

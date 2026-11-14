@@ -1,6 +1,6 @@
 import type {StaffAddressMinimum} from '../../../shared/api';
 import {StatusPill} from '../../components/StatusPill';
-import {FINANCE_KIND_LABELS, FINANCE_STATES, MILESTONES, TONE_WORDS, UNKNOWN, type Tone} from '../../content/labels';
+import {financeRowLabel, financeState, MILESTONES, TONE_WORDS, UNKNOWN, type Tone} from '../../content/labels';
 import {formatMonth} from '../../lib/dates';
 import {OgdAwaitsVlk} from '../shared/OgdAwaitsVlk';
 
@@ -34,10 +34,10 @@ function buildRows(address: StaffAddressMinimum): Row[] {
     rows.push({id: 'finance', label: 'Виплати', value: UNKNOWN, tone: 'unknown'});
   }
   for (const track of sortedFinances(address)) {
-    const state = FINANCE_STATES[track.status];
+    const state = financeState(track.kind, track.status);
     rows.push({
       id: `finance-${track.kind}-${track.periodStart}`,
-      label: `${FINANCE_KIND_LABELS[track.kind]} · ${formatMonth(track.periodStart) ?? 'період невідомий'}`,
+      label: financeRowLabel(track.kind, formatMonth(track.periodStart)),
       value: state.short,
       tone: state.tone,
     });

@@ -280,6 +280,11 @@ export const FINANCE_STATES: Record<FinanceStatus, ToneLabel & {short: string}> 
     short: 'схвалено, виконання не підтверджене',
     tone: 'pending',
   },
+  conclusion_prepared: {
+    label: 'Висновок уповноваженого органу підготовлено; рішення ще немає',
+    short: 'висновок підготовлено, рішення ще немає',
+    tone: 'pending',
+  },
   execution_partial: {
     label: 'Виконання підтверджене частково',
     short: 'виконання підтверджене частково',
@@ -292,6 +297,28 @@ export const FINANCE_STATES: Record<FinanceStatus, ToneLabel & {short: string}> 
   },
   unknown: {label: 'Джерельний стан невідомий', short: UNKNOWN, tone: 'unknown'},
 };
+
+/** ОГД — одна виплата з точними юридичними кроками (ADR 0013): власні підписи станів. */
+const OGD_STATES: Partial<Record<FinanceStatus, ToneLabel & {short: string}>> = {
+  under_review: {label: 'Документи подано до уповноваженого органу', short: 'документи подано', tone: 'pending'},
+  returned: {label: 'Документи повернуто на доопрацювання', short: 'повернуто на доопрацювання', tone: 'attention'},
+  approved: {
+    label: 'Рішення про призначення ухвалено; виплату ще не підтверджено',
+    short: 'рішення про призначення, виплату не підтверджено',
+    tone: 'pending',
+  },
+  denied: {label: 'Рішення про відмову в призначенні; уточніть підставу', short: 'рішення про відмову', tone: 'conflict'},
+  execution_confirmed: {label: 'Виплату здійснено — підтвердило джерело', short: 'виплату здійснено', tone: 'confirmed'},
+};
+
+export function financeState(kind: 'reward' | 'ogd', status: FinanceStatus): ToneLabel & {short: string} {
+  return (kind === 'ogd' ? OGD_STATES[status] : undefined) ?? FINANCE_STATES[status];
+}
+
+/** Підпис рядка виплати: винагорода — з місяцем, ОГД — одноразова, без періоду. */
+export function financeRowLabel(kind: 'reward' | 'ogd', monthLabel: string | null): string {
+  return kind === 'ogd' ? `${FINANCE_KIND_LABELS.ogd} · одноразова` : `${FINANCE_KIND_LABELS.reward} · ${monthLabel ?? 'період невідомий'}`;
+}
 
 const FINANCE_REASONS: Record<string, string> = {
   documents_needed: 'Потрібне уточнення документів',

@@ -29,7 +29,7 @@ function caseDetail(page: Page) {
   return page.locator('.case-detail');
 }
 
-test('S6 + S1: резерв без еПМК — строк від довідки про перебування, пізня еПМК долучається до того самого кейсу', async ({page}) => {
+test('S6 + S1: резерв без еПМК — строк від надходження на лікування, пізня еПМК долучається до того самого кейсу', async ({page}) => {
   await openApp(page);
   await openReserveCase(page);
   await expect(caseDetail(page)).toContainText('Медичний документ ще не підтверджений');
@@ -37,8 +37,13 @@ test('S6 + S1: резерв без еПМК — строк від довідки
   await openPanel(page, 'Симулятор');
   await sendFixtures(page, ['reserve-hospital', 'reserve-hospital-receipt']);
   await openReserveCase(page);
-  // Відлік від отримання довідки про перебування; медичний документ при цьому не підтверджено.
-  await expect(caseDetail(page)).toContainText('18 листопада 2026');
+  // Довідка про перебування й квитанція строку не запускають (ADR 0012).
+  await expect(caseDetail(page)).toContainText('Дату надходження ще не встановлено');
+  await openPanel(page, 'Симулятор');
+  await sendFixture(page, 'reserve-admit');
+  await openReserveCase(page);
+  // Відлік від надходження 12.11: перший день — 13.11, строк — 17.11; медичний документ при цьому не підтверджено.
+  await expect(caseDetail(page)).toContainText('17 листопада 2026');
   await expect(caseDetail(page)).toContainText('Медичний документ ще не підтверджений');
 
   await openPanel(page, 'Симулятор');
@@ -194,16 +199,19 @@ test('S7: звернення родини фіксується без досту
   await expect(actions.getByRole('button', {name: 'Підготувати результат звернення'})).toBeDisabled();
 });
 
-test('S5: суперечливий сигнал не перезаписує завершений період; невідомий — не стирає підтверджене', async ({page}) => {
+test('S5: суперечливий сигнал не перезаписує здійснену ОГД; невідомий — не стирає підтверджене; другий пакет — на розбір', async ({page}) => {
   await openApp(page);
   await openPanel(page, 'Симулятор');
-  // Відмова для періоду, виконання якого вже підтверджене, — лише на розбір.
+  // Відмова після вже здійсненої виплати — лише на розбір.
   await sendFixture(page, 'ogd-denied', PENDING);
   await sendFixture(page, 'ogd-unknown');
+  // ОГД одноразова: другий пакет не створює другої виплати.
+  await sendFixture(page, 'ogd-second-packet', PENDING);
 
   await openPanel(page, 'Мій кейс');
   const ogd = page.locator('.finance-route', {hasText: 'Одноразова грошова допомога'});
-  await expect(ogd).toContainText('Виконання підтверджене джерелом');
-  await expect(ogd).not.toContainText('Відмовлено');
+  await expect(ogd).toContainText('Виплату здійснено — підтвердило джерело');
+  await expect(ogd).not.toContainText('Рішення про відмову');
+  await expect(ogd.locator('.finance-period')).toHaveCount(1);
   await expect(page.locator('main')).not.toContainText(/кошти отримано|виплачено/i);
 });

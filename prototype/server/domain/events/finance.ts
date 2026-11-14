@@ -1,27 +1,22 @@
-import {monthEnd} from '../calendar.js';
+import {kyivDate, monthEnd} from '../calendar.js';
 import {assertOgdAfterDecision} from '../documents.js';
 import {ReviewRequired, newId, optionalText, text, type EventContext} from '../model.js';
-import {financeTransitionProblem} from '../rules.js';
+import {financeTransitionProblem, ogdTransitionProblem} from '../rules.js';
 import {openOrReopenTask, openTask} from '../tasks.js';
 
 /**
- * Фінансовий стан одного виду виплати за один період.
- * Винагорода й ОГД — окремі маршрути; періоди не змішуються; схвалення,
- * часткове та повне виконання — різні підтверджені стани.
+ * Фінансовий стан одного виду виплати.
+ * Винагорода — за періодами; схвалення, часткове та повне виконання — різні підтверджені стани.
+ * ОГД — одна одноразова виплата без періодів (ADR 0013): рядок прив’язаний до єдиного пакета ОГД.
  */
 export function applyFinanceStatus({store, event, payload, caseId, caseEventId}: EventContext): void {
   const kind = text(payload, 'kind');
-  const period = text(payload, 'period');
   const status = text(payload, 'status');
-  const periodStart = `${period}-01`;
   const packetRef = text(payload, 'packet_ref');
   if (kind === 'ogd') assertOgdAfterDecision(store, caseId, [event.occurred_at]);
-
-  const packet = store.exists(
-    'SELECT packet_ref FROM route_packet WHERE case_id=? AND route=? AND packet_ref=? AND period=?',
-    caseId, kind, packetRef, period,
-  );
-  if (!packet) throw new ReviewRequired('finance_without_packet_receipt');
+  const {period, periodStart} = kind === 'ogd'
+    ? ogdKey(store, caseId, packetRef)
+    : rewardKey(store, caseId, packetRef, text(payload, 'period'));
 
   const prior = store.row(
     'SELECT current_status,decision_ref FROM financial_track WHERE case_id=? AND payment_kind=? AND period_start=?',
@@ -30,7 +25,8 @@ export function applyFinanceStatus({store, event, payload, caseId, caseEventId}:
   const priorState = prior
     ? {status: String(prior.current_status), decisionRef: prior.decision_ref ? String(prior.decision_ref) : null}
     : null;
-  const problem = financeTransitionProblem(priorState, {
+  const check = kind === 'ogd' ? ogdTransitionProblem : financeTransitionProblem;
+  const problem = check(priorState, {
     status,
     previousDecisionRef: optionalText(payload, 'previous_decision_ref'),
   });
@@ -74,6 +70,34 @@ export function applyFinanceStatus({store, event, payload, caseId, caseEventId}:
       WHERE case_id=? AND kind='clarify_finance' AND (trigger_ref LIKE ? OR trigger_ref LIKE ?)`,
     caseId, `demo-finance:${kind}:${period}:%`, `demo-finance-unknown:${kind}:${period}`,
   );
+}
+
+interface TrackKey {
+  /** Ключ для тригерів задач: місяць винагороди або `single` для ОГД. */
+  period: string;
+  periodStart: string;
+}
+
+function rewardKey(store: EventContext['store'], caseId: string, packetRef: string, period: string): TrackKey {
+  if (!period) throw new ReviewRequired('finance_period_missing');
+  const packet = store.exists(
+    "SELECT packet_ref FROM route_packet WHERE case_id=? AND route='reward' AND packet_ref=? AND period=?",
+    caseId, packetRef, period,
+  );
+  if (!packet) throw new ReviewRequired('finance_without_packet_receipt');
+  return {period, periodStart: `${period}-01`};
+}
+
+/** ОГД: єдиний пакет кейсу; технічний ключ рядка — місяць подання документів, у продукті його не показуємо. */
+function ogdKey(store: EventContext['store'], caseId: string, packetRef: string): TrackKey {
+  const existing = store.row("SELECT period_start FROM financial_track WHERE case_id=? AND payment_kind='ogd'", caseId);
+  const packet = store.row(
+    "SELECT received_at FROM route_packet WHERE case_id=? AND route='ogd' AND packet_ref=?",
+    caseId, packetRef,
+  );
+  if (!packet) throw new ReviewRequired('finance_without_packet_receipt');
+  const periodStart = existing ? String(existing.period_start) : `${kyivDate(String(packet.received_at)).slice(0, 7)}-01`;
+  return {period: 'single', periodStart};
 }
 
 interface UnknownTrack {

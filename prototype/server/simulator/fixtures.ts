@@ -209,7 +209,7 @@ const vlk: Fixture[] = [
     }),
 ];
 
-/* ───────────── Два фінансові маршрути ───────────── */
+/* ───────────── Винагорода за час стаціонарного лікування: за періодами ───────────── */
 
 type PaymentKind = 'reward' | 'ogd';
 const KIND_TITLE: Record<PaymentKind, string> = {reward: 'Винагорода', ogd: 'ОГД'};
@@ -281,6 +281,60 @@ function financeRoute(kind: PaymentKind): Fixture[] {
   ];
 }
 
+/* ───────────── ОГД: одна одноразова виплата (ADR 0013) ───────────── */
+
+const OGD_PACKET = 'demo-ogd-packet-01';
+
+function ogdPacket(group: FixtureGroup, id: string, title: string, revision: string, extra: Payload = {}): Fixture {
+  return fixture(group, id, title, 'finance.package_received', 'demo-finance', {
+    kind: 'ogd',
+    packet_ref: OGD_PACKET,
+    packet_revision: revision,
+    recipient_ref: 'demo-finance',
+    confirmed_at: AT,
+    evidence_ref: PROOF,
+    ...extra,
+  });
+}
+
+/** Стан ОГД; `after` — рішення, яке цей стан продовжує (порядок переходів має бути доведений). */
+function ogdStatus(group: FixtureGroup, id: string, title: string, status: string, after: string | null): Fixture {
+  return fixture(group, id, title, 'finance.status_recorded', 'demo-finance', {
+    kind: 'ogd',
+    packet_ref: OGD_PACKET,
+    status,
+    reason_code: ['returned', 'denied'].includes(status) ? 'documents_needed' : 'confirmed_scope',
+    decision_ref: `demo-decision-${slug(id)}`,
+    evidence_ref: PROOF,
+    ...(after ? {previous_decision_ref: `demo-decision-${after}`} : {}),
+  });
+}
+
+/**
+ * Документи подано до уповноваженого органу → висновок уповноваженого органу за місцем служби →
+ * рішення розпорядника бюджетних коштів → виплату здійснено. Навчальне джерело demo-finance
+ * представляє обидва органи. Рішення ЕКОПФО / довідка МСЕК і заява — поза обсягом прототипу.
+ */
+const ogd: Fixture[] = [
+  ogdPacket('d1', 'ogd-packet', 'D1 · ОГД · документи подано до уповноваженого органу', 'v1'),
+  ogdStatus('d1', 'ogd-returned', 'D1 · ОГД · документи повернуто на доопрацювання', 'returned', null),
+  ogdPacket('d1', 'ogd-packet-v2', 'D1 · ОГД · доопрацьовані документи подано повторно', 'v2', {supersedes_revision: 'v1'}),
+  ogdStatus('d1', 'ogd-conclusion', 'D1 · ОГД · уповноважений орган підготував висновок', 'conclusion_prepared', 'ogd-returned'),
+  ogdStatus('d1', 'ogd-approved', 'D1 · ОГД · розпорядник коштів ухвалив рішення про призначення', 'approved', 'ogd-conclusion'),
+  ogdStatus('d1', 'ogd-execution_confirmed', 'D1 · ОГД · виплату здійснено', 'execution_confirmed', 'ogd-approved'),
+  ogdStatus('s5', 'ogd-denied', 'S5 · ОГД · рішення про відмову в призначенні', 'denied', 'ogd-conclusion'),
+  ogdStatus('s5', 'ogd-unknown', 'S5 · ОГД · стан невідомий', 'unknown', null),
+  fixture('s5', 'ogd-second-packet', 'S5 · ОГД · другий пакет ОГД — виплата одноразова, на розбір', 'finance.package_received',
+    'demo-finance', {
+      kind: 'ogd',
+      packet_ref: 'demo-ogd-packet-02',
+      packet_revision: 'v1',
+      recipient_ref: 'demo-finance',
+      confirmed_at: AT,
+      evidence_ref: PROOF,
+    }),
+];
+
 /* ───────────── Прогалини, резерв і невизначений випадок ───────────── */
 
 const exceptions: Fixture[] = [
@@ -299,6 +353,9 @@ const exceptions: Fixture[] = [
     }, RESERVE_PERSON),
   fixture('s6', 'reserve-hospital-receipt', 'S6 · військовослужбовець отримав резервний документ', 'document.received',
     'demo-service', receipt('demo-hospital-reserve', 'v1', 'demo-person-02', 'servicemember'), RESERVE_PERSON),
+  fixture('s6', 'reserve-admit', 'S6 · резервний кейс: надходження на лікування — початок відліку строку', 'care.admitted',
+    'demo-mis', {provider_ref: 'demo-provider-2', date: '2026-11-12', evidence_ref: PROOF},
+    {...RESERVE_PERSON, episode_ref: 'demo-reserve-episode'}),
   fixture('s1', 'reserve-primary', 'S1 · пізня еПМК для адміністративного резерву', 'medical.primary_recorded',
     'demo-mis', {document_kind: 'primary_medical_card', document_version: 'v1'}, RESERVE_PERSON),
   fixture('s1', 'uncertain', 'S1 · особа відома, випадок потребує звірки', 'medical.primary_recorded', 'demo-mis',
@@ -310,7 +367,7 @@ export const fixtures: Fixture[] = [
   ...certificate,
   ...vlk,
   ...financeRoute('reward'),
-  ...financeRoute('ogd'),
+  ...ogd,
   ...exceptions,
 ];
 

@@ -131,7 +131,7 @@ test('TR-06: постанова з майбутнього й неможливи�
 test('адресний мінімум після реальних подій не містить посилань на рішення, доказів, пакетів і записів', () =>
   withHarness(async h => {
     for (const id of ['primary', 'admit', 'reward-packet', 'reward-approved', 'reward-execution_partial', 'vlk-received', 'vlk-decision',
-      'ogd-packet', 'ogd-approved', 'ogd-execution_partial']) {
+      'ogd-packet', 'ogd-returned', 'ogd-packet-v2', 'ogd-conclusion', 'ogd-approved']) {
       await h.accepted(id);
     }
     for (const profile of ['support', 'commander'] as const) {
@@ -145,6 +145,6 @@ test('адресний мінімум після реальних подій н�
       }
       const item = await staffCase(h);
       assert.deepEqual(item.address.finances.map(track => [track.kind, track.status]).sort(),
-        [['ogd', 'execution_partial'], ['reward', 'execution_partial']]);
+        [['ogd', 'approved'], ['reward', 'execution_partial']]);
     }
   }));

@@ -247,7 +247,8 @@ export function financeTracks(store: Store, caseId: string): FinanceTrackView[] 
   const rows = store.rows('SELECT * FROM financial_track WHERE case_id=? ORDER BY payment_kind,period_start', caseId);
   return rows.map(track => {
     const kind = track.payment_kind === 'reward' ? 'reward' : 'ogd';
-    const period = String(track.period_start).slice(0, 7);
+    // ОГД — одна виплата: тригери її задач мають ключ `single`, а не місяць (ADR 0013).
+    const period = kind === 'ogd' ? 'single' : String(track.period_start).slice(0, 7);
     const clarificationOpen = store.exists(
       `SELECT id FROM task
         WHERE case_id=? AND kind='clarify_finance' AND status='open'
