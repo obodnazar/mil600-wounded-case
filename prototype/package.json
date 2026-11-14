@@ -8,7 +8,7 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.json && tsc -p tsconfig.ui.json && vite build",
-    "test": "npm run build && node --test dist/security/*.test.js dist/server/*.test.js",
+    "test": "npm run build && node --test dist/security/*.test.js dist/server/tests/*.test.js",
     "lint": "eslint security server shared ui e2e",
     "dev": "npm run build && node dist/server/main.js",
     "start": "node dist/server/main.js",

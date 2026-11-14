@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
-"""Локальна перевірка реєстру, частот, цитування та посилань фази 2."""
+"""Локальна перевірка реєстру, частот, цитування та посилань фази 2.
+
+Межі (уточнення аудиту 2026-11-14). Скрипт працює без мережі й перевіряє лише
+внутрішню узгодженість файлів. Він НЕ звіряє цитати з першоджерелами: SHA-256
+рахується з тексту самого voices.md, тому ловить тільки пізнішу зміну цитати.
+Перелік того, що не перевіряється, друкується у виводі в полі `not_checked`.
+"""
 
 from collections import Counter, defaultdict
 from datetime import date, datetime
@@ -18,6 +24,26 @@ CHANGED_MARKDOWN = (
     "docs/reviews/phase-2.md", "research/voices.md",
     "research/pain-map.md", "research/voices-method.md",
 )
+
+# Правило зрізу: «новіше = дата публікації в межах 12 місяців до зрізу», без ручних
+# винятків. До 2026-11-14 тут був виняток MANUAL_HISTORICAL для Q33 (рішення фази 2);
+# його скасовано рішенням 2026-11-14 (Назар делегував, ухвалив Claude в межах аудиту):
+# Q33 опубліковано 2026-04-18, тож він новіший, як Q42 і Q43. Див. research/voices-method.md,
+# «Ручні рішення кодування, винесені на команду».
+
+# Чого цей скрипт не перевіряє (друкується у виводі).
+NOT_CHECKED = (
+    "наявність цитати в першоджерелі (SHA-256 рахується з voices.md)",
+    "доступність джерел та істинність описаних подій",
+    "числа в прозі: 7 / 19 / 18, 15 медіасторінок, 11 = 4 + 3 + 2 + 1 + 1",
+    "типи авторів, полярність, повтори авторів, персональні дані",
+    "тематичну доречність голосу (напр. Q25 — мобілізаційна ВЛК)",
+)
+
+# Дослівні уривки з тих самих джерел в інших документах теж споживають ліміт
+# «25 слів на групу джерела». Рахуємо «…» від трьох слів у рядках, що посилаються
+# на URL із реєстру.
+QUOTE_LIMIT_EXTRA_FILES = ("docs/01-problem.md",)
 
 
 def require(condition, message):
@@ -84,7 +110,8 @@ def main():
         pub = date.fromisoformat(record["published_at"])
         require(pub <= checked and record["checked_at"] == checked.isoformat(),
                 f"Майбутня дата / інший зріз: {key}")
-        expected_old = pub < cutoff or key == "Q33"
+        # Правило — лише дата публікації (ручних винятків немає з 2026-11-14).
+        expected_old = pub < cutoff
         require(record["historical"] == expected_old, f"Вік свідчення {key}")
         require(urlsplit(record["url"]).scheme == "https", f"URL {key}")
         require(not {"quote", "name", "nickname", "author_id"}.intersection(record),
@@ -104,6 +131,18 @@ def main():
                 f"Уривок карти не збігається з цитатою {key}")
         source_words[by_id[key]["source_group"]] += len(fragment.split())
     require(len(fragments) == 8, "Змінився склад уривків: перевірте ліміт вручну")
+    group_by_url = {record["url"]: record["source_group"] for record in records}
+    extra_quoted_words = 0
+    for relative in QUOTE_LIMIT_EXTRA_FILES:
+        for line in (ROOT / relative).read_text().splitlines():
+            groups = {group for url, group in group_by_url.items() if url in line}
+            if len(groups) != 1:
+                continue
+            group = next(iter(groups))
+            for fragment in re.findall(r"«([^»]+)»", line):
+                if len(fragment.split()) >= 3:
+                    source_words[group] += len(fragment.split())
+                    extra_quoted_words += len(fragment.split())
     require(all(count <= 25 for count in source_words.values()),
             f"Сумарний ліміт джерела: {dict(source_words)}")
 
@@ -169,7 +208,10 @@ def main():
         "source_groups": len(source_words), "strata": strata,
         "cohorts_recent_historical_total": dict(cohorts),
         "max_quoted_words_per_source": max(source_words.values()),
+        "quoted_words_in_other_docs": extra_quoted_words,
         "local_links_checked": links_checked,
+        "manual_exceptions": [],
+        "not_checked": list(NOT_CHECKED),
     }, ensure_ascii=False, indent=2))
 
 

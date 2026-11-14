@@ -1,0 +1,218 @@
+/* Службова панель: список кейсів і деталі вибраного. */
+
+.staff-layout {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.case-list {
+  display: grid;
+  align-content: start;
+  gap: var(--space-3);
+}
+
+.case-list__count {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+
+.case-list__items {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.case-item {
+  position: relative;
+  display: grid;
+  gap: var(--space-2);
+  width: 100%;
+  padding: var(--space-3) var(--space-6) var(--space-3) var(--space-4);
+  border: 1.5px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--bg-raised);
+  color: var(--text);
+  text-align: left;
+}
+
+.case-item:hover {
+  border-color: var(--line-strong);
+}
+
+.case-item[aria-current='true'] {
+  border-color: var(--paper);
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.case-item__top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-1) var(--space-3);
+}
+
+.case-item__label {
+  font-weight: 800;
+}
+
+.case-item__stage,
+.case-item__task {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+
+.case-item[aria-current='true'] .case-item__stage,
+.case-item[aria-current='true'] .case-item__task {
+  color: var(--ink-muted);
+}
+
+.case-item__marks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+
+.case-item__marks:empty {
+  display: none;
+}
+
+.case-item__arrow {
+  position: absolute;
+  top: 50%;
+  right: var(--space-3);
+  color: var(--text-muted);
+  transform: translateY(-50%);
+}
+
+.case-item[aria-current='true'] .case-item__arrow {
+  color: var(--ink);
+}
+
+.case-list .field input {
+  border-color: var(--line-strong);
+}
+
+.case-detail {
+  gap: var(--space-5);
+}
+
+.case-detail > .btn--ghost {
+  justify-self: start;
+  margin: calc(var(--space-2) * -1) 0 calc(var(--space-3) * -1) calc(var(--space-3) * -1);
+}
+
+.case-detail__head {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.case-detail__head h2 {
+  font-size: var(--text-2xl);
+}
+
+.case-detail__marks {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.case-block {
+  display: grid;
+  gap: var(--space-3);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--paper-line);
+}
+
+.case-block .deadline {
+  padding: 0;
+}
+
+.action-grid {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.action-tile {
+  display: grid;
+  align-content: start;
+  gap: var(--space-2);
+}
+
+.action-tile__note {
+  display: flex;
+  gap: var(--space-2);
+  color: var(--ink-muted);
+  font-size: var(--text-sm);
+}
+
+.action-tile.is-unavailable .action-tile__note {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.action-tile__note .icon {
+  margin-top: 2px;
+}
+
+.reserve {
+  margin-top: var(--space-5);
+}
+
+.reserve h2 {
+  margin: var(--space-3) 0 var(--space-2);
+}
+
+.reserve p {
+  color: var(--text-muted);
+}
+
+.reserve strong {
+  color: var(--text);
+}
+
+.reserve .action-tile__note,
+.reserve .action-tile.is-unavailable .action-tile__note {
+  color: var(--text-muted);
+}
+
+@media (min-width: 640px) {
+  .action-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .action-grid--single {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .staff-layout--wide {
+    grid-template-columns: minmax(300px, 4fr) minmax(0, 7fr);
+    align-items: start;
+  }
+
+  .staff-layout__list {
+    position: sticky;
+    top: calc(var(--banner-height) + var(--space-4));
+    max-height: calc(100dvh - var(--banner-height) - var(--space-6));
+    padding-right: var(--space-2);
+    overflow-y: auto;
+  }
+
+  .reserve {
+    grid-template-columns: minmax(0, 7fr) minmax(0, 4fr);
+    align-items: center;
+    gap: var(--space-6);
+  }
+}
+
+/* Адресний мінімум: один стовпчик, щоб довгі назви виплат не розтягували сусідні рядки. */
+.facts.facts--address {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.facts--address .facts__row:last-child {
+  border-bottom: 0;
+}

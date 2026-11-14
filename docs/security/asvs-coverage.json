@@ -2,8 +2,17 @@
   "version": "5.0.0",
   "published": "2025-05-30",
   "checked": "2026-11-13",
+  "app_reviewed": "2026-11-14",
+  "levels_rechecked": "2026-11-14: рівні 43 ID звірено з CSV; повний перерахунок 253 рядків не повторювався",
   "source": "https://raw.githubusercontent.com/OWASP/ASVS/v5.0.0/5.0/docs_en/OWASP_Application_Security_Verification_Standard_5.0.0_en.csv",
-  "scope": "synthetic security harness; no full application L2 certification",
+  "scope": "локальний застосунок прототипу (prototype/server, лише loopback) і security-ядро фази 7; не сертифікація L2",
+  "status_legend": {
+    "app_tested": "є тест застосунку, названий в evidence, який перевіряє саме цю властивість",
+    "module_tested": "доведено лише тестом security harness фази 7",
+    "partial": "реалізовано або задокументовано частково; пояснення в note",
+    "planned": "не виконано; потрібне до публічного доступу чи реальних даних",
+    "not_assessed": "не оцінювалося"
+  },
   "requirements": [
     {
       "id": "v5.0.0-1.1.1",
@@ -188,14 +197,44 @@
     {
       "id": "v5.0.0-2.2.1",
       "level": 1,
-      "status": "not_assessed",
-      "controls": []
+      "status": "app_tested",
+      "controls": [
+        "K03"
+      ],
+      "evidence": [
+        {
+          "file": "prototype/server/tests/http-access.test.ts",
+          "test": "доступ: метод, тип і розмір тіла, невідомий шлях — єдиний формат помилок"
+        },
+        {
+          "file": "prototype/server/tests/ingest.test.ts",
+          "test": "шлюз: усі фікстури відповідають строгим схемам; довільне медичне поле відхиляється"
+        },
+        {
+          "file": "prototype/server/tests/ingest.test.ts",
+          "test": "шлюз: dev-симулятор іде тим самим шляхом; без довільного payload і без нових грантів"
+        }
+      ],
+      "note": "Allowlist-перевірка тіл команд, вибору ролі, симулятора й подій; інших входів у застосунку немає"
     },
     {
       "id": "v5.0.0-2.2.2",
       "level": 1,
-      "status": "not_assessed",
-      "controls": []
+      "status": "app_tested",
+      "controls": [
+        "K03"
+      ],
+      "evidence": [
+        {
+          "file": "prototype/server/tests/http-access.test.ts",
+          "test": "доступ: метод, тип і розмір тіла, невідомий шлях — єдиний формат помилок"
+        },
+        {
+          "file": "prototype/server/tests/ingest.test.ts",
+          "test": "шлюз: чуже джерело, тип чи особа — 403; зайве клінічне поле — 400; аналітика без рядків"
+        }
+      ],
+      "note": "Перевірка виконується на сервері; клієнтська валідація не є контролем"
     },
     {
       "id": "v5.0.0-2.2.3",
@@ -248,26 +287,50 @@
     {
       "id": "v5.0.0-3.3.1",
       "level": 1,
-      "status": "not_assessed",
-      "controls": []
+      "status": "planned",
+      "controls": [
+        "K05"
+      ],
+      "note": "Не виконано: cookie без Secure і без префікса, бо дозволено лише HTTP loopback; обов’язково до будь-якого публічного доступу"
     },
     {
       "id": "v5.0.0-3.3.2",
       "level": 2,
-      "status": "not_assessed",
-      "controls": []
+      "status": "app_tested",
+      "controls": [
+        "K01"
+      ],
+      "evidence": [
+        {
+          "file": "prototype/server/tests/http-access.test.ts",
+          "test": "доступ: застосунок відмовляється від production і не-loopback; cookie та аудит не розкривають секретів"
+        }
+      ],
+      "note": "SameSite=Strict"
     },
     {
       "id": "v5.0.0-3.3.3",
       "level": 2,
-      "status": "not_assessed",
-      "controls": []
+      "status": "planned",
+      "controls": [
+        "K05"
+      ],
+      "note": "Не виконано: cookie без префікса __Host- (HTTP loopback)"
     },
     {
       "id": "v5.0.0-3.3.4",
       "level": 2,
-      "status": "not_assessed",
-      "controls": []
+      "status": "app_tested",
+      "controls": [
+        "K01"
+      ],
+      "evidence": [
+        {
+          "file": "prototype/server/tests/http-access.test.ts",
+          "test": "доступ: застосунок відмовляється від production і не-loopback; cookie та аудит не розкривають секретів"
+        }
+      ],
+      "note": "HttpOnly; токен сесії передається лише в Set-Cookie"
     },
     {
       "id": "v5.0.0-3.4.1",
@@ -283,45 +346,87 @@
       "status": "module_tested",
       "controls": [
         "K05"
-      ]
+      ],
+      "evidence": [
+        {
+          "file": "prototype/security/security.test.ts",
+          "test": "HTTP: unsafe methods and cross-origin requests denied, security headers on errors"
+        }
+      ],
+      "note": "CORS-заголовки не видаються; окремого твердження для застосунку в тестах немає"
     },
     {
       "id": "v5.0.0-3.4.3",
       "level": 2,
-      "status": "module_tested",
+      "status": "app_tested",
       "controls": [
         "K05"
-      ]
+      ],
+      "evidence": [
+        {
+          "file": "prototype/server/tests/http-access.test.ts",
+          "test": "доступ: заголовки безпеки є на успішних відповідях, помилках і статиці"
+        }
+      ],
+      "note": "Тест перевіряє default-src 'none' для API та script-src 'self' без unsafe-inline і frame-ancestors 'none' для сторінки; object-src / base-uri задані тією самою константою й окремо не перевіряються"
     },
     {
       "id": "v5.0.0-3.4.4",
       "level": 2,
-      "status": "module_tested",
+      "status": "app_tested",
       "controls": [
         "K05"
+      ],
+      "evidence": [
+        {
+          "file": "prototype/server/tests/http-access.test.ts",
+          "test": "доступ: заголовки безпеки є на успішних відповідях, помилках і статиці"
+        }
       ]
     },
     {
       "id": "v5.0.0-3.4.5",
       "level": 2,
-      "status": "module_tested",
+      "status": "app_tested",
       "controls": [
         "K05"
+      ],
+      "evidence": [
+        {
+          "file": "prototype/server/tests/http-access.test.ts",
+          "test": "доступ: заголовки безпеки є на успішних відповідях, помилках і статиці"
+        }
       ]
     },
     {
       "id": "v5.0.0-3.4.6",
       "level": 2,
-      "status": "module_tested",
+      "status": "app_tested",
       "controls": [
         "K05"
+      ],
+      "evidence": [
+        {
+          "file": "prototype/server/tests/http-access.test.ts",
+          "test": "доступ: заголовки безпеки є на успішних відповідях, помилках і статиці"
+        }
       ]
     },
     {
       "id": "v5.0.0-3.5.1",
       "level": 1,
-      "status": "not_assessed",
-      "controls": []
+      "status": "app_tested",
+      "controls": [
+        "K01",
+        "K05"
+      ],
+      "evidence": [
+        {
+          "file": "prototype/server/tests/http-access.test.ts",
+          "test": "доступ: зміна ролі анулює старий токен; CSRF, Origin, Host, метод і query тримають межі"
+        }
+      ],
+      "note": "CSRF-токен, прив’язаний до сесії, і точний Origin на кожній мутації"
     },
     {
       "id": "v5.0.0-3.5.2",
@@ -332,8 +437,17 @@
     {
       "id": "v5.0.0-3.5.3",
       "level": 1,
-      "status": "not_assessed",
-      "controls": []
+      "status": "app_tested",
+      "controls": [
+        "K05"
+      ],
+      "evidence": [
+        {
+          "file": "prototype/server/tests/http-access.test.ts",
+          "test": "доступ: метод, тип і розмір тіла, невідомий шлях — єдиний формат помилок"
+        }
+      ],
+      "note": "Усі зміни стану — лише POST (GET на шлях команд дає 405); відхилення Sec-Fetch-Site: cross-site окремого тесту не має"
     },
     {
       "id": "v5.0.0-3.5.4",
@@ -362,10 +476,11 @@
     {
       "id": "v5.0.0-4.1.1",
       "level": 1,
-      "status": "module_tested",
+      "status": "partial",
       "controls": [
         "K05"
-      ]
+      ],
+      "note": "Реалізовано: JSON, HTML, JS і CSS мають Content-Type із charset. Тесту на цей заголовок немає ні для harness, ні для застосунку — статус module_tested у зрізі фази 7 був завищений"
     },
     {
       "id": "v5.0.0-4.1.2",
@@ -376,9 +491,15 @@
     {
       "id": "v5.0.0-4.1.3",
       "level": 2,
-      "status": "module_tested",
+      "status": "app_tested",
       "controls": [
         "K04"
+      ],
+      "evidence": [
+        {
+          "file": "prototype/server/tests/http-access.test.ts",
+          "test": "доступ: ліміт частоти дає 429 з Retry-After, не довіряє X-Forwarded-For і не роздуває аудит"
+        }
       ]
     },
     {
@@ -708,28 +829,54 @@
     {
       "id": "v5.0.0-7.2.1",
       "level": 1,
-      "status": "partial",
+      "status": "app_tested",
       "controls": [
         "K01"
-      ]
+      ],
+      "evidence": [
+        {
+          "file": "prototype/server/tests/http-access.test.ts",
+          "test": "доступ: без сесії, чужий кейс, відкликаний грант діє на наступний запит, власний документ бійця"
+        },
+        {
+          "file": "prototype/server/tests/http-access.test.ts",
+          "test": "доступ: зміна ролі анулює старий токен; CSRF, Origin, Host, метод і query тримають межі"
+        }
+      ],
+      "note": "Перевірка токена сесії лише на сервері; у демо — навчальний вибір ролі замість автентифікації"
     },
     {
       "id": "v5.0.0-7.2.2",
       "level": 1,
-      "status": "not_assessed",
-      "controls": []
+      "status": "partial",
+      "controls": [
+        "K01"
+      ],
+      "note": "Реалізовано: випадковий токен на кожну сесію; окремого тесту немає"
     },
     {
       "id": "v5.0.0-7.2.3",
       "level": 1,
-      "status": "not_assessed",
-      "controls": []
+      "status": "partial",
+      "controls": [
+        "K01"
+      ],
+      "note": "Реалізовано: 256 біт із CSPRNG (randomBytes(32)); тесту ентропії немає"
     },
     {
       "id": "v5.0.0-7.2.4",
       "level": 1,
-      "status": "not_assessed",
-      "controls": []
+      "status": "app_tested",
+      "controls": [
+        "K01"
+      ],
+      "evidence": [
+        {
+          "file": "prototype/server/tests/http-access.test.ts",
+          "test": "доступ: зміна ролі анулює старий токен; CSRF, Origin, Host, метод і query тримають межі"
+        }
+      ],
+      "note": "Аналог автентифікації в демо — вибір ролі: видається новий токен, старий анулюється"
     },
     {
       "id": "v5.0.0-7.3.1",
@@ -746,8 +893,17 @@
     {
       "id": "v5.0.0-7.4.1",
       "level": 1,
-      "status": "not_assessed",
-      "controls": []
+      "status": "app_tested",
+      "controls": [
+        "K01"
+      ],
+      "evidence": [
+        {
+          "file": "prototype/server/tests/http-access.test.ts",
+          "test": "доступ: зміна ролі анулює старий токен; CSRF, Origin, Host, метод і query тримають межі"
+        }
+      ],
+      "note": "Анульований токен дає 401"
     },
     {
       "id": "v5.0.0-7.4.2",
@@ -803,7 +959,8 @@
       "status": "partial",
       "controls": [
         "K01"
-      ]
+      ],
+      "note": "Документ: docs/architecture/rbac.md; фактична службова проєкція прототипу вужча за матрицю"
     },
     {
       "id": "v5.0.0-8.1.2",
@@ -811,38 +968,71 @@
       "status": "partial",
       "controls": [
         "K01"
-      ]
+      ],
+      "note": "Документ: docs/architecture/rbac.md; поля службової проєкції — відкрите питання команді"
     },
     {
       "id": "v5.0.0-8.2.1",
       "level": 1,
-      "status": "module_tested",
+      "status": "app_tested",
       "controls": [
         "K01"
+      ],
+      "evidence": [
+        {
+          "file": "prototype/server/tests/http-access.test.ts",
+          "test": "доступ: зміна ролі анулює старий токен; CSRF, Origin, Host, метод і query тримають межі"
+        },
+        {
+          "file": "prototype/server/tests/ingest.test.ts",
+          "test": "шлюз: dev-симулятор іде тим самим шляхом; без довільного payload і без нових грантів"
+        }
       ]
     },
     {
       "id": "v5.0.0-8.2.2",
       "level": 1,
-      "status": "module_tested",
+      "status": "app_tested",
       "controls": [
         "K01"
+      ],
+      "evidence": [
+        {
+          "file": "prototype/server/tests/http-access.test.ts",
+          "test": "доступ: без сесії, чужий кейс, відкликаний грант діє на наступний запит, власний документ бійця"
+        }
       ]
     },
     {
       "id": "v5.0.0-8.2.3",
       "level": 2,
-      "status": "module_tested",
+      "status": "app_tested",
       "controls": [
         "K01"
+      ],
+      "evidence": [
+        {
+          "file": "prototype/server/tests/http-access.test.ts",
+          "test": "доступ: проєкція командира й супроводу не має клінічних посилань, закладу, документів і виплат"
+        }
       ]
     },
     {
       "id": "v5.0.0-8.3.1",
       "level": 1,
-      "status": "module_tested",
+      "status": "app_tested",
       "controls": [
         "K01"
+      ],
+      "evidence": [
+        {
+          "file": "prototype/server/tests/http-access.test.ts",
+          "test": "доступ: без сесії, чужий кейс, відкликаний грант діє на наступний запит, власний документ бійця"
+        },
+        {
+          "file": "prototype/server/tests/http-access.test.ts",
+          "test": "доступ: проєкція командира й супроводу не має клінічних посилань, закладу, документів і виплат"
+        }
       ]
     },
     {
@@ -1306,7 +1496,14 @@
       "status": "partial",
       "controls": [
         "K05"
-      ]
+      ],
+      "evidence": [
+        {
+          "file": "prototype/server/tests/http-access.test.ts",
+          "test": "доступ: зміна ролі анулює старий токен; CSRF, Origin, Host, метод і query тримають межі"
+        }
+      ],
+      "note": "Query відхиляється (400); ідентифікатор кейсу лишається в шляху URL"
     },
     {
       "id": "v5.0.0-14.2.2",
@@ -1335,9 +1532,15 @@
     {
       "id": "v5.0.0-14.3.2",
       "level": 2,
-      "status": "module_tested",
+      "status": "app_tested",
       "controls": [
         "K05"
+      ],
+      "evidence": [
+        {
+          "file": "prototype/server/tests/http-access.test.ts",
+          "test": "доступ: заголовки безпеки є на успішних відповідях, помилках і статиці"
+        }
       ]
     },
     {
@@ -1461,9 +1664,19 @@
     {
       "id": "v5.0.0-16.2.5",
       "level": 2,
-      "status": "module_tested",
+      "status": "app_tested",
       "controls": [
         "K06"
+      ],
+      "evidence": [
+        {
+          "file": "prototype/server/tests/http-access.test.ts",
+          "test": "доступ: кожна відмова лишає запис аудиту без ідентифікаторів і секретів"
+        },
+        {
+          "file": "prototype/server/tests/http-access.test.ts",
+          "test": "доступ: застосунок відмовляється від production і не-loopback; cookie та аудит не розкривають секретів"
+        }
       ]
     },
     {
@@ -1475,10 +1688,17 @@
     {
       "id": "v5.0.0-16.3.2",
       "level": 2,
-      "status": "module_tested",
+      "status": "app_tested",
       "controls": [
         "K06"
-      ]
+      ],
+      "evidence": [
+        {
+          "file": "prototype/server/tests/http-access.test.ts",
+          "test": "доступ: кожна відмова лишає запис аудиту без ідентифікаторів і секретів"
+        }
+      ],
+      "note": "Відмови за лімітом частоти (429) свідомо не записуються построково"
     },
     {
       "id": "v5.0.0-16.3.3",
@@ -1498,7 +1718,14 @@
       "status": "module_tested",
       "controls": [
         "K06"
-      ]
+      ],
+      "evidence": [
+        {
+          "file": "prototype/security/security.test.ts",
+          "test": "HTTP: privacy-safe audit records allow+deny, no input values or tokens; private file"
+        }
+      ],
+      "note": "Записи складаються лише з кодів і HMAC-міток; у застосунку — параметризований SQL; окремого тесту на ін’єкцію в журнал немає"
     },
     {
       "id": "v5.0.0-16.4.2",
@@ -1519,9 +1746,19 @@
     {
       "id": "v5.0.0-16.5.1",
       "level": 2,
-      "status": "module_tested",
+      "status": "app_tested",
       "controls": [
         "K05"
+      ],
+      "evidence": [
+        {
+          "file": "prototype/server/tests/http-access.test.ts",
+          "test": "доступ: метод, тип і розмір тіла, невідомий шлях — єдиний формат помилок"
+        },
+        {
+          "file": "prototype/server/tests/http-access.test.ts",
+          "test": "доступ: збій аудиту забороняє читання"
+        }
       ]
     },
     {
@@ -1533,9 +1770,19 @@
     {
       "id": "v5.0.0-16.5.3",
       "level": 2,
-      "status": "module_tested",
+      "status": "app_tested",
       "controls": [
         "K06"
+      ],
+      "evidence": [
+        {
+          "file": "prototype/server/tests/http-access.test.ts",
+          "test": "доступ: збій аудиту забороняє читання"
+        },
+        {
+          "file": "prototype/server/tests/ingest.test.ts",
+          "test": "шлюз: збій аудиту відкочує inbox, домен, задачу й outbox; повтор із новим nonce проходить"
+        }
       ]
     },
     {

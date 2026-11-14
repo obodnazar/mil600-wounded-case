@@ -1,5 +1,6 @@
 {
   "checked_at": "2026-11-13",
+  "audit_note_2026_11_14": "Історичний зріз доступності на 2026-11-13 (рівень transport_only); записи нижче не змінювались. Незалежний аудит 2026-11-14 окремо перечитав норми й джерела; його результати — docs/reviews/claude-full-audit.md.",
   "method": "Public GET for HTML; HEAD for binary links; no auth or bypass. HTTP 200 is availability, not claim verification. Rada may return metadata cards. Previous phase legal checks remain dated prior evidence.",
   "counts": {
     "200": 121,

@@ -34,6 +34,8 @@
         <bpmn:flowNodeRef>EventSubProcess_Long</bpmn:flowNodeRef>
       </bpmn:lane>
       <bpmn:lane id="Lane_Unit" name="Частина: командир / штаб / супровід">
+        <bpmn:flowNodeRef>Task_Report</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Order</bpmn:flowNodeRef>
         <bpmn:flowNodeRef>Task_Certificate</bpmn:flowNodeRef>
         <bpmn:flowNodeRef>Timer_Certificate</bpmn:flowNodeRef>
         <bpmn:flowNodeRef>Task_CertInquiry</bpmn:flowNodeRef>
@@ -100,9 +102,19 @@
       <bpmn:incoming>F_TransferYes</bpmn:incoming>
       <bpmn:outgoing>F_TransferBack</bpmn:outgoing>
     </bpmn:task>
-    <bpmn:task id="Task_Certificate" name="Оформити наказ і довідку про обставини травми">
-      <bpmn:documentation>D1: МОУ, 2026-06-02; перевірено 2026-11-13. Опис джерела та межі — ../03-as-is.md. Для сценарію поранення від дій противника. Не встановлює причинний зв’язок замість ВЛК.</bpmn:documentation>
+    <bpmn:task id="Task_Report" name="Безпосередній командир: рапорт про поранення бійця*">
+      <bpmn:documentation>Уточнення 2026-11-14 (рішення команди, повний алгоритм у AS IS, без TO BE): поранення → «Форма 001» → рапорт безпосереднього командира бійця → наказ командира частини → оформлення довідки. Роз’яснення МОУ 2026-06-02 описує послідовність «рапорт → наказ командира → довідка» (../../regulation/internal-service-548.md). Форма, строки й канал рапорту не звірялися з НПА.</bpmn:documentation>
       <bpmn:incoming>F_Unit</bpmn:incoming>
+      <bpmn:outgoing>F_Report</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="Task_Order" name="Командир частини: наказ — підстава довідки">
+      <bpmn:documentation>Уточнення 2026-11-14 (рішення команди). Форма довідки (додаток 5 до Положення про ВЛЕ, наказ МОУ №402) містить реквізит «Підстава: наказ командира (начальника) військової частини»; ../../regulation/vlk-402.md, ../../regulation/internal-service-548.md.</bpmn:documentation>
+      <bpmn:incoming>F_Report</bpmn:incoming>
+      <bpmn:outgoing>F_Order</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="Task_Certificate" name="Оформити довідку про обставини травми">
+      <bpmn:documentation>D1: МОУ, 2026-06-02; перевірено 2026-11-13. Опис джерела та межі — ../03-as-is.md. Для сценарію поранення від дій противника. Не встановлює причинний зв’язок замість ВЛК. Уточнення 2026-11-14: наказ винесено в окремий попередній вузол Task_Order; ID цього вузла не змінено. Довідку складає начальник медслужби, підписує командир частини.</bpmn:documentation>
+      <bpmn:incoming>F_Order</bpmn:incoming>
       <bpmn:outgoing>F_CertReward</bpmn:outgoing>
     </bpmn:task>
     <bpmn:boundaryEvent id="Timer_Certificate" name="Строк довідки: [TBD]*" cancelActivity="false" attachedToRef="Task_Certificate">
@@ -232,7 +244,7 @@
     <bpmn:endEvent id="End_NoOGD" name="ОГД не подається в цьому сценарії">
       <bpmn:incoming>F_OGDNo</bpmn:incoming>
     </bpmn:endEvent>
-    <bpmn:task id="Task_OGDPackage" name="Підготувати окремий пакет ОГД; ЕКОПФО за потреби*">
+    <bpmn:task id="Task_OGDPackage" name="Підготувати окремий пакет ОГД; рішення ЕКОПФО / довідка МСЕК*">
       <bpmn:documentation>D1: МОУ, 2026-06-02; перевірено 2026-11-13. Опис джерела та межі — ../03-as-is.md. ЕКОПФО — окреме оцінювання, не дія ВЛК. У схемі показано отримання належних результатів для пакета, не саме оцінювання. ОГД при інвалідності не є єдиним видом ОГД.</bpmn:documentation>
       <bpmn:incoming>F_OGDYes</bpmn:incoming>
       <bpmn:incoming>F_FinRepair</bpmn:incoming>
@@ -291,7 +303,9 @@
     <bpmn:sequenceFlow id="F_Start" sourceRef="Start_Injury" targetRef="Task_Primary" />
     <bpmn:sequenceFlow id="F_Primary" sourceRef="Task_Primary" targetRef="Gateway_Parallel" />
     <bpmn:sequenceFlow id="F_Care" sourceRef="Gateway_Parallel" targetRef="Task_Admission" />
-    <bpmn:sequenceFlow id="F_Unit" sourceRef="Gateway_Parallel" targetRef="Task_Certificate" />
+    <bpmn:sequenceFlow id="F_Unit" sourceRef="Gateway_Parallel" targetRef="Task_Report" />
+    <bpmn:sequenceFlow id="F_Report" sourceRef="Task_Report" targetRef="Task_Order" />
+    <bpmn:sequenceFlow id="F_Order" sourceRef="Task_Order" targetRef="Task_Certificate" />
     <bpmn:sequenceFlow id="F_Admission" sourceRef="Task_Admission" targetRef="Task_Treatment" />
     <bpmn:sequenceFlow id="F_Treatment" sourceRef="Task_Treatment" targetRef="Task_MedDocs" />
     <bpmn:sequenceFlow id="F_Docs" sourceRef="Task_MedDocs" targetRef="Gateway_Transfer" />
@@ -366,6 +380,10 @@
       <bpmn:text>Додаткова винагорода ≠ ОГД.
 Підпроцес має власні медичні й адміністративні підстави; фінальна ВЛК не є загальним бар’єром.</bpmn:text>
     </bpmn:textAnnotation>
+    <bpmn:textAnnotation id="Note_CertChain">
+      <bpmn:text>Уточнення 2026-11-14, алгоритм за командою: поранення → «Форма 001»* → рапорт безпосереднього командира → наказ командира частини → довідка.
+* «Форма 001» — форма №001/о «Первинна медична картка» (наказ МОУ №879). Лише AS IS, у TO BE не додано.</bpmn:text>
+    </bpmn:textAnnotation>
     <bpmn:textAnnotation id="Note_Long">
       <bpmn:text>* Контрольна дата визначається
 завчасно: огляд щодо тривалого
@@ -435,16 +453,22 @@
       <bpmndi:BPMNShape id="DI_Task_Notify" bpmnElement="Task_Notify">
         <dc:Bounds x="1435" y="180" width="180" height="90" />
       </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Task_Report" bpmnElement="Task_Report">
+        <dc:Bounds x="650" y="1230" width="180" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Task_Order" bpmnElement="Task_Order">
+        <dc:Bounds x="890" y="1230" width="180" height="90" />
+      </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="DI_Task_Certificate" bpmnElement="Task_Certificate">
-        <dc:Bounds x="710" y="1230" width="180" height="90" />
+        <dc:Bounds x="1130" y="1230" width="180" height="90" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="DI_Task_CertInquiry" bpmnElement="Task_CertInquiry">
-        <dc:Bounds x="1030" y="1330" width="220" height="75" />
+        <dc:Bounds x="1450" y="1330" width="220" height="75" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="DI_End_Inquiry" bpmnElement="End_Inquiry">
-        <dc:Bounds x="1370" y="1350" width="36" height="36" />
+        <dc:Bounds x="1790" y="1350" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1300" y="1398" width="190" height="55" />
+          <dc:Bounds x="1713" y="1398" width="190" height="55" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="DI_SubProcess_Reward" bpmnElement="SubProcess_Reward" isExpanded="false">
@@ -522,7 +546,7 @@
       <bpmndi:BPMNShape id="DI_End_Service" bpmnElement="End_Service">
         <dc:Bounds x="4020" y="1257" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="3950" y="1305" width="190" height="55" />
+          <dc:Bounds x="3900" y="1305" width="190" height="55" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="DI_Gateway_OGD" bpmnElement="Gateway_OGD" isMarkerVisible="true">
@@ -628,6 +652,9 @@
       <bpmndi:BPMNShape id="DI_Note_Reward" bpmnElement="Note_Reward">
         <dc:Bounds x="1570" y="1850" width="680" height="120" />
       </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Note_CertChain" bpmnElement="Note_CertChain">
+        <dc:Bounds x="610" y="1140" width="1080" height="56" />
+      </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="DI_Note_Long" bpmnElement="Note_Long">
         <dc:Bounds x="4320" y="910" width="245" height="150" />
       </bpmndi:BPMNShape>
@@ -635,9 +662,9 @@
         <dc:Bounds x="3330" y="1940" width="760" height="120" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="DI_Timer_Certificate" bpmnElement="Timer_Certificate">
-        <dc:Bounds x="850" y="1302" width="36" height="36" />
+        <dc:Bounds x="1270" y="1302" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="630" y="1345" width="195" height="55" />
+          <dc:Bounds x="1050" y="1345" width="195" height="55" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="DI_F_Start" bpmnElement="F_Start">
@@ -657,7 +684,15 @@
       <bpmndi:BPMNEdge id="DI_F_Unit" bpmnElement="F_Unit">
         <di:waypoint x="575" y="670" />
         <di:waypoint x="575" y="1275" />
-        <di:waypoint x="710" y="1275" />
+        <di:waypoint x="650" y="1275" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_Report" bpmnElement="F_Report">
+        <di:waypoint x="830" y="1275" />
+        <di:waypoint x="890" y="1275" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_Order" bpmnElement="F_Order">
+        <di:waypoint x="1070" y="1275" />
+        <di:waypoint x="1130" y="1275" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="DI_F_Admission" bpmnElement="F_Admission">
         <di:waypoint x="890" y="925" />
@@ -691,27 +726,28 @@
         <di:waypoint x="1650" y="225" />
         <di:waypoint x="1750" y="225" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1660" y="580" width="50" height="25" />
+          <dc:Bounds x="1598" y="620" width="46" height="25" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="DI_F_CertReward" bpmnElement="F_CertReward">
-        <di:waypoint x="890" y="1275" />
-        <di:waypoint x="940" y="1275" />
-        <di:waypoint x="940" y="1905" />
-        <di:waypoint x="1030" y="1905" />
+        <di:waypoint x="1310" y="1275" />
+        <di:waypoint x="1350" y="1275" />
+        <di:waypoint x="1350" y="1810" />
+        <di:waypoint x="1140" y="1810" />
+        <di:waypoint x="1140" y="1850" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="DI_F_RewardEnd" bpmnElement="F_RewardEnd">
         <di:waypoint x="1250" y="1905" />
         <di:waypoint x="1370" y="1905" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="DI_F_CertLate" bpmnElement="F_CertLate">
-        <di:waypoint x="868" y="1338" />
-        <di:waypoint x="868" y="1368" />
-        <di:waypoint x="1030" y="1368" />
+        <di:waypoint x="1288" y="1338" />
+        <di:waypoint x="1288" y="1368" />
+        <di:waypoint x="1450" y="1368" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="DI_F_InquiryEnd" bpmnElement="F_InquiryEnd">
-        <di:waypoint x="1250" y="1368" />
-        <di:waypoint x="1370" y="1368" />
+        <di:waypoint x="1670" y="1368" />
+        <di:waypoint x="1790" y="1368" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="DI_F_Collect" bpmnElement="F_Collect">
         <di:waypoint x="1930" y="225" />
@@ -876,9 +912,7 @@
         <di:waypoint x="3980" y="1830" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="DI_F_FinCheck" bpmnElement="F_FinCheck">
-        <di:waypoint x="4090" y="1880" />
-        <di:waypoint x="4130" y="1880" />
-        <di:waypoint x="4130" y="1885" />
+        <di:waypoint x="4090" y="1885" />
         <di:waypoint x="4160" y="1885" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="DI_F_FinRepair" bpmnElement="F_FinRepair">

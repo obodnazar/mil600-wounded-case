@@ -27,8 +27,8 @@ laneset = el(process, 'bpmn:laneSet', id='LaneSet_ToBe')
 lane_defs = [('Medical','Медичні установи: чинна допомога',80,240),
              ('System','Координація / сервіс: серверні межі',320,250),
              ('Unit','Частина: належні посадові особи',570,280),
-             ('VLK','Направлення / ВЛК: учасники в деталях',850,220),
-             ('Finance','Фінансові маршрути: учасники в деталях',1070,280)]
+             ('VLK','Направлення / ВЛК',850,220),
+             ('Finance','Фінансові маршрути',1070,280)]
 lanes = {key:el(laneset,'bpmn:lane',id='Lane_'+key,name=name) for key,name,_,_ in lane_defs}
 diagrams = []
 nodes = {}
@@ -37,12 +37,16 @@ def diagram(key, scope, title, width, height, main=False):
     d = {'key':key,'scope':scope,'title':title,'width':width,'height':height,'nodes':[],'flows':[],'main':main,'notes':[]}
     diagrams.append(d)
     return d
-main = diagram('overview', process, 'TO BE • навчальна пропозиція • 2026-11-13 • деталі: окремі SVG / DI цього XML',2320,1470,True)
+main = diagram('overview', process, 'TO BE • навчальна пропозиція • 2026-11-13, зміни команди 2026-11-14 • деталі: окремі SVG / DI цього XML',2320,1470,True)
 def node(d, id, typ, name, x, y, w=180, h=80, lane=None, doc=None, **attrs):
+    # Задачі мають підписи на 3–4 рядки: рамка 100 замість 80 із тим самим центром,
+    # щоб піктограма типу задачі не перекривала перший рядок.
+    tall=typ.endswith('Task') and h==80
+    if tall: y,h=y-10,100
     e = el(d['scope'],'bpmn:'+typ,id=id,name=name,**attrs)
     if doc: el(e,'bpmn:documentation',doc)
     if lane: el(lanes[lane],'bpmn:flowNodeRef',id)
-    n={'id':id,'el':e,'box':(x,y,w,h),'type':typ,'name':name,'d':d}
+    n={'id':id,'el':e,'box':(x,y,w,h),'type':typ,'name':name,'d':d,'tall':tall}
     nodes[id]=n; d['nodes'].append(n)
     return e
 def event(d,id,typ,name,x,y,lane=None,**attrs):
@@ -55,6 +59,15 @@ def flow(d,id,src,dst,name=None,points=None,default=False,condition=None,label=N
     if points is None:
         sy,ty=a[1]+a[3]/2,b[1]+b[3]/2
         points=[(a[0]+a[2],sy),(b[0],ty)] if sy==ty else [(a[0]+a[2],sy),((a[0]+a[2]+b[0])/2,sy),((a[0]+a[2]+b[0])/2,ty),(b[0],ty)]
+    else:
+        # Явні точки задані для рамки 80: кінці на верхній / нижній межі вищої задачі переносимо на її межу.
+        def snap(pt,n):
+            x,y,w,h=n['box']
+            if n['tall'] and x<pt[0]<x+w:
+                if pt[1]==y+10: return (pt[0],y)
+                if pt[1]==y+h-10: return (pt[0],y+h)
+            return pt
+        points=[snap(points[0],s)]+list(points[1:-1])+[snap(points[-1],t)]
     f=el(d['scope'],'bpmn:sequenceFlow',id=id,sourceRef=src,targetRef=dst,**({'name':name} if name else {}))
     if condition:
         c=el(f,'bpmn:conditionExpression',condition)
@@ -88,18 +101,18 @@ event(main,'End_Joined','endEvent','Долучено до наявного; за
 gate(main,'Fork_Admin','',830,490,'System',True)
 node(main,'Sub_Certificate','subProcess','Довідка про обставини травми (додаток 5 до Наказу №402): скласти → видати → отримати',940,640,220,100,'Unit')
 event(main,'End_Certificate','endEvent','Отримання цієї версії підтверджено',1210,672,'Unit')
-node(main,'Sub_VLK','subProcess','Належне направлення → пакет → рішення ВЛК',1250,900,230,100,'VLK')
+node(main,'Sub_VLK','subProcess','Підстава → належне направлення → пакет → постанова ВЛК',1250,900,230,100,'VLK')
 gate(main,'Fork_AfterVLK','',1580,925,'VLK',True)
 node(main,'Task_ServiceExecution','userTask','Уповноважена особа: виконати службову дію; підтвердити окремо',1800,640,230,100,'Unit')
 event(main,'End_Service','endEvent','Службова дія виконана',2150,672,'Unit')
 node(main,'Sub_Reward','subProcess','Додаткова винагорода: окремий період / підстави',940,1140,230,100,'Finance')
 event(main,'End_Reward','endEvent','Стан обраного періоду',1250,1172,'Finance')
-node(main,'Sub_OGD','subProcess','ОГД: окремий пакет, орган і виконання',1800,1140,230,100,'Finance')
+node(main,'Sub_OGD','subProcess','ОГД: лише після чинної постанови ВЛК; окремий пакет і виконання',1800,1140,230,100,'Finance')
 event(main,'End_OGD','endEvent','Стан окремого пакета',2150,1172,'Finance')
 node(main,'EventSub_Control','subProcess','Нова подія / погоджена звірка / звернення: окремий прохід',1360,365,290,110,'System',triggeredByEvent='true')
 event(main,'Timer_Long','boundaryEvent','Контроль до 4 календарних місяців',520,202,'Medical',attachedToRef='Sub_Care',cancelActivity='false')
 e=el(nodes['Timer_Long']['el'],'bpmn:timerEventDefinition',id='TimerDef_Long');el(e,'bpmn:timeDate','long_treatment_review_at')
-node(main,'Task_LongReview','userTask','Медик / супровід: перевірити актуальність і організувати належний огляд',790,145,220,80,'Medical')
+node(main,'Task_LongReview','userTask','Заклад: перевірити актуальність; направити на ВЛК щодо тривалого лікування (N01 II 6.5)',790,145,220,80,'Medical')
 event(main,'End_LongReview','endEvent','Без санкцій від таймера',1110,167,'Medical')
 event(main,'Timer_Certificate','boundaryEvent','Контроль строку документа',1040,722,'Unit',attachedToRef='Sub_Certificate',cancelActivity='false')
 e=el(nodes['Timer_Certificate']['el'],'bpmn:timerEventDefinition',id='TimerDef_Certificate');el(e,'bpmn:timeDate','certificate_follow_up_at')
@@ -109,20 +122,20 @@ chain(main,['Start_Injury','Fork_CareCase','Sub_Care','End_Care'])
 flow(main,'F_ToIntake','Fork_CareCase','Sub_Intake',points=[(295,193),(295,415),(420,415)])
 chain(main,['Sub_Intake','Gateway_NewCase'])
 flow(main,'F_Existing','Gateway_NewCase','End_Joined','Наявний / повтор',default=True,label=(820,370,135,25))
-flow(main,'F_New','Gateway_NewCase','Fork_Admin','Створено',condition='created == true',points=[(785,440),(785,515),(830,515)],label=(700,460,100,25))
+flow(main,'F_New','Gateway_NewCase','Fork_Admin','Створено',condition='created == true',points=[(785,440),(785,515),(830,515)],label=(684,460,100,25))
 flow(main,'F_ToCert','Fork_Admin','Sub_Certificate',points=[(855,540),(855,690),(940,690)])
-flow(main,'F_ToVLK','Fork_Admin','Sub_VLK',points=[(880,515),(1180,515),(1180,950),(1250,950)])
+flow(main,'F_ToVLK','Fork_Admin','Sub_VLK',points=[(855,540),(855,950),(1250,950)])
 flow(main,'F_ToReward','Fork_Admin','Sub_Reward',points=[(855,540),(855,1190),(940,1190)])
 chain(main,['Sub_Certificate','End_Certificate']);chain(main,['Sub_Reward','End_Reward'])
 chain(main,['Sub_VLK','Fork_AfterVLK'])
-flow(main,'F_ToService','Fork_AfterVLK','Task_ServiceExecution',points=[(1605,925),(1690,925),(1690,690),(1800,690)])
-flow(main,'F_ToOGD','Fork_AfterVLK','Sub_OGD',points=[(1605,975),(1690,975),(1690,1190),(1800,1190)])
+flow(main,'F_ToService','Fork_AfterVLK','Task_ServiceExecution',points=[(1605,925),(1750,925),(1750,690),(1800,690)])
+flow(main,'F_ToOGD','Fork_AfterVLK','Sub_OGD',points=[(1605,975),(1750,975),(1750,1190),(1800,1190)])
 chain(main,['Task_ServiceExecution','End_Service']);chain(main,['Sub_OGD','End_OGD'])
 flow(main,'F_LongAlert','Timer_Long','Task_LongReview',points=[(538,238),(538,275),(900,275),(900,225)])
 chain(main,['Task_LongReview','End_LongReview'])
 flow(main,'F_CertAlert','Timer_Certificate','Task_CertReview',points=[(1058,758),(1058,800),(1430,800),(1430,730)])
 chain(main,['Task_CertReview','End_CertReview'])
-note(main,'Note_Timers','4 календарні місяці — від початку лікування, переведення не скидає її. N16: 5 днів лише за дій противника, від отримання документа військовослужбовцем. Внесення еПМК — лише орієнтир «дату отримання підтвердити»; юридичний строк до підтвердження невідомий. Без санкцій.',120,1370,1230,95)
+note(main,'Note_Timers','4 місяці — від початку лікування (N05 ст.10-1 п.11; N01 II 6.13); «календарні» й «переведення не скидає відлік» — тлумачення команди. N16 ст.260: 5 днів лише за дій противника, від надходження на лікування (тлумачення команди, ADR 0012). Внесення еПМК — лише орієнтир «дату надходження на лікування підтвердити»; строк до підтвердження невідомий. Сервіс рішень не ухвалює: таймер лише нагадує людині перевірити стан.',120,1370,1230,95)
 note(main,'Note_Trust','Усі читання / дії: серверна роль + scope + поля; оригінали в джерелах. Немає входу бійця → призначений супровід. Родина не отримує доступ автоматично. Немає події ≠ немає лікування / права. Демо — лише вигадані дані.',1400,1370,850,95)
 
 # Деталі допомоги: звичайні медичні дії, поза автоматизацією продукту.
@@ -133,7 +146,7 @@ node(care,'Care_Admission','userTask','Заклад: початок / епізо
 node(care,'Care_Treatment','userTask','Медики: лікування за клінічними рішеннями',670,180)
 gate(care,'Care_TransferNeeded','Переведення?',940,195)
 node(care,'Care_Transfer','userTask','Заклад: переведення, новий епізод; початок без скидання',680,380)
-node(care,'Care_Documents','userTask','Автор: оформити належні медичні документи у джерелі',1140,180)
+node(care,'Care_Documents','userTask','Заклад (автор): оформити належні медичні документи у джерелі',1140,180)
 event(care,'Care_End','endEvent','Завершено клінічний епізод',1440,202)
 chain(care,['Care_Start','Care_Primary','Care_Admission','Care_Treatment','Care_TransferNeeded'])
 flow(care,'Care_NoTransfer','Care_TransferNeeded','Care_Documents','Ні',default=True)
@@ -180,22 +193,29 @@ chain(intake,['Intake_Start','Intake_WaitFirst'])
 flow(intake,'Intake_WaitMed','Intake_WaitFirst','Intake_Med',points=[(165,220),(165,148),(320,148)])
 flow(intake,'Intake_WaitAdmin','Intake_WaitFirst','Intake_Admin',points=[(165,270),(165,368),(320,368)])
 
-cert=diagram('certificate',nodes['Sub_Certificate']['el'],'Довідка про обставини травми (додаток 5 до Наказу №402) • підготовка / видача / передача / отримання',2070,430)
+cert=diagram('certificate',nodes['Sub_Certificate']['el'],'Довідка про обставини травми (додаток 5 до Наказу №402) • підготовка / видача / передача / отримання',2240,580)
 event(cert,'Cert_Start','startEvent','',60,202)
-spec=[('Anchor','serviceTask','Сервіс: лише дії противника; отримання підтверджене → строк; інакше орієнтир / уточнення'),
-      ('Prepare','userTask','Начальник медслужби: скласти документ'),
-      ('Issue','userTask','Командир: видати складений начальником медслужби документ'),
+spec=[('Anchor','serviceTask','Сервіс: застосовність і якір строку — підтверджений / орієнтир / невідомий'),
+      ('Prepare','userTask','Начальник медслужби: скласти довідку; підстава у формі — наказ командира'),
+      ('Issue','userTask','Командир частини: підписати й видати складену довідку'),
       ('Send','userTask','Належний відправник: передати чинним дозволеним каналом'),
       ('Receipt','receiveTask','Очікувати підтвердження отримання адресатом саме цієї версії'),
       ('Record','serviceTask','Сервіс: зафіксувати отримувача / версію / час; оновити вимоги')]
-for i,(id,typ,name) in enumerate(spec):node(cert,'Cert_'+id,typ,name,150+i*280,180,220,80)
-event(cert,'Cert_End','endEvent','Версія отримана',1900,202)
-chain(cert,['Cert_Start']+['Cert_'+s[0] for s in spec]+['Cert_End'])
-note(cert,'Cert_Note','N16 ст.260: лише коли травма від дій противника. 5 днів на складання / направлення від отримання військовослужбовцем первинного облікового медичного документа (еПМК); за відсутності — довідки про перебування в закладі. Внесення еПМК — орієнтир: «дату отримання підтвердити». Юридичний due_date до підтвердження null; без санкцій. Видає командир, складає начальник медслужби.',150,310,1810,90)
+# Рішення команди 2026-11-14 (BPMN-F005): невідомі якір / застосовність — явна неблокувальна гілка уточнення.
+for i,(id,typ,name) in enumerate(spec):node(cert,'Cert_'+id,typ,name,150+i*280+(170 if i else 0),180,220,80)
+gate(cert,'Cert_AnchorKnown','Якір і застосовність відомі?',425,195)
+node(cert,'Cert_Clarify','serviceTask','Створити задачу супроводу: уточнити застосовність / дату; без вигаданої дати',310,330,220,80)
+event(cert,'Cert_End','endEvent','Версія отримана',2070,202)
+chain(cert,['Cert_Start','Cert_Anchor','Cert_AnchorKnown'])
+flow(cert,'Cert_AnchorYes','Cert_AnchorKnown','Cert_Prepare','Так / орієнтир',condition='anchor_status_confirmed_or_estimated',label=(482,190,100,25))
+flow(cert,'Cert_AnchorUnknown','Cert_AnchorKnown','Cert_Clarify','Невідомо',default=True,points=[(450,245),(450,330)],label=(460,275,80,22))
+flow(cert,'Cert_ClarifyDone','Cert_Clarify','Cert_Prepare',points=[(530,370),(565,370),(565,220),(600,220)])
+chain(cert,['Cert_'+s[0] for s in spec[1:]]+['Cert_End'])
+note(cert,'Cert_Note','N16 ст.260: лише коли травма від дій противника. 5 днів на складання / направлення від дати надходження на лікування до медичного закладу (так команда тлумачить «отримання» первинного облікового медичного документа, ADR 0012); день 1 — наступний. Внесення еПМК — орієнтир: «дату надходження на лікування підтвердити». Юридичний due_date до підтвердження null; сервіс рішень не ухвалює, лише нагадує. Складає начальник медслужби, підписує командир частини; форма додатка 5 має реквізит «Підстава: наказ командира» — крок «рапорт → наказ» у цій моделі згорнуто. Невідомі якір чи застосовність не блокують складання: супровід уточнює їх окремою задачею, дату не вигадуємо (AC04).',150,450,1980,90)
 
 vlk=diagram('vlk',nodes['Sub_VLK']['el'],'ВЛК • технічний чекліст не блокує направлення • клінічне рішення залишається ВЛК',3130,620)
 event(vlk,'VLK_Start','startEvent','',50,202)
-node(vlk,'VLK_Referral','userTask','Належний видавець: оформити направлення за N01',140,180,210,80)
+node(vlk,'VLK_Referral','userTask','Командир — за рекомендацією лікаря закладу; під час тривалого лікування — заклад: направлення (N01 II 6.1, 6.5)',140,160,250,120)  # 4 рядки: вища рамка, щоб текст не торкався піктограми
 node(vlk,'VLK_Checklist','serviceTask','Сервіс: технічні вимоги пакета + версія правил',420,180,210,80)
 gate(vlk,'VLK_Gaps','Прогалина?',710,195)
 node(vlk,'VLK_CreateTask','serviceTask','Створити задачу автору; це не очікування її виконання',690,410,220,80)
@@ -208,7 +228,7 @@ node(vlk,'VLK_Exam','userTask','ВЛК: медичний огляд і прич�
 node(vlk,'VLK_Decision','userTask','ВЛК: прийняти й оформити належну постанову',2200,180,220,80)
 node(vlk,'VLK_Record','serviceTask','Сервіс: зафіксувати дозволений результат; наступна службова дія окремо',2490,180,230,80)
 event(vlk,'VLK_End','endEvent','Рішення зафіксовано',2830,202)
-chain(vlk,['VLK_Start','VLK_Referral','VLK_Checklist','VLK_Gaps'])
+chain(vlk,['VLK_Referral','VLK_Checklist','VLK_Gaps'])
 flow(vlk,'VLK_NoGap','VLK_Gaps','VLK_Merge','Ні',default=True)
 flow(vlk,'VLK_HasGap','VLK_Gaps','VLK_CreateTask','Так',condition='requirements_missing_or_unknown',points=[(735,245),(735,410)],label=(750,320,60,25))
 flow(vlk,'VLK_TaskCreated','VLK_CreateTask','VLK_Merge',points=[(910,450),(1035,450),(1035,245)])
@@ -217,38 +237,48 @@ flow(vlk,'VLK_NotReturned','VLK_Returned','VLK_Exam','Ні',default=True)
 flow(vlk,'VLK_WasReturned','VLK_Returned','VLK_Correct','Так',condition='explicit_return_received',points=[(1745,245),(1745,450),(1640,450)],label=(1760,330,60,25))
 flow(vlk,'VLK_CorrectionLoop','VLK_Correct','VLK_Send',points=[(1420,450),(1100,450),(1100,220),(1140,220)])
 chain(vlk,['VLK_Exam','VLK_Decision','VLK_Record','VLK_End'])
-note(vlk,'VLK_Note','Направлення видає суб’єкт належного рівня за N01 II 6.1 / за умовами 6.4; супровід координує, не підписує замість нього. Технічна прогалина створює задачу, не відмову в направленні. C2 — підгіпотеза; повернення моделюємо як можливий виняток. Оригінали й правомірність доступу перевіряє джерело.',1900,390,1110,140)
+note(vlk,'VLK_Note','Направляє суб’єкт N01 II 6.1 (командир — за рекомендацією лікаря закладу), керівник закладу за умовами 6.4, а щодо тривалого лікування — заклад (6.5); супровід координує, не підписує замість них. Технічна прогалина створює задачу, не відмову в направленні. Масове повернення пакета — непідтверджене припущення A-1; повернення моделюємо як можливий виняток. Оригінали й правомірність доступу перевіряє джерело. Створення кейсу не є підставою для направлення: площина чекає події належного джерела (рішення команди 2026-11-14).',1900,390,1110,140)
+# Рішення команди 2026-11-14 (BPMN-F003): направлення лише після події-підстави від належного джерела.
+for n in vlk['nodes']:
+    if n['id']!='VLK_Start':
+        x,y,w,h=n['box'];n['box']=(x+160,y,w,h)
+vlk['flows']=[(id,[(x+160,y) for x,y in pts],(lb[0]+160,*lb[1:]) if lb else None) for id,pts,lb in vlk['flows']]
+vlk['notes']=[(id,text,(box[0]+160,*box[1:])) for id,text,box in vlk['notes']]
+vlk['width']=3290
+event(vlk,'VLK_Trigger','intermediateCatchEvent','Належне джерело: є підстава для направлення (рекомендація лікаря; під час тривалого лікування направляє заклад)',160,202)
+el(nodes['VLK_Trigger']['el'],'bpmn:messageEventDefinition',id='MessageDef_VLKTrigger')
+chain(vlk,['VLK_Start','VLK_Trigger','VLK_Referral'])
 
-def financial(key, sub, prefix, title, basis):
+def financial(key, sub, prefix, title, basis, names):
     d=diagram(key,nodes[sub]['el'],title,2560,1100)
-    def n(id,typ,name,x,y,w=180):return node(d,prefix+id,typ,name,x,y,w,80)
+    def n(id,typ,name,x,y,w=180,h=80):return node(d,prefix+id,typ,name,x,y,w,h)
     def ev(id,name,x,y):return event(d,prefix+id,'endEvent',name,x,y)
     event(d,prefix+'Start','startEvent','',60,227)
-    n('Basis','userTask',basis,150,205)
-    n('Checklist','serviceTask','Сервіс: окремі вимоги / правила / період; не визначає право',400,205)
-    n('Send','userTask','Належний заявник / учасник: подати пакет чинним каналом',650,205)
-    n('Receipt','receiveTask','Очікувати підтвердження реєстрації / отримання належним органом',900,205)
-    n('Decision','userTask','Належний орган: рішення; сервіс лише отримує підтверджений стан',1150,205)
+    n('Basis','userTask',basis,150,205,220)
+    n('Checklist','serviceTask',names['Checklist'],400,205)
+    n('Send','userTask',names['Send'],650,205)
+    n('Receipt','receiveTask',names['Receipt'],900,205)
+    n('Decision','userTask',names['Decision'],1150,205)
     gate(d,prefix+'Outcome','Який стан?',1400,220)
-    n('Fix','userTask','Автор / заявник: доопрацювати; повернення не є відмовою',650,440)
+    n('Fix','userTask',names['Fix'],650,440)
     n('Explain','userTask','Супровід: пояснити причину відмови й чинний шлях оскарження',1600,440,220)
     ev('Denied','Обґрунтована відмова; право на оскарження збережено',2100,462)
     n('Clarify','userTask','Супровід: уточнити невідомий стан; без обіцянки грошей',1150,680)
     n('AwaitStatus','receiveTask','Очікувати відповідь належного джерела',1360,680)
-    n('AwaitExecution','receiveTask','Очікувати належне підтвердження виконання за обраним періодом / пакетом',1580,205,220)
+    n('AwaitExecution','receiveTask',names['AwaitExecution'],1580,205,220)
     gate(d,prefix+'Enough','Увесь обраний обсяг виконано?',1860,220)
     n('Partial','serviceTask','Зафіксувати частину; решту лишити відкритою',2090,680)
-    n('Confirmed','serviceTask','Зафіксувати виконання: джерело + сума / період / час',2090,205)
+    n('Confirmed','serviceTask',names['Confirmed'],2090,205)
     ev('End','Підтверджено лише обраний обсяг',2390,227)
     chain(d,[prefix+x for x in ['Start','Basis','Checklist','Send','Receipt','Decision','Outcome']])
-    flow(d,prefix+'Returned',prefix+'Outcome',prefix+'Fix','Повернено',condition='status == returned',points=[(1400,245),(1380,245),(1380,340),(740,340),(740,440)],label=(1050,305,120,25))
+    flow(d,prefix+'Returned',prefix+'Outcome',prefix+'Fix','Повернено',condition='status == returned',points=[(1412,257),(1412,340),(740,340),(740,440)],label=(1050,305,120,25))
     flow(d,prefix+'FixLoop',prefix+'Fix',prefix+'Send',points=[(650,480),(620,480),(620,245),(650,245)])
-    flow(d,prefix+'Refused',prefix+'Outcome',prefix+'Explain','Відмова',condition='status == denied',points=[(1425,220),(1425,100),(1530,100),(1530,480),(1600,480)],label=(1460,65,120,25))
+    flow(d,prefix+'Refused',prefix+'Outcome',prefix+'Explain','Відмова',condition='status == denied',points=[(1425,220),(1425,100),(1540,100),(1540,480),(1600,480)],label=(1436,104,92,22))
     chain(d,[prefix+'Explain',prefix+'Denied'])
-    flow(d,prefix+'Unknown',prefix+'Outcome',prefix+'Clarify','Невідомо',default=True,points=[(1425,270),(1425,610),(1240,610),(1240,680)],label=(1435,565,120,25))
+    flow(d,prefix+'Unknown',prefix+'Outcome',prefix+'Clarify','Невідомо',default=True,points=[(1425,270),(1425,610),(1240,610),(1240,680)],label=(1432,565,92,25))
     chain(d,[prefix+'Clarify',prefix+'AwaitStatus'])
-    flow(d,prefix+'StatusLoop',prefix+'AwaitStatus',prefix+'Outcome',points=[(1540,720),(1550,720),(1550,60),(1425,60),(1425,220)])
-    flow(d,prefix+'Approved',prefix+'Outcome',prefix+'AwaitExecution','Призначено',condition='status == approved',label=(1460,210,120,25))
+    flow(d,prefix+'StatusLoop',prefix+'AwaitStatus',prefix+'Outcome',points=[(1540,720),(1550,720),(1550,60),(1365,60),(1365,245),(1400,245)])
+    flow(d,prefix+'Approved',prefix+'Outcome',prefix+'AwaitExecution','Призначено',condition='status == approved',label=(1452,250,82,22))
     chain(d,[prefix+'AwaitExecution',prefix+'Enough'])
     flow(d,prefix+'AllExecuted',prefix+'Enough',prefix+'Confirmed','Так',condition='execution_evidence_covers_selected_scope')
     flow(d,prefix+'PartExecuted',prefix+'Enough',prefix+'Partial','Ні / частина',default=True,points=[(1885,270),(1885,720),(2090,720)],label=(1900,600,150,25))
@@ -256,10 +286,29 @@ def financial(key, sub, prefix, title, basis):
     chain(d,[prefix+'Confirmed',prefix+'End'])
     note(d,prefix+'Note','Повернення ≠ відмова ≠ призначення ≠ виконання. Немає довіреного джерела виконання → очікування / невідоме, не «гроші отримано». Один прохід — обраний період або пакет; інші не закриваються. F06; ADR 0001, 0003–0004.',80,950,2320,100)
     return d
-financial('reward','Sub_Reward','Reward_','Додаткова винагорода • паралельно лікуванню / без загального бар’єра фінальної ВЛК • N06, N21',
-          'Уповноважені: підстави винагороди для конкретного періоду; чинні N06 / N21')
-ogd=financial('ogd','Sub_OGD','OGD_','ОГД • окрема заява / пакет / орган призначення • N07 • опціональний маршрут',
-          'Заявник / належний орган: перевірити застосовність ОГД; ЕКОПФО за потреби — окремо від ВЛК')
+# Підписи кроків різні для двох маршрутів; граф спільний. Винагорода — за наказом командира (N06, N21),
+# ОГД — заява до уповноваженого органу за місцем служби й рішення розпорядника бюджетних коштів (N07 пп.20–24).
+reward=financial('reward','Sub_Reward','Reward_','Додаткова винагорода • паралельно лікуванню / без загального бар’єра фінальної ВЛК • N06, N21',
+          'Частина: підстави за період; довідка про обставини травми — підстава наказу',
+          {'Checklist':'Сервіс: окремі вимоги / правила / період; не визначає право',
+           'Send':'Частина: подати підстави за період для наказу',
+           'Receipt':'Очікувати підтвердження: підстави прийнято до розгляду',
+           'Decision':'Командир: наказ за період; сервіс лише отримує стан',
+           'Fix':'Автор документа: доопрацювати; повернення не є відмовою',
+           'AwaitExecution':'Очікувати належне підтвердження виконання за обраним періодом',
+           'Confirmed':'Зафіксувати виконання: джерело + період + час'})
+# ADR 0011: винагорода за стаціонар не чекає постанови ВЛК; залежні від тяжкості виплати — лише після неї (примітка, не граф).
+rid,rtext,rbox=reward['notes'][-1]
+reward['notes'][-1]=(rid,rtext+' Винагорода за стаціонарне лікування — до постанови ВЛК (N06); виплати, що залежать від тяжкості поранення, — лише після постанови ВЛК.',rbox)
+ogd=financial('ogd','Sub_OGD','OGD_','ОГД • лише після чинної постанови ВЛК (ADR 0011) • окрема заява / пакет / уповноважений орган і розпорядник • N07 • опціональний маршрут',
+          'Заявник: підстава ОГД; рішення ЕКОПФО або довідка МСЕК — обов’язкові',
+          {'Checklist':'Сервіс: окремі вимоги пакета / версія правил; не визначає право',
+           'Send':'Заявник: подати заяву й пакет уповноваженому органу за місцем служби',
+           'Receipt':'Очікувати підтвердження: уповноважений орган зареєстрував документи',
+           'Decision':'Уповноважений орган: висновок; розпорядник коштів: рішення',
+           'Fix':'Заявник / автор документа: доопрацювати; повернення не є відмовою',
+           'AwaitExecution':'Очікувати належне підтвердження виконання за цим пакетом',
+           'Confirmed':'Зафіксувати виконання: джерело + пакет + час'})
 # Не кожен кейс породжує ОГД. Відсутність потреби / застосовності — явна людська розвилка.
 gate(ogd,'OGD_Applicable','Є підстава / звернення?',350,385)
 event(ogd,'OGD_NotApplicable','endEvent','ОГД не запитується / не застосовується; без відмови сервісом',70,427)
@@ -270,16 +319,28 @@ for nid in ['OGD_Basis','OGD_Checklist']:
     for child in list(nodes[nid]['el']):
         if child.text==old:nodes[nid]['el'].remove(child)
 ogd['flows']=[f for f in ogd['flows'] if f[0]!=old]
-flow(ogd,'OGD_CheckApplicability','OGD_Basis','OGD_Applicable',points=[(240,285),(240,410),(350,410)])
-flow(ogd,'OGD_ApplicableYes','OGD_Applicable','OGD_Checklist','Так',condition='authorized_applicability_confirmed',points=[(375,385),(375,245),(400,245)],label=(500,320,60,25))
-flow(ogd,'OGD_ApplicableNo','OGD_Applicable','OGD_NotApplicable','Явне ні',condition='not_requested_or_authorized_not_applicable',points=[(350,410),(180,410),(180,445),(106,445)],label=(220,380,100,25))
+flow(ogd,'OGD_CheckApplicability','OGD_Basis','OGD_Applicable',points=[(240,295),(240,340),(375,340),(375,385)])
+flow(ogd,'OGD_ApplicableYes','OGD_Applicable','OGD_Checklist','Так',condition='authorized_applicability_confirmed',points=[(400,410),(490,410),(490,285)],label=(412,386,60,22))
+flow(ogd,'OGD_ApplicableNo','OGD_Applicable','OGD_NotApplicable','Явне ні',condition='not_requested_or_authorized_not_applicable',points=[(350,410),(180,410),(180,445),(106,445)],label=(215,414,90,22))
 node(ogd,'OGD_ApplicabilityWait','receiveTask','Застосовність невідома: уточнити / очікувати належну відповідь',360,760,230,80)
 flow(ogd,'OGD_ApplicableUnknown','OGD_Applicable','OGD_ApplicabilityWait','Невідомо',default=True,points=[(375,435),(375,760)],label=(390,690,130,25))
-flow(ogd,'OGD_ApplicabilityRetry','OGD_ApplicabilityWait','OGD_Applicable',points=[(590,800),(610,800),(610,410),(400,410)])
-note(ogd,'OGD_Deadlines','Строк рішення ≠ банківське зарахування. N07 п.23: у воєнний час рішення про призначення — 3 місяці від отримання всіх необхідних документів. Невідомий якір → уточнення. Повні умови — у нормативній матриці.',650,550,420,150)
+flow(ogd,'OGD_ApplicabilityRetry','OGD_ApplicabilityWait','OGD_Applicable',points=[(590,800),(610,800),(610,340),(375,340),(375,385)])
+# ADR 0011: ОГД лише після чинної постанови ВЛК. Старт піднято над Basis, щоб не зсувати всю площину.
+old='F_OGD_Start_OGD_Basis'
+ogd['scope'].remove(next(f for f in flows if f.get('id')==old))
+for nid in ['OGD_Start','OGD_Basis']:
+    for child in list(nodes[nid]['el']):
+        if child.text==old:nodes[nid]['el'].remove(child)
+ogd['flows']=[f for f in ogd['flows'] if f[0]!=old]
+nodes['OGD_Start']['box']=(60,90,36,36)
+event(ogd,'OGD_VLKDecision','intermediateCatchEvent','Чинна постанова ВЛК оформлена (причинний зв’язок)',192,90)
+el(nodes['OGD_VLKDecision']['el'],'bpmn:messageEventDefinition',id='MessageDef_OGDAfterVLK')
+flow(ogd,'OGD_WaitVLK','OGD_Start','OGD_VLKDecision')
+flow(ogd,'OGD_AfterVLK','OGD_VLKDecision','OGD_Basis',points=[(210,126),(210,205)])
+note(ogd,'OGD_Deadlines','ADR 0011: пакет ОГД подається лише після чинної постанови ВЛК; запит ВЛК на уточнення не є підставою. N07 пп.20–24: заяву й документи подають за місцем служби (уповноважений орган); він подає висновок, рішення ухвалює розпорядник бюджетних коштів. Рішення ЕКОПФО / довідку МСЕК не підміняє постанова ВЛК. Строк рішення ≠ банківське зарахування. N07 п.23: у воєнний час рішення про призначення — 3 місяці від отримання всіх необхідних документів. Невідомий якір → уточнення. Повні умови — у нормативній матриці.',650,550,470,190)
 
 control=diagram('control',nodes['EventSub_Control']['el'],'Окремий непереривний прохід • нова подія / звірка / звернення • не клінічне рішення',2510,700)
-event(control,'Control_Start','startEvent','Погоджений вхід для case_id',70,227,isInterrupting='false')
+event(control,'Control_Start','startEvent','Погоджений вхід: подія / звірка / звернення щодо наявного кейсу',70,227,isInterrupting='false')
 el(nodes['Control_Start']['el'],'bpmn:messageEventDefinition',id='MessageDef_Control')
 node(control,'Control_Validate','serviceTask','Сервер: джерело, scope, мінімізація; перевірити версію / збіг',220,205,220,80)
 gate(control,'Control_Trusted','Узгоджено?',520,220)
@@ -337,6 +398,10 @@ for d in diagrams:
             if n['id']=='Intake_WaitFirst':lb=(0,80,245,60)
             if n['id']=='Intake_Admin':lb=(250,395,265,90)
             if n['id']=='Control_Duplicate':lb=(930,450,180,40)
+            if n['id'] in ('Reward_Outcome','OGD_Outcome'):lb=(1436,150,96,40)
+            if n['id']=='OGD_Applicable':lb=(248,350,120,40)
+            if n['id']=='OGD_VLKDecision':lb=(240,74,260,45)
+            if n['id']=='VLK_Trigger':lb=(70,250,225,80)
             l=el(s,'bpmndi:BPMNLabel');el(l,'dc:Bounds',x=lb[0],y=lb[1],width=lb[2],height=lb[3])
     for id,text,box in d['notes']:
         e=el(d['scope'],'bpmn:textAnnotation',id=id);el(e,'bpmn:text',text)

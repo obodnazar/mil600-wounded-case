@@ -1,5 +1,7 @@
 # Фаза 8б — затверджений синтетичний прототип
 
+> **Уточнення 2026-11-14.** Це опис затвердженого стану 8б на 2026-11-13 (коміт `bcead3a`); посилання на код ведуть на той коміт. Відтоді прототип переписано в межах [повного аудиту](reviews/claude-full-audit.md): поведінку й обсяг збережено, структуру коду та інтерфейс змінено, виправлено дефекти доменних переходів (зокрема критичний — підтверджений строк довідки стирався пізнішою подією без потрібних фактів). Поточний стан, тести й межі — у [README прототипу](../prototype/README.md), [рев’ю переписування](reviews/prototype-rewrite-review.md) і [ADR 0010](architecture/adr/0010-prototype-rewrite.md).
+
 **2026-11-13 · затверджено Назаром, варіант А; PR #10 злитий за окремим дозволом.** База — затверджена 8а / PR #9; перед PR включено нові командні коміти main `f601774` і `aeaa88f`. Виконано локальний синтетичний маршрут на прийнятому стеку; новий PR не зливається автоматично. [Запуск / показ](../prototype/README.md) · [рев’ю](reviews/phase-8b.md) · [ADR 0009](architecture/adr/0009-demo-workflow-and-frozen-analytics.md).
 
 ## Що готово
@@ -27,7 +29,7 @@
 | F09 / AC09 | S1–S8 | Усі fixed fixtures валідні за строгими схемами, same gateway / HMAC / global source policy, повтор / конфлікт / пропуск / відновлення; цивільний канал тільки погоджений mock |
 | F10 / AC10 | S7, S8 | Негативні HTTP-перевірки клініки / чужого кейсу / ролі / поточного grant, append-only / rollback аудиту, Playwright lost response → той самий command id, жодного хибного успіху / старого patient view після зміни ролі; банер на всіх панелях |
 
-Код перевірок: [ядро](../prototype/security/security.test.ts), [HTTP / DB](../prototype/server/app.test.ts), [D1 / AC](../prototype/server/workflow.test.ts), [браузер](../prototype/e2e/panels.spec.ts). Фактичні локальні результати на 2026-11-13: **57 / 57** node-тестів, **12 / 12** Playwright, lint / build пройдено, `npm audit`: **0** вразливостей. Перевірка секретів git-історії й результати CI — у PR; приватний ігнорований `.runtime/local.env` не належить публічному набору.
+Код перевірок: [ядро](../prototype/security/security.test.ts), [HTTP / DB](https://github.com/obodnazar/mil600-wounded-case/blob/bcead3a3975136ed10c63bbd775701565673ca71/prototype/server/app.test.ts), [D1 / AC](https://github.com/obodnazar/mil600-wounded-case/blob/bcead3a3975136ed10c63bbd775701565673ca71/prototype/server/workflow.test.ts), [браузер](https://github.com/obodnazar/mil600-wounded-case/blob/bcead3a3975136ed10c63bbd775701565673ca71/prototype/e2e/panels.spec.ts). Фактичні локальні результати на 2026-11-13: **57 / 57** node-тестів, **12 / 12** Playwright, lint / build пройдено, `npm audit`: **0** вразливостей. Перевірка секретів git-історії й результати CI — у PR; приватний ігнорований `.runtime/local.env` не належить публічному набору.
 
 ## P0–P4 і лінія відсікання
 

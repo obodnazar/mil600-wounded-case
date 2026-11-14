@@ -30,11 +30,14 @@ async function body(req: IncomingMessage): Promise<Buffer> {
   return Buffer.concat(chunks);
 }
 export function createSecurityServer(options: ServerOptions) {
-  if (options.environment !== 'synthetic-test' || process.env.NODE_ENV === 'production' || options.auditKey.length < 32) throw new Error('synthetic_environment_required');
+  const unsafe =
+    options.environment !== 'synthetic-test' || process.env.NODE_ENV === 'production' || options.auditKey.length < 32;
+  if (unsafe) throw new Error('synthetic_environment_required');
   for (const [id,key] of options.keys) {
     if (id !== key.id || key.secret.length < 32 || key.secret.equals(options.auditKey)) throw new Error('invalid_key_configuration');
   }
-  if (new Set([...options.keys.values()].map(k=>k.secret.toString('hex'))).size !== options.keys.size) throw new Error('separate_keys_required');
+  const distinct = new Set([...options.keys.values()].map(key => key.secret.toString('hex')));
+  if (distinct.size !== options.keys.size) throw new Error('separate_keys_required');
   const now = options.now ?? Date.now;
   const reads = new Limiter(options.readLimit ?? 60, 60_000);
   const ingressRate = new Limiter(options.ingressLimit ?? 30, 60_000);
@@ -57,9 +60,16 @@ export function createSecurityServer(options: ServerOptions) {
       if (url.pathname === '/api/integration/events') {
         action = 'event_validate'; ingressRate.take(peer, now());
         if (req.method !== 'POST') throw new Denied(405, 'method_not_allowed');
-        const verified = ingress.verify(await body(req), {keyId: header(req,'x-key-id'), timestamp: header(req,'x-timestamp'), nonce: header(req,'x-nonce'), signature: header(req,'x-signature')}, now());
+        const signed = {
+          keyId: header(req, 'x-key-id'),
+          timestamp: header(req, 'x-timestamp'),
+          nonce: header(req, 'x-nonce'),
+          signature: header(req, 'x-signature'),
+        };
+        const verified = ingress.verify(await body(req), signed, now());
         actor = verified.event.source_system; resource = verified.event.event_id;
-        await options.audit.write(auditRecord(options.auditKey,action,verified.duplicate ? 'duplicate':'validated_only',actor,resource,now()));
+        const outcome = verified.duplicate ? 'duplicate' : 'validated_only';
+        await options.audit.write(auditRecord(options.auditKey, action, outcome, actor, resource, now()));
         // Це security-harness: немає стійкого inbox / застосування домену, не видаємо 202 accepted.
         reply(200,{status: verified.duplicate ? 'duplicate':'validated_only', business_applied: false}); return;
       }

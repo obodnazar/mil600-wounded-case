@@ -689,6 +689,10 @@
                 "type": "string",
                 "pattern": "^demo-[a-z0-9-]{1,60}$"
               },
+              "provider_ref": {
+                "type": "string",
+                "pattern": "^demo-[a-z0-9-]{1,60}$"
+              },
               "evidence_ref": {
                 "type": "string",
                 "pattern": "^demo-[a-z0-9-]{1,60}$"
@@ -973,7 +977,6 @@
               "packet_revision",
               "recipient_ref",
               "confirmed_at",
-              "period",
               "evidence_ref"
             ]
           }
@@ -1015,6 +1018,7 @@
                   "returned",
                   "denied",
                   "approved",
+                  "conclusion_prepared",
                   "execution_partial",
                   "execution_confirmed",
                   "unknown"
@@ -1052,7 +1056,6 @@
             "required": [
               "kind",
               "packet_ref",
-              "period",
               "status",
               "reason_code",
               "decision_ref",
