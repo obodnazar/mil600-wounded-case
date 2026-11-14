@@ -207,3 +207,12 @@
     gap: var(--space-6);
   }
 }
+
+/* Адресний мінімум: один стовпчик, щоб довгі назви виплат не розтягували сусідні рядки. */
+.facts.facts--address {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.facts--address .facts__row:last-child {
+  border-bottom: 0;
+}

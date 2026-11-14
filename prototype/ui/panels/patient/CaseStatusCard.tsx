@@ -21,7 +21,7 @@ export function CaseStatusCard({view}: {view: PatientCaseView}) {
         </p>
       )}
       <p className="case-status__hint">
-        Маршрути документів, ВЛК і виплат рухаються окремо — дивіться нижче.
+        Документи, ВЛК і виплати показано окремо. ОГД розглядається лише після постанови ВЛК — дивіться нижче.
       </p>
       <div className="case-status__freshness">
         <StatusPill tone={freshness.tone}>{freshness.label}</StatusPill>

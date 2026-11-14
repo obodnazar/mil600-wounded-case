@@ -1,5 +1,5 @@
 import {expect, test} from '@playwright/test';
-import {D1, openApp, openPanel, sendFixtures, snapshot, staffRole} from './support';
+import {D1, MONEY, OGD_AWAITS_VLK, openApp, openPanel, sendFixtures, snapshot, staffRole} from './support';
 
 test('D1 у браузері: команди ролей, джерела, два види виплат, таймлайн і малий агрегат', async ({page}) => {
   test.setTimeout(120_000);
@@ -12,6 +12,10 @@ test('D1 у браузері: команди ролей, джерела, два 
   const actions = page.getByRole('region', {name: 'Дії'});
   await expect(page.getByRole('heading', {level: 2, name: 'Навчальний учасник 01'})).toBeVisible();
   await expect(actions.getByRole('button', {name: 'Направити на ВЛК', exact: true})).toBeDisabled();
+  // Заклад після переведення — від джерела; виплати — лише вид, місяць і стан.
+  const address = page.getByRole('region', {name: 'Що бачить частина'});
+  await expect(address).toContainText(/Заклад лікування\s*Умовний заклад \d{2}/);
+  expect(await address.innerText()).not.toMatch(MONEY);
   await staffRole(page, 'Командир');
   await actions.getByRole('button', {name: 'Запит видачі довідки', exact: true}).click();
   await expect(page.locator('.global-result')).toContainText('Запит збережено');
@@ -27,6 +31,7 @@ test('D1 у браузері: команди ролей, джерела, два 
   await openPanel(page, 'Мій кейс');
   await expect(page.getByText('Виконання підтверджене джерелом', {exact: true})).toBeVisible();
   await expect(page.getByText('Адміністративну дію виконано', {exact: true})).toHaveCount(0);
+  await expect(page.getByText(OGD_AWAITS_VLK, {exact: true})).toBeVisible();
 
   await openPanel(page, 'Супровід');
   await staffRole(page, 'Командир');
@@ -43,6 +48,8 @@ test('D1 у браузері: команди ролей, джерела, два 
   await expect(page.getByText('Схвалено; виконання ще не підтверджене', {exact: true})).toHaveCount(1);
   await expect(page.locator('main')).not.toContainText(/кошти отримано|виплачено/i);
   await expect(page.locator('.finance-route')).toHaveCount(2);
+  // Після постанови ВЛК пояснення-очікування зникає: ОГД уже розглядається.
+  await expect(page.getByText(OGD_AWAITS_VLK, {exact: true})).toHaveCount(0);
 
   const documents = page.getByRole('group', {name: 'Перелік документів'});
   await expect(documents.getByRole('button', {name: 'ВЛК', exact: true})).toHaveAttribute('aria-pressed', 'true');

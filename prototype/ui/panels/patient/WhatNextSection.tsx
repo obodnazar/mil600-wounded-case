@@ -7,7 +7,9 @@ import {
   CERTIFICATE_FORM_REFERENCE,
   REFERRAL_NOTE,
   REFERRAL_SIMPLIFICATION,
+  OGD_AWAITS_VLK_NOTE,
   REWARD_NOTE,
+  SEVERITY_PAYMENTS_NOTE,
 } from '../../content/legal';
 
 const STEPS: readonly {title: string; text: string}[] = [
@@ -29,7 +31,9 @@ const STEPS: readonly {title: string; text: string}[] = [
   },
   {
     title: 'Виплати',
-    text: `${REWARD_NOTE} Одноразова допомога має окреме рішення й окреме виконання. Дати коштів тут не обіцяються.`,
+    text:
+      `${REWARD_NOTE} ${OGD_AWAITS_VLK_NOTE} ${SEVERITY_PAYMENTS_NOTE} ` +
+      'Дати коштів тут не обіцяються.',
   },
 ];
 

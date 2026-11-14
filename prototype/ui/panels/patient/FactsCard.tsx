@@ -1,17 +1,8 @@
 import type {PatientCaseView} from '../../../shared/api';
 import {Card} from '../../components/Card';
 import {StatusPill} from '../../components/StatusPill';
-import type {Tone} from '../../content/labels';
+import {TONE_WORDS} from '../../content/labels';
 import {buildFacts} from './facts';
-
-const TONE_WORDS: Record<Tone, string> = {
-  confirmed: 'Підтверджено',
-  pending: 'Очікує',
-  unknown: 'Невідомо',
-  attention: 'Потрібна увага',
-  conflict: 'Суперечність',
-  neutral: 'Не застосовується',
-};
 
 /** Що вже підтверджено джерелом, що очікує, а що невідомо. */
 export function FactsCard({view}: {view: PatientCaseView}) {

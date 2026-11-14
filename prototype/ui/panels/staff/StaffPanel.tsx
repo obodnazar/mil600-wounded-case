@@ -74,8 +74,8 @@ export function StaffPanel({view, busy, selectedId, onSelect, onProfile, onComma
       </div>
       {showList && <ReserveCard reserve={view.reserve} busy={busy} onCommand={onCommand} />}
       <p className="page-footnote">
-        Службова проєкція: клінічні документи, місце лікування, джерельні посилання та виплати сюди не
-        передаються.
+        Службова проєкція: клінічні документи й документні посилання сюди не передаються. Заклад лікування
+        і стан виплат — лише в межах адресного мінімуму, без сум.
       </p>
     </>
   );

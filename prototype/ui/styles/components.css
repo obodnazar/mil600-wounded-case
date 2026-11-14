@@ -426,6 +426,16 @@
   max-width: 720px;
 }
 
+/* Стисле пояснення всередині картки (наприклад, чому ОГД чекає на постанову ВЛК). */
+.notice--compact {
+  gap: var(--space-2);
+  padding: var(--space-3);
+}
+
+.card--paper .notice--compact .notice__text {
+  font-weight: 600;
+}
+
 /* ── Порожній стан ── */
 
 .empty {

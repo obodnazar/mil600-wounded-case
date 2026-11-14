@@ -12,6 +12,7 @@ import {CERTIFICATE_RULE, SERVICE_RULE} from '../../content/legal';
 import {RequestList, ReviewList, TaskList} from '../shared/CaseBits';
 import {DeadlineCard} from '../shared/DeadlineCard';
 import {summarizeCertificateDeadline} from '../shared/deadlines';
+import {AddressMinimum} from './AddressMinimum';
 import {CaseActions} from './CaseActions';
 
 interface CaseDetailProps {
@@ -23,7 +24,7 @@ interface CaseDetailProps {
   onCommand: (draft: CommandDraft) => void;
 }
 
-/** Деталі кейсу для супроводу: стан, строк, задачі, розбори, звернення й дії. */
+/** Деталі кейсу для супроводу: стан, задачі, розбори, звернення, адресний мінімум, дії й строк. */
 export function CaseDetail({item, profile, busy, onBack, onCommand}: CaseDetailProps) {
   const heading = useRef<HTMLHeadingElement>(null);
   const stepped = onBack !== null;
@@ -104,6 +105,7 @@ export function CaseDetail({item, profile, busy, onBack, onCommand}: CaseDetailP
           <p className="muted">Звернень у цьому кейсі немає.</p>
         )}
       </section>
+      <AddressMinimum address={item.address} />
       <CaseActions item={item} profile={profile} busy={busy} onCommand={onCommand} />
       <section className="case-block" aria-labelledby="case-deadline-title">
         <h3 id="case-deadline-title" className="visually-hidden">

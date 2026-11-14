@@ -30,6 +30,16 @@ export interface ToneLabel {
 
 export const UNKNOWN = 'невідомо';
 
+/** Коротке слово стану поруч зі значенням (дублює колір і іконку текстом). */
+export const TONE_WORDS: Record<Tone, string> = {
+  confirmed: 'Підтверджено',
+  pending: 'Очікує',
+  unknown: 'Невідомо',
+  attention: 'Потрібна увага',
+  conflict: 'Суперечність',
+  neutral: 'Не застосовується',
+};
+
 export const PROFILE_LABELS: Record<DemoProfile, string> = {
   patient: 'Військовослужбовець',
   commander: 'Командир',
@@ -177,6 +187,7 @@ const REVIEW_REASONS: Record<string, string> = {
   admission_conflict: 'Суперечність у даних про надходження до закладу',
   receipt_unknown_version: 'Отримання стосується невідомої версії документа',
   unknown_document: 'Подія посилається на документ, якого немає в кейсі',
+  ogd_before_vlk_decision: 'ОГД надійшла раніше за постанову ВЛК — розгляд можливий лише після неї',
 };
 
 export function reviewReasonLabel(reason: string): string {
@@ -250,7 +261,7 @@ export const VERSION_STATE_LABELS: Record<DocumentItemView['history'][number]['s
 };
 
 export const FINANCE_KIND_LABELS: Record<FinanceTrackView['kind'], string> = {
-  reward: 'Винагорода під час лікування',
+  reward: 'Винагорода за час стаціонарного лікування',
   ogd: 'Одноразова грошова допомога (ОГД)',
 };
 

@@ -6,8 +6,17 @@ import {ExternalLink} from '../../components/ExternalLink';
 import {Icon} from '../../components/Icon';
 import {StatusPill} from '../../components/StatusPill';
 import {FINANCE_KIND_LABELS, FINANCE_STATES, financeReasonLabel, SOURCE_LABELS} from '../../content/labels';
-import {FINANCE_NOTE, OGD_DECISION_NOTE, OGD_NOTE, OGD_REFERENCE, REWARD_NOTE} from '../../content/legal';
+import {
+  FINANCE_NOTE,
+  OGD_DECISION_NOTE,
+  OGD_NOTE,
+  OGD_REFERENCE,
+  PAYMENTS_VLK_RULE,
+  REWARD_NOTE,
+  SEVERITY_PAYMENTS_NOTE,
+} from '../../content/legal';
 import {formatMonth} from '../../lib/dates';
+import {OgdAwaitsVlk} from '../shared/OgdAwaitsVlk';
 
 /** Рішення й виконання — два окремі підтвердження джерела. */
 function Confirmation({label, confirmed}: {label: string; confirmed: boolean}) {
@@ -44,7 +53,13 @@ function FinancePeriod({track}: {track: FinanceTrackView}) {
   );
 }
 
-function FinanceColumn({kind, tracks}: {kind: FinanceTrackView['kind']; tracks: FinanceTrackView[]}) {
+interface FinanceColumnProps {
+  kind: FinanceTrackView['kind'];
+  tracks: FinanceTrackView[];
+  vlkDecision: PatientCaseView['milestones']['vlkDecision'];
+}
+
+function FinanceColumn({kind, tracks, vlkDecision}: FinanceColumnProps) {
   return (
     <Card as="article" className="finance-route">
       <header className="finance-route__head">
@@ -53,6 +68,7 @@ function FinanceColumn({kind, tracks}: {kind: FinanceTrackView['kind']; tracks: 
         </span>
         <h3>{FINANCE_KIND_LABELS[kind]}</h3>
       </header>
+      {kind === 'ogd' && <OgdAwaitsVlk vlkDecision={vlkDecision} />}
       {tracks.length > 0 ? (
         <ul className="finance-route__periods">
           {tracks.map(track => (
@@ -82,23 +98,30 @@ function FinanceColumn({kind, tracks}: {kind: FinanceTrackView['kind']; tracks: 
 
 const KINDS: readonly FinanceTrackView['kind'][] = ['reward', 'ogd'];
 
-/** Два окремі фінансові маршрути; у кожному — окремі періоди. Стани не зливаються. */
+/** Два окремі фінансові маршрути; у кожному — окремі періоди. ОГД — лише після постанови ВЛК. */
 export function FinanceSection({view}: {view: PatientCaseView}) {
   return (
     <Section
       id="finance"
       eyebrow="Виплати"
       title="Окремі фінансові маршрути"
-      lead="Винагорода під час лікування й одноразова допомога мають різні рішення та різне виконання."
+      lead={PAYMENTS_VLK_RULE}
       collapsible
       summary={`Періодів: ${view.finances.length}`}
     >
       <div className="finance-grid">
         {KINDS.map(kind => (
-          <FinanceColumn key={kind} kind={kind} tracks={view.finances.filter(track => track.kind === kind)} />
+          <FinanceColumn
+            key={kind}
+            kind={kind}
+            tracks={view.finances.filter(track => track.kind === kind)}
+            vlkDecision={view.milestones.vlkDecision}
+          />
         ))}
       </div>
-      <p className="section__note">{FINANCE_NOTE}</p>
+      <p className="section__note">
+        {SEVERITY_PAYMENTS_NOTE} {FINANCE_NOTE}
+      </p>
     </Section>
   );
 }
