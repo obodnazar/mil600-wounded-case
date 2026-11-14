@@ -1,4 +1,5 @@
 import {monthEnd} from '../calendar.js';
+import {hasCurrentVlkDecision} from '../documents.js';
 import {ReviewRequired, newId, optionalText, text, type EventContext} from '../model.js';
 import {financeTransitionProblem} from '../rules.js';
 import {openOrReopenTask, openTask} from '../tasks.js';
@@ -14,6 +15,7 @@ export function applyFinanceStatus({store, event, payload, caseId, caseEventId}:
   const status = text(payload, 'status');
   const periodStart = `${period}-01`;
   const packetRef = text(payload, 'packet_ref');
+  if (kind === 'ogd' && !hasCurrentVlkDecision(store, caseId)) throw new ReviewRequired('ogd_before_vlk_decision');
 
   const packet = store.exists(
     'SELECT packet_ref FROM route_packet WHERE case_id=? AND route=? AND packet_ref=? AND period=?',

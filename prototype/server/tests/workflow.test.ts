@@ -367,9 +367,30 @@ test('AC05: повернений пакет уточнюється новою р
     assert.equal(h.store.row('SELECT lifecycle_state FROM wound_case WHERE id=?', CASE)?.lifecycle_state, 'vlk');
   }));
 
+test('ADR 0011: ОГД лише після чинної постанови ВЛК; винагорода за стаціонар — і до неї', () =>
+  withHarness(async h => {
+    await h.pending('ogd-packet');
+    assert.equal(h.reviewReasons().at(-1), 'ogd_before_vlk_decision');
+    await h.accepted('reward-packet');
+    await h.accepted('reward-approved');
+    await h.accepted('vlk-received');
+    const clarification = fixtureEvent('vlk-decision');
+    clarification.payload.service_code = 'clarification_needed';
+    await h.accepted(clarification);
+    // Запит ВЛК на уточнення — не підстава для ОГД.
+    await h.pending(variant('ogd-packet', 'demo-ogd-after-clarification'));
+    await h.accepted(variant('vlk-decision', 'demo-vlk-final-for-ogd', event => {
+      event.source_stream = 'demo-stream-vlk-decision';
+      event.source_version = 'v2';
+      event.supersedes_version = 'v1';
+      event.payload.document_version = 'v2';
+    }));
+    await h.accepted(variant('ogd-packet', 'demo-ogd-after-decision'));
+  }));
+
 test('AC06: повернення, відмова, схвалення, часткове й повне виконання не зливаються', () =>
   withHarness(async h => {
-    await acceptAll(h, ['ogd-packet', 'ogd-returned']);
+    await acceptAll(h, ['vlk-received', 'vlk-decision', 'ogd-packet', 'ogd-returned']);
     assert.deepEqual([finance(h, 'ogd').status, finance(h, 'ogd').clarificationOpen], ['returned', true]);
     await h.accepted('ogd-denied');
     assert.equal(finance(h, 'ogd').status, 'denied');

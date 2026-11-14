@@ -2,7 +2,7 @@ import {Denied, type Session} from '../../security/core.js';
 import type {ActionAvailability, CommandAction, StaffCaseView, StaffProfile, StaffView} from '../../shared/api.js';
 import type {Store} from '../db/store.js';
 import {RESERVE_BASE_CASE, SUPPORT_ONLY_TASKS, commandBlocker, isSupportOnlyReview} from '../domain/preconditions.js';
-import {caseSummary} from './case-view.js';
+import {caseSummary, currentFacility, financeTracks, milestones} from './case-view.js';
 
 /** Дії над кейсом, доступність яких службова панель показує наперед. */
 const CASE_ACTIONS: readonly CommandAction[] = [
@@ -20,9 +20,9 @@ function availability(store: Store, role: StaffProfile, caseId: string, action: 
 }
 
 /**
- * Службова проєкція одного кейсу: стадія, задачі, розбори, звернення, строк довідки.
- * Клінічних полів, місця лікування, документних посилань і фінансових станів
- * у цьому DTO немає взагалі — їх не можна випадково показати.
+ * Службова проєкція одного кейсу: стадія, задачі, розбори, звернення, строк довідки
+ * й адресний мінімум (рішення команди 2026-11-14). Клінічних полів і документних
+ * посилань у цьому DTO немає взагалі — їх не можна випадково показати.
  */
 export function staffCaseView(store: Store, role: StaffProfile, caseId: string): StaffCaseView {
   const summary = caseSummary(store, caseId, {staff: true});
@@ -33,9 +33,17 @@ export function staffCaseView(store: Store, role: StaffProfile, caseId: string):
         reviews: summary.reviews.filter(review => !isSupportOnlyReview(store, review.id)),
       }
     : {};
+  const marks = milestones(store, caseId);
   return {
     ...summary,
     ...visible,
+    address: {
+      certificate: marks.certificate,
+      facility: currentFacility(store, caseId),
+      vlkDecision: marks.vlkDecision,
+      // Лише вид, період і стан: без посилань на рішення, доказів виконання й сум.
+      finances: financeTracks(store, caseId).map(({kind, periodStart, status}) => ({kind, periodStart, status})),
+    },
     actions: CASE_ACTIONS.map(action => availability(store, role, caseId, action)),
   };
 }

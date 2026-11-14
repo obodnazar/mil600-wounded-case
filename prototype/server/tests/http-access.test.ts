@@ -17,7 +17,7 @@ test('доступ: без сесії, чужий кейс, відкликани
     assert.equal((await h.get('/api/patient')).status, 401);
   }));
 
-test('доступ: проєкція командира й супроводу не має клінічних посилань, закладу, документів і виплат', () =>
+test('доступ: проєкція командира й супроводу — без клінічних посилань і документів; адресний мінімум без сум і посилань', () =>
   withHarness(async h => {
     for (const profile of ['commander', 'support'] as const) {
       await h.login(profile);
@@ -28,12 +28,17 @@ test('доступ: проєкція командира й супроводу н
       assert.equal(body.profile, profile);
       assert.equal(body.cases.length, 10);
       for (const item of body.cases) {
-        for (const forbidden of ['care', 'timeline', 'documents', 'finances', 'timelineTotal']) {
+        for (const forbidden of ['care', 'timeline', 'documents', 'finances', 'timelineTotal', 'milestones']) {
           assert(!(forbidden in item), `${forbidden} не має бути в службовій проєкції`);
         }
+        // Адресний мінімум (рішення команди 2026-11-14): вид, період і стан виплати — без рішень, доказів і сум.
+        assert.deepEqual(Object.keys(item.address).sort(), ['certificate', 'facility', 'finances', 'vlkDecision']);
+        for (const track of item.address.finances) assert.deepEqual(Object.keys(track).sort(), ['kind', 'periodStart', 'status']);
       }
+      const first = body.cases.find(item => item.id === 'demo-case-01');
+      assert.equal(first?.address.facility, 'Умовний заклад 01');
       const serialized = JSON.stringify(body);
-      for (const marker of ['demo-record-', 'demo-provider-', 'demo-mis', 'demo-sedo', 'Умовний заклад']) {
+      for (const marker of ['demo-record-', 'demo-provider-', 'demo-mis', 'demo-sedo', 'decision_ref', 'execution', 'evidence']) {
         assert(!serialized.includes(marker), marker);
       }
       const single = await h.get('/api/cases/demo-case-01');

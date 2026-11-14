@@ -298,10 +298,23 @@ export interface ActionAvailability {
 }
 
 /**
- * Службова проєкція: без клінічних полів, місця лікування, документних
- * посилань і фінансових станів.
+ * Адресний мінімум для частини (рішення команди 2026-11-14): стан довідки без
+ * документних посилань, умовна назва закладу, вид / період / стан виплати без сум.
+ */
+export interface StaffAddressMinimum {
+  certificate: CaseMilestones['certificate'];
+  /** Умовна назва закладу без адреси; null, якщо поточний заклад не підтверджено. */
+  facility: string | null;
+  vlkDecision: CaseMilestones['vlkDecision'];
+  finances: {kind: 'reward' | 'ogd'; periodStart: string; status: FinanceStatus}[];
+}
+
+/**
+ * Службова проєкція: без клінічних полів і документних посилань.
+ * Заклад і стан виплат — лише в межах адресного мінімуму.
  */
 export interface StaffCaseView extends CaseSummaryView {
+  address: StaffAddressMinimum;
   actions: ActionAvailability[];
 }
 

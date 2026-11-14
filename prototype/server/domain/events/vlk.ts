@@ -1,4 +1,4 @@
-import {ensureRequirements, recordSourceDocument} from '../documents.js';
+import {ensureRequirements, hasCurrentVlkDecision, recordSourceDocument} from '../documents.js';
 import {RECIPIENT, ReviewRequired, optionalText, text, type EventContext, type Route} from '../model.js';
 import {packetProblem} from '../rules.js';
 import {hasOpenTask, openTask, resolveAwaitedCommand, resolveOpenTasksByTrigger, resolveTasks} from '../tasks.js';
@@ -44,6 +44,8 @@ export function applyReferralIssued({store, event, payload, caseId, caseEventId,
  */
 export function applyPackageSignal({store, event, payload, caseId, caseEventId}: EventContext): void {
   const route = routeOf(event.source_system, payload);
+  // ОГД розглядається лише після чинної постанови ВЛК (ADR 0011).
+  if (route === 'ogd' && !hasCurrentVlkDecision(store, caseId)) throw new ReviewRequired('ogd_before_vlk_decision');
   const packet = text(payload, 'packet_ref');
   const revision = text(payload, 'packet_revision');
   const returned = event.event_type.endsWith('returned');

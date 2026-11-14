@@ -123,6 +123,19 @@ export function hasIssuedCertificate(store: Store, caseId: string): boolean {
   );
 }
 
+/**
+ * Чинна позитивна постанова ВЛК: остання оформлена постанова не є запитом на уточнення.
+ * Без неї ОГД не розглядається (ADR 0011).
+ */
+export function hasCurrentVlkDecision(store: Store, caseId: string): boolean {
+  const latest = store.row(
+    `SELECT json_extract(minimal_payload,'$.service_code') AS code FROM case_event
+      WHERE case_id=? AND event_type='vlk.decision_recorded' ORDER BY rowid DESC LIMIT 1`,
+    caseId,
+  );
+  return latest !== undefined && latest.code !== 'clarification_needed';
+}
+
 /** Довідку склала медслужба, але видачу ще не підтверджено. */
 export function hasPreparedCertificate(store: Store, caseId: string): boolean {
   return store.exists(

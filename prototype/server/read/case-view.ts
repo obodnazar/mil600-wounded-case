@@ -174,7 +174,7 @@ export function patientCaseView(store: Store, caseId: string): PatientCaseView {
 }
 
 /** Віхи маршруту з підтверджених записів БД, а не з обмеженого журналу подій. */
-function milestones(store: Store, caseId: string): CaseMilestones {
+export function milestones(store: Store, caseId: string): CaseMilestones {
   const referralIssued = store.exists(
     "SELECT id FROM document_ref WHERE case_id=? AND kind='referral' AND active=1 AND state IN ('issued','corrected')",
     caseId,
@@ -210,7 +210,7 @@ function milestones(store: Store, caseId: string): CaseMilestones {
  * Поточний заклад — лише підтверджений відкритий епізод. Після виписки чи без
  * підтвердження наступний заклад не вигадується.
  */
-function currentFacility(store: Store, caseId: string): string | null {
+export function currentFacility(store: Store, caseId: string): string | null {
   const item = store.row('SELECT current_episode,last_source_at FROM wound_case WHERE id=?', caseId);
   if (!item) return null;
   if (item.current_episode) {
@@ -243,7 +243,7 @@ function careDeadline(store: Store, caseId: string): CareDeadlineView {
   };
 }
 
-function financeTracks(store: Store, caseId: string): FinanceTrackView[] {
+export function financeTracks(store: Store, caseId: string): FinanceTrackView[] {
   const rows = store.rows('SELECT * FROM financial_track WHERE case_id=? ORDER BY payment_kind,period_start', caseId);
   return rows.map(track => {
     const kind = track.payment_kind === 'reward' ? 'reward' : 'ogd';

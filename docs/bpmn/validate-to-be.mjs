@@ -124,6 +124,15 @@ assert(!reachable('Intake_Med','Intake_End',['Intake_EnsureCase']));
 assert(!reachable('Intake_Admin','Intake_End',['Intake_EnsureCase']));
 assert(!reachable('VLK_Start','VLK_Checklist',['VLK_Referral']),'Чекліст не передує направленню');
 assert.equal(byId.VLK_CreateTask.$type,'bpmn:ServiceTask','Створення задачі, а не блокування направлення');
+// Рішення команди 2026-11-14: подія-підстава перед направленням, неблокувальне уточнення якоря, ОГД після постанови ВЛК.
+assert.equal(byId.VLK_Trigger.$type,'bpmn:IntermediateCatchEvent');
+assert(!reachable('VLK_Start','VLK_Referral',['VLK_Trigger']),'Направлення лише після події-підстави');
+assert.equal(byId.Cert_AnchorKnown.default.targetRef.id,'Cert_Clarify','Невідомий якір веде до уточнення, а не до вигаданої дати');
+assert.equal(byId.Cert_Clarify.$type,'bpmn:ServiceTask','Уточнення не блокує складання');
+assert(byId.Cert_Clarify.outgoing.some(f=>f.targetRef.id==='Cert_Prepare'));
+assert.equal(byId.OGD_VLKDecision.$type,'bpmn:IntermediateCatchEvent');
+assert(!reachable('OGD_Start','OGD_Basis',['OGD_VLKDecision']),'ОГД лише після чинної постанови ВЛК');
+assert(!reachable('Fork_Admin','Sub_OGD',['Sub_VLK']),'ОГД не стартує від створення кейсу в обхід ВЛК');
 assert.equal(byId.VLK_Exam.$type,'bpmn:UserTask','Клініка залишається людині');
 assert(byId.Fork_Admin.outgoing.some(f=>f.targetRef.id==='Sub_Reward'));
 assert(!reachable('Sub_Reward','Sub_VLK'),'Винагорода не очікує фінальної ВЛК');

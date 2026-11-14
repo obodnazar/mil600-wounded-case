@@ -211,10 +211,11 @@
       </bpmn:startEvent>
       <bpmn:serviceTask id="Cert_Anchor" name="Сервіс: застосовність і якір строку — підтверджений / орієнтир / невідомий">
         <bpmn:incoming>F_Cert_Start_Cert_Anchor</bpmn:incoming>
-        <bpmn:outgoing>F_Cert_Anchor_Cert_Prepare</bpmn:outgoing>
+        <bpmn:outgoing>F_Cert_Anchor_Cert_AnchorKnown</bpmn:outgoing>
       </bpmn:serviceTask>
       <bpmn:userTask id="Cert_Prepare" name="Начальник медслужби: скласти довідку; підстава у формі — наказ командира">
-        <bpmn:incoming>F_Cert_Anchor_Cert_Prepare</bpmn:incoming>
+        <bpmn:incoming>Cert_AnchorYes</bpmn:incoming>
+        <bpmn:incoming>Cert_ClarifyDone</bpmn:incoming>
         <bpmn:outgoing>F_Cert_Prepare_Cert_Issue</bpmn:outgoing>
       </bpmn:userTask>
       <bpmn:userTask id="Cert_Issue" name="Командир частини: підписати й видати складену довідку">
@@ -233,18 +234,32 @@
         <bpmn:incoming>F_Cert_Receipt_Cert_Record</bpmn:incoming>
         <bpmn:outgoing>F_Cert_Record_Cert_End</bpmn:outgoing>
       </bpmn:serviceTask>
+      <bpmn:exclusiveGateway id="Cert_AnchorKnown" name="Якір і застосовність відомі?" default="Cert_AnchorUnknown">
+        <bpmn:incoming>F_Cert_Anchor_Cert_AnchorKnown</bpmn:incoming>
+        <bpmn:outgoing>Cert_AnchorYes</bpmn:outgoing>
+        <bpmn:outgoing>Cert_AnchorUnknown</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:serviceTask id="Cert_Clarify" name="Створити задачу супроводу: уточнити застосовність / дату; без вигаданої дати">
+        <bpmn:incoming>Cert_AnchorUnknown</bpmn:incoming>
+        <bpmn:outgoing>Cert_ClarifyDone</bpmn:outgoing>
+      </bpmn:serviceTask>
       <bpmn:endEvent id="Cert_End" name="Версія отримана">
         <bpmn:incoming>F_Cert_Record_Cert_End</bpmn:incoming>
       </bpmn:endEvent>
       <bpmn:sequenceFlow id="F_Cert_Start_Cert_Anchor" sourceRef="Cert_Start" targetRef="Cert_Anchor" />
-      <bpmn:sequenceFlow id="F_Cert_Anchor_Cert_Prepare" sourceRef="Cert_Anchor" targetRef="Cert_Prepare" />
+      <bpmn:sequenceFlow id="F_Cert_Anchor_Cert_AnchorKnown" sourceRef="Cert_Anchor" targetRef="Cert_AnchorKnown" />
+      <bpmn:sequenceFlow id="Cert_AnchorYes" sourceRef="Cert_AnchorKnown" targetRef="Cert_Prepare" name="Так / орієнтир">
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">anchor_status_confirmed_or_estimated</bpmn:conditionExpression>
+      </bpmn:sequenceFlow>
+      <bpmn:sequenceFlow id="Cert_AnchorUnknown" sourceRef="Cert_AnchorKnown" targetRef="Cert_Clarify" name="Невідомо" />
+      <bpmn:sequenceFlow id="Cert_ClarifyDone" sourceRef="Cert_Clarify" targetRef="Cert_Prepare" />
       <bpmn:sequenceFlow id="F_Cert_Prepare_Cert_Issue" sourceRef="Cert_Prepare" targetRef="Cert_Issue" />
       <bpmn:sequenceFlow id="F_Cert_Issue_Cert_Send" sourceRef="Cert_Issue" targetRef="Cert_Send" />
       <bpmn:sequenceFlow id="F_Cert_Send_Cert_Receipt" sourceRef="Cert_Send" targetRef="Cert_Receipt" />
       <bpmn:sequenceFlow id="F_Cert_Receipt_Cert_Record" sourceRef="Cert_Receipt" targetRef="Cert_Record" />
       <bpmn:sequenceFlow id="F_Cert_Record_Cert_End" sourceRef="Cert_Record" targetRef="Cert_End" />
       <bpmn:textAnnotation id="Cert_Note">
-        <bpmn:text>N16 ст.260: лише коли травма від дій противника. 5 днів на складання / направлення від отримання військовослужбовцем первинного облікового медичного документа (еПМК); за відсутності — довідки про перебування в закладі. Внесення еПМК — орієнтир: «дату отримання підтвердити». Юридичний due_date до підтвердження null; сервіс рішень не ухвалює, лише нагадує. Складає начальник медслужби, підписує командир частини; форма додатка 5 має реквізит «Підстава: наказ командира» — крок «рапорт → наказ» у цій моделі згорнуто.</bpmn:text>
+        <bpmn:text>N16 ст.260: лише коли травма від дій противника. 5 днів на складання / направлення від отримання військовослужбовцем первинного облікового медичного документа (еПМК); за відсутності — довідки про перебування в закладі. Внесення еПМК — орієнтир: «дату отримання підтвердити». Юридичний due_date до підтвердження null; сервіс рішень не ухвалює, лише нагадує. Складає начальник медслужби, підписує командир частини; форма додатка 5 має реквізит «Підстава: наказ командира» — крок «рапорт → наказ» у цій моделі згорнуто. Невідомі якір чи застосовність не блокують складання: супровід уточнює їх окремою задачею, дату не вигадуємо (AC04).</bpmn:text>
       </bpmn:textAnnotation>
       <bpmn:textAnnotation id="Title_certificate">
         <bpmn:text>Довідка про обставини травми (додаток 5 до Наказу №402) • підготовка / видача / передача / отримання</bpmn:text>
@@ -253,14 +268,14 @@
     <bpmn:endEvent id="End_Certificate" name="Отримання цієї версії підтверджено">
       <bpmn:incoming>F_Sub_Certificate_End_Certificate</bpmn:incoming>
     </bpmn:endEvent>
-    <bpmn:subProcess id="Sub_VLK" name="Належне направлення → пакет → рішення ВЛК">
+    <bpmn:subProcess id="Sub_VLK" name="Підстава → належне направлення → пакет → постанова ВЛК">
       <bpmn:incoming>F_ToVLK</bpmn:incoming>
       <bpmn:outgoing>F_Sub_VLK_Fork_AfterVLK</bpmn:outgoing>
       <bpmn:startEvent id="VLK_Start" name="">
-        <bpmn:outgoing>F_VLK_Start_VLK_Referral</bpmn:outgoing>
+        <bpmn:outgoing>F_VLK_Start_VLK_Trigger</bpmn:outgoing>
       </bpmn:startEvent>
-      <bpmn:userTask id="VLK_Referral" name="Командир (за рекомендацією лікаря) або заклад: оформити направлення (N01 II 6.1, 6.5)">
-        <bpmn:incoming>F_VLK_Start_VLK_Referral</bpmn:incoming>
+      <bpmn:userTask id="VLK_Referral" name="Командир — за рекомендацією лікаря закладу; під час тривалого лікування — заклад: направлення (N01 II 6.1, 6.5)">
+        <bpmn:incoming>F_VLK_Trigger_VLK_Referral</bpmn:incoming>
         <bpmn:outgoing>F_VLK_Referral_VLK_Checklist</bpmn:outgoing>
       </bpmn:userTask>
       <bpmn:serviceTask id="VLK_Checklist" name="Сервіс: технічні вимоги пакета + версія правил">
@@ -314,7 +329,6 @@
       <bpmn:endEvent id="VLK_End" name="Рішення зафіксовано">
         <bpmn:incoming>F_VLK_Record_VLK_End</bpmn:incoming>
       </bpmn:endEvent>
-      <bpmn:sequenceFlow id="F_VLK_Start_VLK_Referral" sourceRef="VLK_Start" targetRef="VLK_Referral" />
       <bpmn:sequenceFlow id="F_VLK_Referral_VLK_Checklist" sourceRef="VLK_Referral" targetRef="VLK_Checklist" />
       <bpmn:sequenceFlow id="F_VLK_Checklist_VLK_Gaps" sourceRef="VLK_Checklist" targetRef="VLK_Gaps" />
       <bpmn:sequenceFlow id="VLK_NoGap" sourceRef="VLK_Gaps" targetRef="VLK_Merge" name="Ні" />
@@ -333,8 +347,15 @@
       <bpmn:sequenceFlow id="F_VLK_Exam_VLK_Decision" sourceRef="VLK_Exam" targetRef="VLK_Decision" />
       <bpmn:sequenceFlow id="F_VLK_Decision_VLK_Record" sourceRef="VLK_Decision" targetRef="VLK_Record" />
       <bpmn:sequenceFlow id="F_VLK_Record_VLK_End" sourceRef="VLK_Record" targetRef="VLK_End" />
+      <bpmn:intermediateCatchEvent id="VLK_Trigger" name="Належне джерело: є підстава для направлення (рекомендація лікаря; під час тривалого лікування направляє заклад)">
+        <bpmn:incoming>F_VLK_Start_VLK_Trigger</bpmn:incoming>
+        <bpmn:outgoing>F_VLK_Trigger_VLK_Referral</bpmn:outgoing>
+        <bpmn:messageEventDefinition id="MessageDef_VLKTrigger" />
+      </bpmn:intermediateCatchEvent>
+      <bpmn:sequenceFlow id="F_VLK_Start_VLK_Trigger" sourceRef="VLK_Start" targetRef="VLK_Trigger" />
+      <bpmn:sequenceFlow id="F_VLK_Trigger_VLK_Referral" sourceRef="VLK_Trigger" targetRef="VLK_Referral" />
       <bpmn:textAnnotation id="VLK_Note">
-        <bpmn:text>Направляє суб’єкт N01 II 6.1 (командир — за рекомендацією лікаря), керівник закладу за умовами 6.4, а щодо тривалого лікування — заклад (6.5); супровід координує, не підписує замість них. Технічна прогалина створює задачу, не відмову в направленні. Масове повернення пакета — непідтверджене припущення A-1; повернення моделюємо як можливий виняток. Оригінали й правомірність доступу перевіряє джерело.</bpmn:text>
+        <bpmn:text>Направляє суб’єкт N01 II 6.1 (командир — за рекомендацією лікаря закладу), керівник закладу за умовами 6.4, а щодо тривалого лікування — заклад (6.5); супровід координує, не підписує замість них. Технічна прогалина створює задачу, не відмову в направленні. Масове повернення пакета — непідтверджене припущення A-1; повернення моделюємо як можливий виняток. Оригінали й правомірність доступу перевіряє джерело. Створення кейсу не є підставою для направлення: площина чекає події належного джерела (рішення команди 2026-11-14).</bpmn:text>
       </bpmn:textAnnotation>
       <bpmn:textAnnotation id="Title_vlk">
         <bpmn:text>ВЛК • технічний чекліст не блокує направлення • клінічне рішення залишається ВЛК</bpmn:text>
@@ -455,7 +476,7 @@
       <bpmn:sequenceFlow id="Reward_ExecutionLoop" sourceRef="Reward_Partial" targetRef="Reward_AwaitExecution" />
       <bpmn:sequenceFlow id="F_Reward_Confirmed_Reward_End" sourceRef="Reward_Confirmed" targetRef="Reward_End" />
       <bpmn:textAnnotation id="Reward_Note">
-        <bpmn:text>Повернення ≠ відмова ≠ призначення ≠ виконання. Немає довіреного джерела виконання → очікування / невідоме, не «гроші отримано». Один прохід — обраний період або пакет; інші не закриваються. F06; ADR 0001, 0003–0004.</bpmn:text>
+        <bpmn:text>Повернення ≠ відмова ≠ призначення ≠ виконання. Немає довіреного джерела виконання → очікування / невідоме, не «гроші отримано». Один прохід — обраний період або пакет; інші не закриваються. F06; ADR 0001, 0003–0004. Винагорода за стаціонарне лікування — до постанови ВЛК (N06); виплати, що залежать від тяжкості поранення, — лише після постанови ВЛК.</bpmn:text>
       </bpmn:textAnnotation>
       <bpmn:textAnnotation id="Title_reward">
         <bpmn:text>Додаткова винагорода • паралельно лікуванню / без загального бар’єра фінальної ВЛК • N06, N21</bpmn:text>
@@ -464,14 +485,14 @@
     <bpmn:endEvent id="End_Reward" name="Стан обраного періоду">
       <bpmn:incoming>F_Sub_Reward_End_Reward</bpmn:incoming>
     </bpmn:endEvent>
-    <bpmn:subProcess id="Sub_OGD" name="ОГД: окремий пакет, орган і виконання">
+    <bpmn:subProcess id="Sub_OGD" name="ОГД: лише після чинної постанови ВЛК; окремий пакет і виконання">
       <bpmn:incoming>F_ToOGD</bpmn:incoming>
       <bpmn:outgoing>F_Sub_OGD_End_OGD</bpmn:outgoing>
       <bpmn:startEvent id="OGD_Start" name="">
-        <bpmn:outgoing>F_OGD_Start_OGD_Basis</bpmn:outgoing>
+        <bpmn:outgoing>OGD_WaitVLK</bpmn:outgoing>
       </bpmn:startEvent>
       <bpmn:userTask id="OGD_Basis" name="Заявник: підстава ОГД; рішення ЕКОПФО або довідка МСЕК — обов’язкові">
-        <bpmn:incoming>F_OGD_Start_OGD_Basis</bpmn:incoming>
+        <bpmn:incoming>OGD_AfterVLK</bpmn:incoming>
         <bpmn:outgoing>OGD_CheckApplicability</bpmn:outgoing>
       </bpmn:userTask>
       <bpmn:serviceTask id="OGD_Checklist" name="Сервіс: окремі вимоги пакета / версія правил; не визначає право">
@@ -539,7 +560,6 @@
       <bpmn:endEvent id="OGD_End" name="Підтверджено лише обраний обсяг">
         <bpmn:incoming>F_OGD_Confirmed_OGD_End</bpmn:incoming>
       </bpmn:endEvent>
-      <bpmn:sequenceFlow id="F_OGD_Start_OGD_Basis" sourceRef="OGD_Start" targetRef="OGD_Basis" />
       <bpmn:sequenceFlow id="F_OGD_Checklist_OGD_Send" sourceRef="OGD_Checklist" targetRef="OGD_Send" />
       <bpmn:sequenceFlow id="F_OGD_Send_OGD_Receipt" sourceRef="OGD_Send" targetRef="OGD_Receipt" />
       <bpmn:sequenceFlow id="F_OGD_Receipt_OGD_Decision" sourceRef="OGD_Receipt" targetRef="OGD_Decision" />
@@ -588,14 +608,21 @@
       </bpmn:receiveTask>
       <bpmn:sequenceFlow id="OGD_ApplicableUnknown" sourceRef="OGD_Applicable" targetRef="OGD_ApplicabilityWait" name="Невідомо" />
       <bpmn:sequenceFlow id="OGD_ApplicabilityRetry" sourceRef="OGD_ApplicabilityWait" targetRef="OGD_Applicable" />
+      <bpmn:intermediateCatchEvent id="OGD_VLKDecision" name="Чинна постанова ВЛК оформлена (причинний зв’язок)">
+        <bpmn:incoming>OGD_WaitVLK</bpmn:incoming>
+        <bpmn:outgoing>OGD_AfterVLK</bpmn:outgoing>
+        <bpmn:messageEventDefinition id="MessageDef_OGDAfterVLK" />
+      </bpmn:intermediateCatchEvent>
+      <bpmn:sequenceFlow id="OGD_WaitVLK" sourceRef="OGD_Start" targetRef="OGD_VLKDecision" />
+      <bpmn:sequenceFlow id="OGD_AfterVLK" sourceRef="OGD_VLKDecision" targetRef="OGD_Basis" />
       <bpmn:textAnnotation id="OGD_Note">
         <bpmn:text>Повернення ≠ відмова ≠ призначення ≠ виконання. Немає довіреного джерела виконання → очікування / невідоме, не «гроші отримано». Один прохід — обраний період або пакет; інші не закриваються. F06; ADR 0001, 0003–0004.</bpmn:text>
       </bpmn:textAnnotation>
       <bpmn:textAnnotation id="OGD_Deadlines">
-        <bpmn:text>N07 пп.20–24: заяву й документи подають за місцем служби (уповноважений орган); він подає висновок, рішення ухвалює розпорядник бюджетних коштів. Рішення ЕКОПФО / довідку МСЕК не підміняє постанова ВЛК. Строк рішення ≠ банківське зарахування. N07 п.23: у воєнний час рішення про призначення — 3 місяці від отримання всіх необхідних документів. Невідомий якір → уточнення. Повні умови — у нормативній матриці.</bpmn:text>
+        <bpmn:text>ADR 0011: пакет ОГД подається лише після чинної постанови ВЛК; запит ВЛК на уточнення не є підставою. N07 пп.20–24: заяву й документи подають за місцем служби (уповноважений орган); він подає висновок, рішення ухвалює розпорядник бюджетних коштів. Рішення ЕКОПФО / довідку МСЕК не підміняє постанова ВЛК. Строк рішення ≠ банківське зарахування. N07 п.23: у воєнний час рішення про призначення — 3 місяці від отримання всіх необхідних документів. Невідомий якір → уточнення. Повні умови — у нормативній матриці.</bpmn:text>
       </bpmn:textAnnotation>
       <bpmn:textAnnotation id="Title_ogd">
-        <bpmn:text>ОГД • окрема заява / пакет / уповноважений орган і розпорядник • N07 • опціональний маршрут</bpmn:text>
+        <bpmn:text>ОГД • лише після чинної постанови ВЛК (ADR 0011) • окрема заява / пакет / уповноважений орган і розпорядник • N07 • опціональний маршрут</bpmn:text>
       </bpmn:textAnnotation>
     </bpmn:subProcess>
     <bpmn:endEvent id="End_OGD" name="Стан окремого пакета">
@@ -737,7 +764,7 @@
       <bpmn:text>Усі читання / дії: серверна роль + scope + поля; оригінали в джерелах. Немає входу бійця → призначений супровід. Родина не отримує доступ автоматично. Немає події ≠ немає лікування / права. Демо — лише вигадані дані.</bpmn:text>
     </bpmn:textAnnotation>
     <bpmn:textAnnotation id="Title_overview">
-      <bpmn:text>TO BE • навчальна пропозиція • 2026-11-13 • деталі: окремі SVG / DI цього XML</bpmn:text>
+      <bpmn:text>TO BE • навчальна пропозиція • 2026-11-13, зміни команди 2026-11-14 • деталі: окремі SVG / DI цього XML</bpmn:text>
     </bpmn:textAnnotation>
   </bpmn:process>
   <bpmn:collaboration id="Collaboration_ToBe">
@@ -1233,59 +1260,88 @@
         <dc:Bounds x="150" y="170" width="220" height="100" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="DI_Cert_Prepare" bpmnElement="Cert_Prepare">
-        <dc:Bounds x="430" y="170" width="220" height="100" />
+        <dc:Bounds x="600" y="170" width="220" height="100" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="DI_Cert_Issue" bpmnElement="Cert_Issue">
-        <dc:Bounds x="710" y="170" width="220" height="100" />
+        <dc:Bounds x="880" y="170" width="220" height="100" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="DI_Cert_Send" bpmnElement="Cert_Send">
-        <dc:Bounds x="990" y="170" width="220" height="100" />
+        <dc:Bounds x="1160" y="170" width="220" height="100" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="DI_Cert_Receipt" bpmnElement="Cert_Receipt">
-        <dc:Bounds x="1270" y="170" width="220" height="100" />
+        <dc:Bounds x="1440" y="170" width="220" height="100" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="DI_Cert_Record" bpmnElement="Cert_Record">
-        <dc:Bounds x="1550" y="170" width="220" height="100" />
+        <dc:Bounds x="1720" y="170" width="220" height="100" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Cert_AnchorKnown" bpmnElement="Cert_AnchorKnown" isMarkerVisible="true">
+        <dc:Bounds x="425" y="195" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="360" y="133" width="180" height="50" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Cert_Clarify" bpmnElement="Cert_Clarify">
+        <dc:Bounds x="310" y="320" width="220" height="100" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="DI_Cert_End" bpmnElement="Cert_End">
-        <dc:Bounds x="1900" y="202" width="36" height="36" />
+        <dc:Bounds x="2070" y="202" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1830" y="248" width="190" height="58" />
+          <dc:Bounds x="2000" y="248" width="190" height="58" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="DI_Cert_Note" bpmnElement="Cert_Note">
-        <dc:Bounds x="150" y="310" width="1810" height="90" />
+        <dc:Bounds x="150" y="450" width="1980" height="90" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="DI_Title_certificate" bpmnElement="Title_certificate">
-        <dc:Bounds x="80" y="0" width="1910" height="60" />
+        <dc:Bounds x="80" y="0" width="2080" height="60" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="DI_F_Cert_Start_Cert_Anchor" bpmnElement="F_Cert_Start_Cert_Anchor">
         <di:waypoint x="96" y="220.0" />
         <di:waypoint x="150" y="220.0" />
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="DI_F_Cert_Anchor_Cert_Prepare" bpmnElement="F_Cert_Anchor_Cert_Prepare">
+      <bpmndi:BPMNEdge id="DI_F_Cert_Anchor_Cert_AnchorKnown" bpmnElement="F_Cert_Anchor_Cert_AnchorKnown">
         <di:waypoint x="370" y="220.0" />
-        <di:waypoint x="430" y="220.0" />
+        <di:waypoint x="425" y="220.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_Cert_AnchorYes" bpmnElement="Cert_AnchorYes">
+        <di:waypoint x="475" y="220.0" />
+        <di:waypoint x="600" y="220.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="482" y="190" width="100" height="25" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_Cert_AnchorUnknown" bpmnElement="Cert_AnchorUnknown">
+        <di:waypoint x="450" y="245" />
+        <di:waypoint x="450" y="320" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="460" y="275" width="80" height="22" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_Cert_ClarifyDone" bpmnElement="Cert_ClarifyDone">
+        <di:waypoint x="530" y="370" />
+        <di:waypoint x="565" y="370" />
+        <di:waypoint x="565" y="220" />
+        <di:waypoint x="600" y="220" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="DI_F_Cert_Prepare_Cert_Issue" bpmnElement="F_Cert_Prepare_Cert_Issue">
-        <di:waypoint x="650" y="220.0" />
-        <di:waypoint x="710" y="220.0" />
+        <di:waypoint x="820" y="220.0" />
+        <di:waypoint x="880" y="220.0" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="DI_F_Cert_Issue_Cert_Send" bpmnElement="F_Cert_Issue_Cert_Send">
-        <di:waypoint x="930" y="220.0" />
-        <di:waypoint x="990" y="220.0" />
+        <di:waypoint x="1100" y="220.0" />
+        <di:waypoint x="1160" y="220.0" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="DI_F_Cert_Send_Cert_Receipt" bpmnElement="F_Cert_Send_Cert_Receipt">
-        <di:waypoint x="1210" y="220.0" />
-        <di:waypoint x="1270" y="220.0" />
+        <di:waypoint x="1380" y="220.0" />
+        <di:waypoint x="1440" y="220.0" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="DI_F_Cert_Receipt_Cert_Record" bpmnElement="F_Cert_Receipt_Cert_Record">
-        <di:waypoint x="1490" y="220.0" />
-        <di:waypoint x="1550" y="220.0" />
+        <di:waypoint x="1660" y="220.0" />
+        <di:waypoint x="1720" y="220.0" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="DI_F_Cert_Record_Cert_End" bpmnElement="F_Cert_Record_Cert_End">
-        <di:waypoint x="1770" y="220.0" />
-        <di:waypoint x="1900" y="220.0" />
+        <di:waypoint x="1940" y="220.0" />
+        <di:waypoint x="2070" y="220.0" />
       </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>
@@ -1295,134 +1351,144 @@
         <dc:Bounds x="50" y="202" width="36" height="36" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="DI_VLK_Referral" bpmnElement="VLK_Referral">
-        <dc:Bounds x="140" y="170" width="210" height="100" />
+        <dc:Bounds x="300" y="160" width="250" height="120" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="DI_VLK_Checklist" bpmnElement="VLK_Checklist">
-        <dc:Bounds x="420" y="170" width="210" height="100" />
+        <dc:Bounds x="580" y="170" width="210" height="100" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="DI_VLK_Gaps" bpmnElement="VLK_Gaps" isMarkerVisible="true">
-        <dc:Bounds x="710" y="195" width="50" height="50" />
+        <dc:Bounds x="870" y="195" width="50" height="50" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="645" y="133" width="180" height="50" />
+          <dc:Bounds x="805" y="133" width="180" height="50" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="DI_VLK_CreateTask" bpmnElement="VLK_CreateTask">
-        <dc:Bounds x="690" y="400" width="220" height="100" />
+        <dc:Bounds x="850" y="400" width="220" height="100" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="DI_VLK_Merge" bpmnElement="VLK_Merge" isMarkerVisible="true">
-        <dc:Bounds x="1010" y="195" width="50" height="50" />
+        <dc:Bounds x="1170" y="195" width="50" height="50" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="DI_VLK_Send" bpmnElement="VLK_Send">
-        <dc:Bounds x="1140" y="170" width="220" height="100" />
+        <dc:Bounds x="1300" y="170" width="220" height="100" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="DI_VLK_Receipt" bpmnElement="VLK_Receipt">
-        <dc:Bounds x="1430" y="170" width="220" height="100" />
+        <dc:Bounds x="1590" y="170" width="220" height="100" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="DI_VLK_Returned" bpmnElement="VLK_Returned" isMarkerVisible="true">
-        <dc:Bounds x="1720" y="195" width="50" height="50" />
+        <dc:Bounds x="1880" y="195" width="50" height="50" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1655" y="133" width="180" height="50" />
+          <dc:Bounds x="1815" y="133" width="180" height="50" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="DI_VLK_Correct" bpmnElement="VLK_Correct">
-        <dc:Bounds x="1420" y="400" width="220" height="100" />
+        <dc:Bounds x="1580" y="400" width="220" height="100" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="DI_VLK_Exam" bpmnElement="VLK_Exam">
-        <dc:Bounds x="1910" y="170" width="220" height="100" />
+        <dc:Bounds x="2070" y="170" width="220" height="100" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="DI_VLK_Decision" bpmnElement="VLK_Decision">
-        <dc:Bounds x="2200" y="170" width="220" height="100" />
+        <dc:Bounds x="2360" y="170" width="220" height="100" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="DI_VLK_Record" bpmnElement="VLK_Record">
-        <dc:Bounds x="2490" y="170" width="230" height="100" />
+        <dc:Bounds x="2650" y="170" width="230" height="100" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="DI_VLK_End" bpmnElement="VLK_End">
-        <dc:Bounds x="2830" y="202" width="36" height="36" />
+        <dc:Bounds x="2990" y="202" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="2760" y="248" width="190" height="58" />
+          <dc:Bounds x="2920" y="248" width="190" height="58" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_VLK_Trigger" bpmnElement="VLK_Trigger">
+        <dc:Bounds x="160" y="202" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="70" y="250" width="225" height="80" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="DI_VLK_Note" bpmnElement="VLK_Note">
-        <dc:Bounds x="1900" y="390" width="1110" height="140" />
+        <dc:Bounds x="2060" y="390" width="1110" height="140" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="DI_Title_vlk" bpmnElement="Title_vlk">
-        <dc:Bounds x="80" y="0" width="2970" height="60" />
+        <dc:Bounds x="80" y="0" width="3130" height="60" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNEdge id="DI_F_VLK_Start_VLK_Referral" bpmnElement="F_VLK_Start_VLK_Referral">
-        <di:waypoint x="86" y="220.0" />
-        <di:waypoint x="140" y="220.0" />
-      </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="DI_F_VLK_Referral_VLK_Checklist" bpmnElement="F_VLK_Referral_VLK_Checklist">
-        <di:waypoint x="350" y="220.0" />
-        <di:waypoint x="420" y="220.0" />
+        <di:waypoint x="550" y="220.0" />
+        <di:waypoint x="580" y="220.0" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="DI_F_VLK_Checklist_VLK_Gaps" bpmnElement="F_VLK_Checklist_VLK_Gaps">
-        <di:waypoint x="630" y="220.0" />
-        <di:waypoint x="710" y="220.0" />
+        <di:waypoint x="790" y="220.0" />
+        <di:waypoint x="870" y="220.0" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="DI_VLK_NoGap" bpmnElement="VLK_NoGap">
-        <di:waypoint x="760" y="220.0" />
-        <di:waypoint x="1010" y="220.0" />
+        <di:waypoint x="920" y="220.0" />
+        <di:waypoint x="1170" y="220.0" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="820.0" y="184.0" width="130" height="32" />
+          <dc:Bounds x="980.0" y="184.0" width="130" height="32" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="DI_VLK_HasGap" bpmnElement="VLK_HasGap">
-        <di:waypoint x="735" y="245" />
-        <di:waypoint x="735" y="400" />
+        <di:waypoint x="895" y="245" />
+        <di:waypoint x="895" y="400" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="750" y="320" width="60" height="25" />
+          <dc:Bounds x="910" y="320" width="60" height="25" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="DI_VLK_TaskCreated" bpmnElement="VLK_TaskCreated">
-        <di:waypoint x="910" y="450" />
-        <di:waypoint x="1035" y="450" />
-        <di:waypoint x="1035" y="245" />
+        <di:waypoint x="1070" y="450" />
+        <di:waypoint x="1195" y="450" />
+        <di:waypoint x="1195" y="245" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="DI_F_VLK_Merge_VLK_Send" bpmnElement="F_VLK_Merge_VLK_Send">
-        <di:waypoint x="1060" y="220.0" />
-        <di:waypoint x="1140" y="220.0" />
+        <di:waypoint x="1220" y="220.0" />
+        <di:waypoint x="1300" y="220.0" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="DI_F_VLK_Send_VLK_Receipt" bpmnElement="F_VLK_Send_VLK_Receipt">
-        <di:waypoint x="1360" y="220.0" />
-        <di:waypoint x="1430" y="220.0" />
+        <di:waypoint x="1520" y="220.0" />
+        <di:waypoint x="1590" y="220.0" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="DI_F_VLK_Receipt_VLK_Returned" bpmnElement="F_VLK_Receipt_VLK_Returned">
-        <di:waypoint x="1650" y="220.0" />
-        <di:waypoint x="1720" y="220.0" />
+        <di:waypoint x="1810" y="220.0" />
+        <di:waypoint x="1880" y="220.0" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="DI_VLK_NotReturned" bpmnElement="VLK_NotReturned">
-        <di:waypoint x="1770" y="220.0" />
-        <di:waypoint x="1910" y="220.0" />
+        <di:waypoint x="1930" y="220.0" />
+        <di:waypoint x="2070" y="220.0" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1775.0" y="184.0" width="130" height="32" />
+          <dc:Bounds x="1935.0" y="184.0" width="130" height="32" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="DI_VLK_WasReturned" bpmnElement="VLK_WasReturned">
-        <di:waypoint x="1745" y="245" />
-        <di:waypoint x="1745" y="450" />
-        <di:waypoint x="1640" y="450" />
+        <di:waypoint x="1905" y="245" />
+        <di:waypoint x="1905" y="450" />
+        <di:waypoint x="1800" y="450" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1760" y="330" width="60" height="25" />
+          <dc:Bounds x="1920" y="330" width="60" height="25" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="DI_VLK_CorrectionLoop" bpmnElement="VLK_CorrectionLoop">
-        <di:waypoint x="1420" y="450" />
-        <di:waypoint x="1100" y="450" />
-        <di:waypoint x="1100" y="220" />
-        <di:waypoint x="1140" y="220" />
+        <di:waypoint x="1580" y="450" />
+        <di:waypoint x="1260" y="450" />
+        <di:waypoint x="1260" y="220" />
+        <di:waypoint x="1300" y="220" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="DI_F_VLK_Exam_VLK_Decision" bpmnElement="F_VLK_Exam_VLK_Decision">
-        <di:waypoint x="2130" y="220.0" />
-        <di:waypoint x="2200" y="220.0" />
+        <di:waypoint x="2290" y="220.0" />
+        <di:waypoint x="2360" y="220.0" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="DI_F_VLK_Decision_VLK_Record" bpmnElement="F_VLK_Decision_VLK_Record">
-        <di:waypoint x="2420" y="220.0" />
-        <di:waypoint x="2490" y="220.0" />
+        <di:waypoint x="2580" y="220.0" />
+        <di:waypoint x="2650" y="220.0" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="DI_F_VLK_Record_VLK_End" bpmnElement="F_VLK_Record_VLK_End">
-        <di:waypoint x="2720" y="220.0" />
-        <di:waypoint x="2830" y="220.0" />
+        <di:waypoint x="2880" y="220.0" />
+        <di:waypoint x="2990" y="220.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_VLK_Start_VLK_Trigger" bpmnElement="F_VLK_Start_VLK_Trigger">
+        <di:waypoint x="86" y="220.0" />
+        <di:waypoint x="160" y="220.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_F_VLK_Trigger_VLK_Referral" bpmnElement="F_VLK_Trigger_VLK_Referral">
+        <di:waypoint x="196" y="220.0" />
+        <di:waypoint x="300" y="220.0" />
       </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>
@@ -1614,7 +1680,7 @@
   <bpmndi:BPMNDiagram id="Diagram_ogd" name="ogd">
     <bpmndi:BPMNPlane id="Plane_ogd" bpmnElement="Sub_OGD">
       <bpmndi:BPMNShape id="DI_OGD_Start" bpmnElement="OGD_Start">
-        <dc:Bounds x="60" y="227" width="36" height="36" />
+        <dc:Bounds x="60" y="90" width="36" height="36" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="DI_OGD_Basis" bpmnElement="OGD_Basis">
         <dc:Bounds x="150" y="195" width="220" height="100" />
@@ -1691,19 +1757,21 @@
       <bpmndi:BPMNShape id="DI_OGD_ApplicabilityWait" bpmnElement="OGD_ApplicabilityWait">
         <dc:Bounds x="360" y="750" width="230" height="100" />
       </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_OGD_VLKDecision" bpmnElement="OGD_VLKDecision">
+        <dc:Bounds x="192" y="90" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="240" y="74" width="260" height="45" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="DI_OGD_Note" bpmnElement="OGD_Note">
         <dc:Bounds x="80" y="950" width="2320" height="100" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="DI_OGD_Deadlines" bpmnElement="OGD_Deadlines">
-        <dc:Bounds x="650" y="550" width="420" height="150" />
+        <dc:Bounds x="650" y="550" width="470" height="190" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="DI_Title_ogd" bpmnElement="Title_ogd">
         <dc:Bounds x="80" y="0" width="2400" height="60" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNEdge id="DI_F_OGD_Start_OGD_Basis" bpmnElement="F_OGD_Start_OGD_Basis">
-        <di:waypoint x="96" y="245.0" />
-        <di:waypoint x="150" y="245.0" />
-      </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="DI_F_OGD_Checklist_OGD_Send" bpmnElement="F_OGD_Checklist_OGD_Send">
         <di:waypoint x="580" y="245.0" />
         <di:waypoint x="650" y="245.0" />
@@ -1844,6 +1912,14 @@
         <di:waypoint x="610" y="340" />
         <di:waypoint x="375" y="340" />
         <di:waypoint x="375" y="385" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_OGD_WaitVLK" bpmnElement="OGD_WaitVLK">
+        <di:waypoint x="96" y="108.0" />
+        <di:waypoint x="192" y="108.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_OGD_AfterVLK" bpmnElement="OGD_AfterVLK">
+        <di:waypoint x="210" y="126" />
+        <di:waypoint x="210" y="195" />
       </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>
