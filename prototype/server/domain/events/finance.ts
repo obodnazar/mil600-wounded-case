@@ -1,7 +1,7 @@
 import {monthEnd} from '../calendar.js';
 import {ReviewRequired, newId, optionalText, text, type EventContext} from '../model.js';
 import {financeTransitionProblem} from '../rules.js';
-import {openTask} from '../tasks.js';
+import {openOrReopenTask, openTask} from '../tasks.js';
 
 /**
  * Фінансовий стан одного виду виплати за один період.
@@ -39,7 +39,7 @@ export function applyFinanceStatus({store, event, payload, caseId, caseEventId}:
   // з’являється рядок «стан невідомий» без рішення.
   if (status === 'unknown') {
     if (!prior) insertUnknownTrack({store, event, caseId, kind, periodStart, packetRef, reason: text(payload, 'reason_code')});
-    openTask(store, caseId, 'clarify_finance', 'support', `demo-finance-unknown:${kind}:${period}`, caseEventId);
+    openOrReopenTask(store, caseId, 'clarify_finance', 'support', `demo-finance-unknown:${kind}:${period}`, caseEventId);
     return;
   }
 

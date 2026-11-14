@@ -176,7 +176,7 @@ export function patientCaseView(store: Store, caseId: string): PatientCaseView {
 /** Віхи маршруту з підтверджених записів БД, а не з обмеженого журналу подій. */
 function milestones(store: Store, caseId: string): CaseMilestones {
   const referralIssued = store.exists(
-    "SELECT id FROM document_ref WHERE case_id=? AND kind='referral' AND active=1",
+    "SELECT id FROM document_ref WHERE case_id=? AND kind='referral' AND active=1 AND state IN ('issued','corrected')",
     caseId,
   );
   const packet = store.row("SELECT state FROM route_packet WHERE case_id=? AND route='vlk'", caseId);

@@ -24,12 +24,31 @@ export const SUPPORT_ONLY_REVIEWS: ReadonlySet<string> = new Set([
 ]);
 
 export const SUPPORT_ONLY_TASKS: ReadonlySet<string> = new Set(['clarify_finance', 'clarify_care_start']);
+
+/**
+ * Розбір стосується виплат чи лікування — за кодом причини або за типом події, якої він
+ * стосується (загальні причини на кшталт `event_conflict` бувають і у фінансових подій).
+ */
+export function isSupportOnlyReview(store: Store, reviewId: string): boolean {
+  const review = store.row(
+    `SELECT r.reason_code,i.event_type FROM review_item r
+       LEFT JOIN inbox_event i ON i.id=r.inbox_event_id
+      WHERE r.id=?`,
+    reviewId,
+  );
+  if (!review) return false;
+  const eventType = review.event_type ? String(review.event_type) : '';
+  return SUPPORT_ONLY_REVIEWS.has(String(review.reason_code)) || eventType.startsWith('finance.') || eventType.startsWith('care.');
+}
 export const RESERVE_CASE = 'demo-reserve-case';
 
 const COMMANDER_ONLY: readonly CommandAction[] = ['issue_certificate', 'refer_vlk'];
 
 function hasActiveReferral(store: Store, caseId: string): boolean {
-  return store.exists("SELECT id FROM document_ref WHERE case_id=? AND kind='referral' AND active=1", caseId);
+  return store.exists(
+    "SELECT id FROM document_ref WHERE case_id=? AND kind='referral' AND active=1 AND state IN ('issued','corrected')",
+    caseId,
+  );
 }
 
 export function hasPendingCopy(store: Store, caseId: string): boolean {

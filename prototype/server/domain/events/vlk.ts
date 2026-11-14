@@ -16,9 +16,9 @@ const CLARIFY_TRIGGER = 'demo-vlk-decision-clarify:';
  * воно не приймається: один запит — одне підтвердження; підтвердження, що надійшло
  * раніше за запит, цього запиту не підтверджує.
  */
-export function applyReferralIssued({store, event, payload, caseId, caseEventId}: EventContext): void {
+export function applyReferralIssued({store, event, payload, caseId, caseEventId, inboxId}: EventContext): void {
   if (payload.issuer_ref !== 'demo-commander') throw new ReviewRequired('referral_needs_command');
-  assertConfirmsPendingRequest(store, event, caseId, 'refer_vlk', 'referral_needs_command');
+  assertConfirmsPendingRequest(store, inboxId, caseId, 'refer_vlk', 'referral_needs_command');
   resolveAwaitedCommand(store, caseId, 'command.refer_vlk');
   recordSourceDocument(store, {
     caseId,
@@ -28,7 +28,12 @@ export function applyReferralIssued({store, event, payload, caseId, caseEventId}
     kind: 'referral',
     state: 'issued',
   });
-  store.run("UPDATE wound_case SET lifecycle_state='vlk' WHERE id=?", caseId);
+  // Направлення не відкочує стадію, якщо кейс уже далі (постанова, дія за постановою).
+  store.run(
+    `UPDATE wound_case SET lifecycle_state='vlk'
+      WHERE id=? AND lifecycle_state IN ('administrative_open','source_linked','care','documents')`,
+    caseId,
+  );
   openTask(store, caseId, 'await_vlk_receipt', 'support', `demo-vlk-receipt:${caseId}`, caseEventId);
 }
 
@@ -97,14 +102,13 @@ export function applyVlkDecision({store, event, payload, caseId, caseEventId}: E
     caseId,
   );
   if (!accepted) throw new ReviewRequired('decision_without_packet_receipt');
-  const newest = store.row(
-    `SELECT MAX(occurred_at) AS at FROM case_event
-      WHERE case_id=? AND event_type='vlk.decision_recorded' AND id!=?`,
+  // Порівнюємо моменти часу, а не рядки: джерела можуть передавати різні часові зсуви.
+  const earlier = store.rows(
+    "SELECT occurred_at FROM case_event WHERE case_id=? AND event_type='vlk.decision_recorded' AND id!=?",
     caseId, caseEventId,
   );
-  if (newest?.at && Date.parse(event.occurred_at) < Date.parse(String(newest.at))) {
-    throw new ReviewRequired('decision_older_than_current');
-  }
+  const newest = Math.max(...earlier.map(row => Date.parse(String(row.occurred_at))).filter(Number.isFinite));
+  if (Date.parse(event.occurred_at) < newest) throw new ReviewRequired('decision_older_than_current');
   recordSourceDocument(store, {
     caseId,
     source: event.source_system,

@@ -80,7 +80,7 @@ export function applyEvent(
 
   const handler = HANDLERS[event.event_type];
   if (!handler) throw new ReviewRequired('unsupported_type');
-  handler({store, event, payload: event.payload, caseRow, caseId, caseEventId, now});
+  handler({store, event, payload: event.payload, caseRow, caseId, caseEventId, inboxId, now});
 
   closeRecoveredGap(store, event, caseId);
   advanceCursor(store, event);

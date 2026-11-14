@@ -82,9 +82,20 @@ function reviewReason(error: unknown): string {
   // Порушення обмеження БД чи некоректне значення в даних джерела (наприклад, неможлива дата) —
   // проблема даних, а не коду: подія лишається на розборі. Помилки програми (TypeError тощо)
   // не маскуються: транзакція відкочується, і назовні йде 503.
-  const sqlite = typeof error === 'object' && error !== null && (error as {code?: unknown}).code === 'ERR_SQLITE_ERROR';
-  if (sqlite || error instanceof Denied) return 'unprocessable_event';
+  if (isConstraintViolation(error) || error instanceof Denied || error instanceof RangeError) return 'unprocessable_event';
   throw error;
+}
+
+/**
+ * Порушення обмеження БД (SQLITE_CONSTRAINT, SQLITE_MISMATCH) — проблема даних джерела.
+ * Інші помилки SQLite (наприклад, «no such column») — помилки програми, їх не маскуємо.
+ */
+function isConstraintViolation(error: unknown): boolean {
+  if (typeof error !== 'object' || error === null) return false;
+  const {code, errcode} = error as {code?: unknown; errcode?: unknown};
+  if (code !== 'ERR_SQLITE_ERROR' || typeof errcode !== 'number') return false;
+  const primary = errcode & 0xff;
+  return primary === 19 || primary === 20;
 }
 
 function accepted(store: Store, event: EventEnvelope, inboxId: string, now: number): IngestOutcome {

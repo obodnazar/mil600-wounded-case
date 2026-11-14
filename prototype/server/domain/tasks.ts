@@ -36,6 +36,21 @@ export function openTask(
   );
 }
 
+/**
+ * Відкриває задачу знову, якщо така сама вже була закрита: для сигналів, що можуть
+ * повторюватися (новий невідомий стан після рішення), задача має бути видимою щоразу.
+ */
+export function openOrReopenTask(
+  store: Store, caseId: string, kind: TaskKind, owner: OwnerRole, trigger: string, openedByEvent: string,
+): void {
+  store.run(
+    `UPDATE task SET status='open',resolution_code=NULL,opened_by_event=?
+      WHERE case_id=? AND trigger_ref=? AND kind=? AND owner_role=? AND status='resolved'`,
+    openedByEvent, caseId, trigger, kind, owner,
+  );
+  openTask(store, caseId, kind, owner, trigger, openedByEvent);
+}
+
 /** Закриває відкриті задачі цього виду в кейсі з кодом результату. */
 export function resolveTasks(store: Store, caseId: string, kind: TaskKind, resolution: string): void {
   store.run(

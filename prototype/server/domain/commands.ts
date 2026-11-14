@@ -8,7 +8,7 @@ import {attachEvidence} from './documents.js';
 import {applyEvent} from './events/apply.js';
 import {refreshFreshness} from './freshness.js';
 import {ReviewRequired, SOURCE_SYSTEMS, newId} from './model.js';
-import {RESERVE_BASE_CASE, RESERVE_CASE, SUPPORT_ONLY_REVIEWS, commandBlocker, isManualTask} from './preconditions.js';
+import {RESERVE_BASE_CASE, RESERVE_CASE, commandBlocker, isManualTask, isSupportOnlyReview} from './preconditions.js';
 import {openTask, ownerScope} from './tasks.js';
 
 /**
@@ -271,7 +271,7 @@ const closeReview: Effect = ({store, input, caseId, caseEventId, role}) => {
   if (!review || (!ownCase && !ownScope) || review.reason_code === 'missing_incident') {
     throw new Denied(409, 'review_not_closable');
   }
-  if (role === 'commander' && SUPPORT_ONLY_REVIEWS.has(String(review.reason_code))) {
+  if (role === 'commander' && isSupportOnlyReview(store, String(review.id))) {
     throw new Denied(403, 'command_forbidden');
   }
   store.run(

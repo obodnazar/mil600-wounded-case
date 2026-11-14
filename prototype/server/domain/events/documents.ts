@@ -5,7 +5,6 @@ import {recordSourceDocument} from '../documents.js';
 import {RECIPIENT, ReviewRequired, newId, text, type EventContext} from '../model.js';
 import {asEnemyAction, mergeEnemyAction} from '../rules.js';
 import {hasIssuedCertificate} from '../documents.js';
-import type {EventEnvelope} from '../../../security/core.js';
 import type {Store} from '../../db/store.js';
 import {openTask, pendingRequestAt, resolveAwaitedCommand, resolveOpenTasksByTrigger, resolveTasks} from '../tasks.js';
 
@@ -60,22 +59,29 @@ export function applyDocumentPrepared(context: EventContext): void {
   openTask(store, caseId, 'issue_certificate', 'commander', issueTrigger, caseEventId);
 }
 
-/** Коли подія вперше надійшла до шлюзу (ISO). Повторна доставка зберігає перше надходження. */
-function firstArrival(store: Store, event: EventEnvelope): string | null {
-  const inbox = store.row('SELECT received_at FROM inbox_event WHERE source_system=? AND event_id=?', event.source_system, event.event_id);
+/**
+ * Коли подія вперше надійшла до шлюзу (ISO). Береться з рядка inbox, під яким подію прийнято:
+ * повторна доставка — навіть із новим event_id, але тим самим змістом — зберігає перше надходження.
+ */
+function firstArrival(store: Store, inboxId: string): string | null {
+  const inbox = store.row('SELECT received_at FROM inbox_event WHERE id=?', inboxId);
   return inbox ? String(inbox.received_at) : null;
 }
+
+/** Тригер очікування квитанції для конкретного запису й версії довідки. */
+const receiptTrigger = (caseId: string, recordRef: string, version: string): string =>
+  `demo-cert-receipt:${caseId}:${recordRef}:${version}`;
 
 /**
  * Підтвердження джерела стосується лише запиту, поданого до того, як підтвердження надійшло:
  * подія, що чекала на розборі ще до запиту командира, не може бути підтвердженням цього запиту.
  */
 export function assertConfirmsPendingRequest(
-  store: Store, event: EventEnvelope, caseId: string, action: 'issue_certificate' | 'refer_vlk', reason: string,
+  store: Store, inboxId: string, caseId: string, action: 'issue_certificate' | 'refer_vlk', reason: string,
 ): void {
   const requestedAt = pendingRequestAt(store, caseId, action);
   if (!requestedAt) throw new ReviewRequired(reason);
-  const arrived = firstArrival(store, event);
+  const arrived = firstArrival(store, inboxId);
   if (arrived && Date.parse(arrived) < Date.parse(requestedAt)) throw new ReviewRequired('confirmation_before_request');
 }
 
@@ -86,7 +92,7 @@ export function assertConfirmsPendingRequest(
  * нагадування про строк і перевірку стану видачі.
  */
 export function applyDocumentIssued(context: EventContext): void {
-  const {store, event, caseId, caseEventId} = context;
+  const {store, event, caseId, caseEventId, inboxId} = context;
   const document = refOf(context);
   applyHospitalContext(context, document);
   if (document.kind !== 'trauma_certificate') throw new ReviewRequired('issue_kind_mismatch');
@@ -97,7 +103,7 @@ export function applyDocumentIssued(context: EventContext): void {
     caseId, document.recordRef, document.version,
   );
   if (!prepared) throw new ReviewRequired('issue_needs_preparation_and_command');
-  assertConfirmsPendingRequest(store, event, caseId, 'issue_certificate', 'issue_needs_preparation_and_command');
+  assertConfirmsPendingRequest(store, inboxId, caseId, 'issue_certificate', 'issue_needs_preparation_and_command');
   recordSourceDocument(store, {caseId, source: event.source_system, ...document, state: 'issued'});
   resolveAwaitedCommand(store, caseId, 'command.issue_certificate');
   // Складена чернетка медслужби поступається місцем виданій версії.
@@ -108,8 +114,7 @@ export function applyDocumentIssued(context: EventContext): void {
   );
   resolveTasks(store, caseId, 'issue_certificate', 'source_issued');
   resolveTasks(store, caseId, 'certificate_status_check', 'certificate_issue_confirmed');
-  const receiptTrigger = `demo-cert-receipt:${caseId}:${document.version}`;
-  openTask(store, caseId, 'await_recipient_receipt', 'support', receiptTrigger, caseEventId);
+  openTask(store, caseId, 'await_recipient_receipt', 'support', receiptTrigger(caseId, document.recordRef, document.version), caseEventId);
   syncCertificateReview(store, caseId);
 }
 
@@ -145,6 +150,13 @@ export function applyDocumentCorrected(context: EventContext): void {
     state,
     supersedesId: String(previous.id),
   });
+  // Квитанцію тепер очікуємо саме на нову видану версію довідки, а не на замінену.
+  if (document.kind === 'trauma_certificate') {
+    const previousTrigger = receiptTrigger(caseId, document.recordRef, previousVersion);
+    resolveOpenTasksByTrigger(store, caseId, 'await_recipient_receipt', previousTrigger, 'version_superseded');
+    const trigger = receiptTrigger(caseId, document.recordRef, document.version);
+    openTask(store, caseId, 'await_recipient_receipt', 'support', trigger, context.caseEventId);
+  }
 }
 
 /**
@@ -164,7 +176,9 @@ export function applyDocumentWithdrawn(context: EventContext): void {
   store.run("UPDATE document_ref SET active=0,state='withdrawn' WHERE id=?", target.id);
   const targetId = String(target.id);
   openTask(store, caseId, 'clarify_author', 'support', `demo-withdrawn:${targetId}`, caseEventId);
-  if (document.kind === 'trauma_certificate') restartCertificateRoute(store, caseId, document.version, targetId, caseEventId);
+  if (document.kind === 'trauma_certificate') {
+    restartCertificateRoute(store, caseId, receiptTrigger(caseId, document.recordRef, document.version), targetId, caseEventId);
+  }
   syncCertificateReview(store, caseId);
 }
 
@@ -172,8 +186,8 @@ export function applyDocumentWithdrawn(context: EventContext): void {
  * Після відкликання чинної довідки маршрут починається знову: квитанція відкликаної
  * версії більше не очікується, а медслужба має скласти нову версію.
  */
-function restartCertificateRoute(store: Store, caseId: string, version: string, withdrawnId: string, caseEventId: string): void {
-  resolveOpenTasksByTrigger(store, caseId, 'await_recipient_receipt', `demo-cert-receipt:${caseId}:${version}`, 'version_withdrawn');
+function restartCertificateRoute(store: Store, caseId: string, receipt: string, withdrawnId: string, caseEventId: string): void {
+  resolveOpenTasksByTrigger(store, caseId, 'await_recipient_receipt', receipt, 'version_withdrawn');
   if (hasIssuedCertificate(store, caseId)) return;
   const trigger = `demo-cert-prepare:${caseId}:after-withdrawal:${withdrawnId}`;
   openTask(store, caseId, 'prepare_certificate', 'medical_service', trigger, caseEventId);
@@ -259,7 +273,7 @@ export function applyDocumentReceived(context: EventContext): void {
   );
   // Квитанцію на довідку закриває лише отримання саме чинної версії довідки, а не будь-якого документа.
   if (recipientKind === 'vlk' && document.kind === 'trauma_certificate') {
-    const trigger = `demo-cert-receipt:${caseId}:${String(document.document_version)}`;
+    const trigger = receiptTrigger(caseId, String(document.source_record_ref), String(document.document_version));
     resolveOpenTasksByTrigger(store, caseId, 'await_recipient_receipt', trigger, 'receipt_confirmed');
   }
   if (toServicemember && startsCertificateClock(context, document)) {

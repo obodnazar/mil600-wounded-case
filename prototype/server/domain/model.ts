@@ -55,6 +55,8 @@ export interface EventContext {
   caseId: string;
   /** Запис цієї події в журналі кейсу. */
   caseEventId: string;
+  /** Запис inbox, під яким подію прийнято (той самий і для повторної доставки). */
+  inboxId: string;
   now: number;
 }
 
