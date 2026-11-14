@@ -33,12 +33,12 @@ function notApplicable(reason: string): DeadlineSummary {
 }
 
 function confirmedCertificate(view: CertificateDeadlineView): DeadlineSummary {
-  const received = `Документ отримано ${formatDay(view.anchorDate) ?? 'у підтверджену дату'}.`;
+  const received = `Надходження на лікування — ${formatDay(view.anchorDate) ?? 'у підтверджену дату'}.`;
   if (!view.dueDate) {
     return {
       tone: 'unknown',
       status: 'Строку немає',
-      headline: 'Дата отримання підтверджена',
+      headline: 'Дата надходження підтверджена',
       details: [received, APPLICABILITY_PENDING],
       date: null,
       dateLabel: null,
@@ -48,7 +48,7 @@ function confirmedCertificate(view: CertificateDeadlineView): DeadlineSummary {
   return {
     tone: overdue ? 'attention' : 'confirmed',
     status: overdue ? 'Строк сплив — стан перевіряють' : 'Строк визначено',
-    headline: 'Дата отримання підтверджена',
+    headline: 'Дата надходження підтверджена',
     details: [
       `${received} Строк довідки — до ${dated(view.dueDate)}.`,
       ...(overdue ? ['Строк сплив: супровід отримав нагадування перевірити стан видачі.'] : []),
@@ -69,9 +69,9 @@ export function summarizeCertificateDeadline(view: CertificateDeadlineView): Dea
     return {
       tone: 'pending',
       status: 'Орієнтир, ще не строк',
-      headline: 'Дату отримання підтвердити',
+      headline: 'Дату надходження на лікування підтвердити',
       details: [
-        `Орієнтир за датою внесення еПМК: ${orientir}. Дату отримання треба підтвердити; це ще не строк.`,
+        `Орієнтир за датою внесення еПМК: ${orientir}. Дату надходження на лікування треба підтвердити; це ще не строк.`,
         ...pending,
       ],
       date: formatDay(view.followUpDate),
@@ -81,8 +81,8 @@ export function summarizeCertificateDeadline(view: CertificateDeadlineView): Dea
   return {
     tone: 'unknown',
     status: 'Строку немає',
-    headline: 'Дату отримання ще не встановлено',
-    details: ['Без підтвердженої дати отримання строку немає. Супровід має задачу її уточнити.', ...pending],
+    headline: 'Дату надходження ще не встановлено',
+    details: ['Без підтвердженої дати надходження на лікування строку немає. Супровід має задачу її уточнити.', ...pending],
     date: null,
     dateLabel: null,
   };

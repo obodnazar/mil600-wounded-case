@@ -21,32 +21,32 @@ test('календар: кінець місяця, високосний рік, 
   assert.throws(() => calendarMonths('26-02-01', 1));
 });
 
-test('правило довідки: строк лише за підтвердженого отримання й застосовності; інакше орієнтир або нічого', () => {
-  const base = {patientReceivedAt: '2026-11-10T12:00:00Z', sourceRecordedAt: '2026-11-09T10:00:00Z'};
+test('правило довідки (ADR 0012): строк від підтвердженого надходження й застосовності; інакше орієнтир або нічого', () => {
+  const base = {admittedOn: '2026-11-10', sourceRecordedAt: '2026-11-09T10:00:00Z'};
+  // Перший день строку — наступний після надходження: 11–15 листопада, строк спливає 15-го.
   assert.deepEqual(certificateClock({enemyAction: 'yes', ...base}), {
     applicability: 'applicable',
     anchorStatus: 'confirmed',
     anchorDate: '2026-11-10',
     dueDate: '2026-11-15',
     followUpDate: null,
-    needsReceiptConfirmation: false,
+    needsAdmissionConfirmation: false,
   });
-  const estimated = certificateClock({enemyAction: 'yes', patientReceivedAt: null, sourceRecordedAt: base.sourceRecordedAt});
+  const estimated = certificateClock({enemyAction: 'yes', admittedOn: null, sourceRecordedAt: base.sourceRecordedAt});
   assert.deepEqual([estimated.anchorStatus, estimated.dueDate, estimated.followUpDate], ['estimated', null, '2026-11-14']);
-  assert.equal(estimated.needsReceiptConfirmation, true);
-  // Невідома застосовність: ні строку, ні орієнтира — навіть за підтвердженого отримання.
+  assert.equal(estimated.needsAdmissionConfirmation, true);
+  // Невідома застосовність: ні строку, ні орієнтира — навіть за підтвердженого надходження.
   const unknown = certificateClock({enemyAction: 'unknown', ...base});
   assert.deepEqual([unknown.anchorStatus, unknown.dueDate, unknown.followUpDate], ['unknown', null, null]);
-  assert.equal(unknown.needsReceiptConfirmation, true);
+  assert.equal(unknown.needsAdmissionConfirmation, true);
   // Правило не застосовується: нічого не рахуємо й нічого не просимо уточнити.
   const notApplicable = certificateClock({enemyAction: 'no', ...base});
-  assert.deepEqual([notApplicable.applicability, notApplicable.dueDate, notApplicable.needsReceiptConfirmation], ['not_applicable', null, false]);
+  assert.deepEqual([notApplicable.applicability, notApplicable.dueDate, notApplicable.needsAdmissionConfirmation], ['not_applicable', null, false]);
   // Немає жодної дати — немає вигаданого відліку.
-  const nothing = certificateClock({enemyAction: 'yes', patientReceivedAt: null, sourceRecordedAt: null});
+  const nothing = certificateClock({enemyAction: 'yes', admittedOn: null, sourceRecordedAt: null});
   assert.deepEqual([nothing.anchorStatus, nothing.dueDate, nothing.followUpDate], ['unknown', null, null]);
-  // Отримання о 23:30 за Києвом рахується київською датою.
-  assert.equal(certificateClock({enemyAction: 'yes', patientReceivedAt: '2026-11-10T21:30:00Z', sourceRecordedAt: null}).anchorDate, '2026-11-10');
-  assert.equal(certificateClock({enemyAction: 'yes', patientReceivedAt: '2026-11-10T22:30:00Z', sourceRecordedAt: null}).anchorDate, '2026-11-11');
+  // Перехід через кінець року.
+  assert.equal(certificateClock({enemyAction: 'yes', admittedOn: '2026-12-29', sourceRecordedAt: null}).dueDate, '2027-01-03');
 });
 
 test('правило застосовності: підтверджене не знижується; пряма суперечність — розбір', () => {

@@ -188,6 +188,8 @@ const SOURCE_TYPES: Readonly<Record<string, readonly string[]>> = {
   'demo-mis': [
     'source.sync_gap', 'medical.primary_recorded', 'care.admitted', 'care.transferred', 'care.discharged',
     'care.start_confirmed', 'document.prepared', 'document.corrected', 'document.withdrawn',
+    // Заклад лікування сам направляє на ВЛК під час лікування (ADR 0013).
+    'referral.issued',
   ],
   'demo-sedo': [
     'document.sent', 'document.prepared', 'document.issued', 'document.corrected', 'document.withdrawn',

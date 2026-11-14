@@ -137,6 +137,7 @@ function seedCase(insert: Insert, index: number): void {
     injury_date_assurance: dateUnknown ? 'unknown' : 'confirmed',
     lifecycle_state: stage,
     revision: 1,
+    admitted_on: admittedOn(index, dateUnknown),
   });
   // Лише перший учасник має демо-вхід; супровід інших працює незалежно від входу бійця.
   if (index === 1) {
@@ -159,10 +160,10 @@ function seedCase(insert: Insert, index: number): void {
     source_system: 'demo-mis',
     source_episode_ref: `demo-episode-ref-${n}`,
     provider_ref: `demo-provider-${1 + ((index - 1) % 9)}`,
-    start_date: dateUnknown ? null : '2026-10-21',
+    start_date: admittedOn(index, dateUnknown),
     end_date: stage === 'completed' ? '2026-11-10' : null,
     evidence_ref: `demo-care-proof-${n}`,
-    assurance: dateUnknown ? 'unknown' : 'confirmed',
+    assurance: admittedOn(index, dateUnknown) ? 'confirmed' : 'unknown',
   });
   seedCertificateClock(insert, {index, n, caseId, unit});
   seedVlkChecklist(insert, {index, n, caseId});
@@ -182,7 +183,16 @@ function seedCase(insert: Insert, index: number): void {
 
 interface CaseSeed {index: number; n: string; caseId: string}
 
-/** Три варіанти початку відліку: орієнтир за внесенням еПМК, підтверджене отримання, невідомо. */
+/**
+ * Дата надходження на лікування (ADR 0012): у кейсах з орієнтиром вона ще не підтверджена,
+ * у кейсах з підтвердженим строком — 1 листопада (строк спливає 6-го).
+ */
+function admittedOn(index: number, dateUnknown: boolean): string | null {
+  if (dateUnknown || index % 3 === 1) return null;
+  return index % 3 === 2 ? '2026-11-01' : '2026-10-21';
+}
+
+/** Три варіанти початку відліку: орієнтир за внесенням еПМК, підтверджене надходження, невідома застосовність. */
 function seedCertificateClock(insert: Insert, {index, n, caseId, unit}: CaseSeed & {unit: string}): void {
   const estimated = index % 3 === 1;
   const confirmed = index % 3 === 2;
@@ -201,20 +211,20 @@ function seedCertificateClock(insert: Insert, {index, n, caseId, unit}: CaseSeed
   });
   if (confirmed) {
     insert('case_event', {
-      id: `demo-receipt-anchor-${n}`,
+      id: `demo-admission-anchor-${n}`,
       case_id: caseId,
       inbox_event_id: null,
       command_id: null,
-      event_type: 'document.received',
+      event_type: 'care.admitted',
       occurred_at: '2026-11-01T09:00:00.000Z',
       recorded_at: '2026-11-01T09:05:00.000Z',
-      source_ref: 'demo-service',
+      source_ref: 'demo-mis',
       source_version: 'seed-v1',
-      assurance: 'synthetic_patient_receipt_fixture',
+      assurance: 'synthetic_admission_fixture',
       supersedes_id: null,
     });
   }
-  const anchorEvent = confirmed ? `demo-receipt-anchor-${n}` : estimated ? `demo-seed-event-${n}` : null;
+  const anchorEvent = confirmed ? `demo-admission-anchor-${n}` : estimated ? `demo-seed-event-${n}` : null;
   insert('deadline', {
     id: `demo-deadline-${n}`,
     case_id: caseId,
@@ -231,7 +241,7 @@ function seedCertificateClock(insert: Insert, {index, n, caseId, unit}: CaseSeed
   insert('task', {
     id: `demo-task-${n}`,
     case_id: caseId,
-    kind: confirmed ? 'certificate_status_check' : 'confirm_receipt_date',
+    kind: confirmed ? 'certificate_status_check' : 'confirm_admission_date',
     owner_role: 'support',
     owner_scope: unit,
     status: 'open',

@@ -14,7 +14,7 @@ const fact = (id: string, label: string, value: string, tone: Tone): Fact => ({i
 
 function receiptFact(view: PatientCaseView): Fact {
   const {anchorStatus, anchorDate} = view.certificateDeadline;
-  const label = 'Дата отримання документа';
+  const label = 'Надходження на лікування';
   if (anchorStatus === 'confirmed') {
     return fact('receipt', label, `${formatDay(anchorDate) ?? 'дата є'} — підтверджено`, 'confirmed');
   }

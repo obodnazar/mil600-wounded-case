@@ -10,7 +10,7 @@ test('БД: міграції та seed повторювані; 30 кейсів, 
   withHarness(async h => {
     const again = new Store(h.path, h.auditKey);
     assert.equal(again.count('SELECT COUNT(*) AS n FROM wound_case'), 30);
-    assert.equal(again.count('SELECT COUNT(*) AS n FROM schema_migration'), 3);
+    assert.equal(again.count('SELECT COUNT(*) AS n FROM schema_migration'), 4);
     again.close();
 
     assert.equal(h.count('SELECT COUNT(*) AS n FROM demo_unit'), 3);

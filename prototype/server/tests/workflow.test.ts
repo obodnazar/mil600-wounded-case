@@ -168,14 +168,18 @@ test('AC01/10: невизначений випадок не зливається
     assert.equal(h.count("SELECT COUNT(*) AS n FROM inbox_event WHERE processing_state='applied'"), 1);
   }));
 
-test('AC04: п’ять днів лише після підтвердженого отримання й лише для дій противника', () =>
+test('AC04 (ADR 0012): п’ять днів від наступного дня після надходження на лікування й лише для дій противника', () =>
   withHarness(async h => {
     await h.accepted('primary');
     let deadline = patient(h).certificateDeadline;
     assert.deepEqual([deadline.anchorStatus, deadline.dueDate, deadline.followUpDate], ['estimated', null, '2026-11-14']);
-    await h.accepted('patient-receipt');
+    await h.accepted('admit');
     deadline = patient(h).certificateDeadline;
-    assert.deepEqual([deadline.anchorStatus, deadline.anchorDate, deadline.dueDate, deadline.followUpDate], ['confirmed', '2026-11-10', '2026-11-15', null]);
+    assert.deepEqual([deadline.anchorStatus, deadline.anchorDate, deadline.dueDate, deadline.followUpDate], ['confirmed', '2026-10-21', '2026-10-26', null]);
+    assert.equal(h.count("SELECT COUNT(*) AS n FROM task WHERE case_id=? AND kind='confirm_admission_date' AND status='open'", CASE), 0);
+    // Квитанція бійця про отримання еПМК строк не змінює.
+    await h.accepted('patient-receipt');
+    assert.equal(patient(h).certificateDeadline.dueDate, '2026-10-26');
 
     for (const [number, enemyAction] of [[2, 'no'], [3, 'unknown']] as const) {
       const event = variant('primary', `demo-enemy-${number}`, item => {
@@ -192,7 +196,7 @@ test('AC04: п’ять днів лише після підтвердженог�
     await h.pending(variant('patient-receipt', 'demo-wrong-person', item => {
       item.payload.recipient_ref = 'demo-person-02';
     }));
-    assert.equal(h.store.row("SELECT patient_received_at FROM wound_case WHERE id='demo-case-02'")?.patient_received_at, null);
+    assert.equal(h.reviewReasons().at(-1), 'receipt_wrong_person');
   }));
 
 test('AC04: без дати немає строку; переведення не скидає початок; суперечлива дата йде на розбір', () =>
@@ -214,21 +218,28 @@ test('AC04: без дати немає строку; переведення не
     assert.equal(patient(h).care.deadline.dueDate, '2027-02-21');
   }));
 
-test('AC04: без еПМК відлік може початися від отримання довідки про перебування в закладі', () =>
+test('AC04 (ADR 0012): без еПМК строк і далі рахується від надходження; довідка про перебування його не зрушує', () =>
   withHarness(async h => {
     await h.login('support');
     assert.equal((await h.command('admin_open', 'demo-case-02', 'primary_unavailable')).status, 200);
     await h.accepted('reserve-hospital');
-    assert.equal(caseSummary(h.store, RESERVE, {staff: true}).certificateDeadline.dueDate, null);
     await h.accepted('reserve-hospital-receipt');
-    assert.equal(caseSummary(h.store, RESERVE, {staff: true}).certificateDeadline.dueDate, '2026-11-18');
+    // Довідка про перебування й квитанція бійця строку не запускають.
+    assert.equal(caseSummary(h.store, RESERVE, {staff: true}).certificateDeadline.dueDate, null);
+    await h.accepted(variant('admit', 'demo-reserve-admit', event => {
+      event.subject_ref = 'demo-person-02';
+      event.incident_ref = 'demo-reserve-02';
+      event.episode_ref = 'demo-reserve-episode';
+      event.payload.date = '2026-11-12';
+    }));
+    assert.equal(caseSummary(h.store, RESERVE, {staff: true}).certificateDeadline.dueDate, '2026-11-17');
     // Довідка про перебування не робить медичний документ підтвердженим.
     assert.equal(h.store.row('SELECT source_linked FROM wound_case WHERE id=?', RESERVE)?.source_linked, 0);
   }));
 
 test('AC04: календарний worker створює лише задачу людині, без дублів і без зміни виплат чи стадії', () =>
   withHarness(async h => {
-    await acceptAll(h, ['primary', 'patient-receipt', 'care-start']);
+    await acceptAll(h, ['primary', 'admit', 'care-start']);
     const finances = h.store.rows('SELECT payment_kind,current_status FROM financial_track WHERE case_id=?', CASE);
     const stage = h.store.row('SELECT lifecycle_state FROM wound_case WHERE id=?', CASE)?.lifecycle_state;
     const later = Date.parse('2027-03-01T12:00:00Z');

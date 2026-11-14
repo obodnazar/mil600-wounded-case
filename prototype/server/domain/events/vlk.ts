@@ -10,15 +10,45 @@ import {assertConfirmsPendingRequest} from './documents.js';
  */
 
 const CLARIFY_TRIGGER = 'demo-vlk-decision-clarify:';
+const FACILITY_ISSUER = 'demo-facility';
+
+/** Направляє лише заклад поточного епізоду лікування; уже чинне направлення не дублюється. */
+function assertFacilityReferral({store, event, payload, caseRow, caseId}: EventContext): void {
+  if (event.source_system !== 'demo-mis') throw new ReviewRequired('referral_needs_command');
+  const episode = caseRow.current_episode
+    ? store.row(
+      'SELECT provider_ref FROM treatment_episode WHERE case_id=? AND source_episode_ref=? AND end_date IS NULL',
+      caseId, caseRow.current_episode,
+    )
+    : undefined;
+  if (!episode || episode.provider_ref !== text(payload, 'provider_ref')) {
+    throw new ReviewRequired('facility_referral_without_current_care');
+  }
+  const active = store.exists(
+    "SELECT id FROM document_ref WHERE case_id=? AND kind='referral' AND active=1 AND state IN ('issued','corrected')",
+    caseId,
+  );
+  if (active) throw new ReviewRequired('referral_already_active');
+}
 
 /**
- * Джерело підтвердило направлення. Без ще не підтвердженого запиту належного командира
- * воно не приймається: один запит — одне підтвердження; підтвердження, що надійшло
- * раніше за запит, цього запиту не підтверджує.
+ * Джерело підтвердило направлення. Два шляхи (ADR 0013):
+ * - командирський — через документообіг і лише як підтвердження ще не підтвердженого запиту
+ *   командира: один запит — одне підтвердження; підтвердження, що надійшло раніше за запит,
+ *   цього запиту не підтверджує;
+ * - заклад лікування — медична система закладу, де військовослужбовець лікується зараз,
+ *   без запиту командира. Друге чинне направлення не створюється.
  */
-export function applyReferralIssued({store, event, payload, caseId, caseEventId, inboxId}: EventContext): void {
-  if (payload.issuer_ref !== 'demo-commander') throw new ReviewRequired('referral_needs_command');
-  assertConfirmsPendingRequest(store, inboxId, caseId, 'refer_vlk', 'referral_needs_command');
+export function applyReferralIssued(context: EventContext): void {
+  const {store, event, payload, caseId, caseEventId, inboxId} = context;
+  if (payload.issuer_ref === FACILITY_ISSUER) {
+    assertFacilityReferral(context);
+  } else {
+    if (payload.issuer_ref !== 'demo-commander' || event.source_system !== 'demo-sedo') {
+      throw new ReviewRequired('referral_needs_command');
+    }
+    assertConfirmsPendingRequest(store, inboxId, caseId, 'refer_vlk', 'referral_needs_command');
+  }
   resolveAwaitedCommand(store, caseId, 'command.refer_vlk');
   recordSourceDocument(store, {
     caseId,

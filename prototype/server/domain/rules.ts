@@ -14,8 +14,8 @@ export const CARE_MONTHS = 4;
 export interface CertificateFacts {
   /** Чи підтвердило джерело, що травма пов’язана з діями противника. */
   enemyAction: 'yes' | 'no' | 'unknown';
-  /** Підтверджений момент отримання документа військовослужбовцем (ISO) або null. */
-  patientReceivedAt: string | null;
+  /** Підтверджена джерелом дата першого надходження на лікування до закладу (YYYY-MM-DD) або null. */
+  admittedOn: string | null;
   /** Момент внесення еПМК джерелом (ISO) або null. Лише орієнтир. */
   sourceRecordedAt: string | null;
 }
@@ -26,19 +26,22 @@ export interface CertificateClock {
   anchorDate: string | null;
   dueDate: string | null;
   followUpDate: string | null;
-  /** Потрібна задача людині: підтвердити дату отримання. */
-  needsReceiptConfirmation: boolean;
+  /** Потрібна задача людині: підтвердити дату надходження на лікування. */
+  needsAdmissionConfirmation: boolean;
 }
 
 /**
- * Відлік починається тільки від підтвердженого отримання документа військовослужбовцем
- * і тільки коли правило застосовне. Дата внесення еПМК дає орієнтир, але не строк.
+ * Рішення команди 2026-11-14 (ADR 0012): «отриманням» первинного медичного облікового документа
+ * вважається надходження на лікування до закладу. Перший день строку — наступний після
+ * надходження, тож строк спливає через п’ять календарних днів після дати надходження.
+ * Відлік є лише тоді, коли правило застосовне (дії противника) і дату надходження
+ * підтвердило джерело. Дата внесення еПМК дає орієнтир, але не строк.
  * Невідома дата чи застосовність не породжує вигаданого строку.
  */
 export function certificateClock(facts: CertificateFacts): CertificateClock {
   const applicability: Applicability =
     facts.enemyAction === 'yes' ? 'applicable' : facts.enemyAction === 'no' ? 'not_applicable' : 'unknown';
-  const received = facts.patientReceivedAt ? kyivDate(facts.patientReceivedAt) : null;
+  const received = facts.admittedOn;
   const recorded = facts.sourceRecordedAt ? kyivDate(facts.sourceRecordedAt) : null;
   const applies = applicability === 'applicable';
 
@@ -49,7 +52,7 @@ export function certificateClock(facts: CertificateFacts): CertificateClock {
       anchorDate: received,
       dueDate: calendarDays(received, CERTIFICATE_DAYS),
       followUpDate: null,
-      needsReceiptConfirmation: false,
+      needsAdmissionConfirmation: false,
     };
   }
   return {
@@ -58,7 +61,7 @@ export function certificateClock(facts: CertificateFacts): CertificateClock {
     anchorDate: null,
     dueDate: null,
     followUpDate: applies && recorded ? calendarDays(recorded, CERTIFICATE_DAYS) : null,
-    needsReceiptConfirmation: applicability !== 'not_applicable',
+    needsAdmissionConfirmation: applicability !== 'not_applicable',
   };
 }
 

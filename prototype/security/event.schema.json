@@ -689,6 +689,10 @@
                 "type": "string",
                 "pattern": "^demo-[a-z0-9-]{1,60}$"
               },
+              "provider_ref": {
+                "type": "string",
+                "pattern": "^demo-[a-z0-9-]{1,60}$"
+              },
               "evidence_ref": {
                 "type": "string",
                 "pattern": "^demo-[a-z0-9-]{1,60}$"

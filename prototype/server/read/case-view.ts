@@ -175,8 +175,8 @@ export function patientCaseView(store: Store, caseId: string): PatientCaseView {
 
 /** Віхи маршруту з підтверджених записів БД, а не з обмеженого журналу подій. */
 export function milestones(store: Store, caseId: string): CaseMilestones {
-  const referralIssued = store.exists(
-    "SELECT id FROM document_ref WHERE case_id=? AND kind='referral' AND active=1 AND state IN ('issued','corrected')",
+  const referralIssued = store.row(
+    "SELECT source_system FROM document_ref WHERE case_id=? AND kind='referral' AND active=1 AND state IN ('issued','corrected')",
     caseId,
   );
   const packet = store.row("SELECT state FROM route_packet WHERE case_id=? AND route='vlk'", caseId);
@@ -198,7 +198,7 @@ export function milestones(store: Store, caseId: string): CaseMilestones {
       : hasPendingRequest(store, caseId, 'issue_certificate')
         ? 'requested'
         : hasPreparedCertificate(store, caseId) ? 'prepared' : 'none',
-    referral: referralIssued ? 'issued' : hasPendingRequest(store, caseId, 'refer_vlk') ? 'requested' : 'none',
+    referral: referralIssued ? (referralIssued.source_system === 'demo-mis' ? 'issued_by_facility' : 'issued') : hasPendingRequest(store, caseId, 'refer_vlk') ? 'requested' : 'none',
     vlkPacket: packet ? (packet.state === 'returned' ? 'returned' : 'received') : 'none',
     vlkDecision: !decision ? 'none' : decision.service_code === 'clarification_needed' ? 'clarification_needed' : 'recorded',
     // За чинного запиту ВЛК на уточнення попереднє виконання вже не є виконанням чинної постанови.

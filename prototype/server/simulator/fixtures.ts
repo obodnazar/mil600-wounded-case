@@ -98,9 +98,9 @@ const medical: Fixture[] = [
     recorded_at: '2026-11-09T10:00:00Z',
     occurred_at: '2026-10-20T10:00:00Z',
   }),
-  fixture('d1', 'admit', 'D1.2 · надходження до закладу', 'care.admitted', 'demo-mis', {
+  fixture('d1', 'admit', 'D1.2 · надходження на лікування до закладу: початок відліку строку довідки', 'care.admitted', 'demo-mis', {
     provider_ref: 'demo-provider-1',
-    date: '2026-11-01',
+    date: '2026-10-21',
     evidence_ref: PROOF,
   }, {episode_ref: 'demo-d1-episode-a'}),
   fixture('d1', 'care-start', 'D1.2 · підтверджений початок лікування', 'care.start_confirmed', 'demo-mis',
@@ -135,7 +135,7 @@ const medical: Fixture[] = [
     evidence_ref: PROOF,
     source_channel: 'agreed_demo_901',
   }, {episode_ref: 'demo-d1-episode-c'}),
-  fixture('d1', 'patient-receipt', 'D1.2 · військовослужбовець отримав еПМК', 'document.received', 'demo-service',
+  fixture('d1', 'patient-receipt', 'D1.2 · військовослужбовець отримав еПМК (строк не змінює)', 'document.received', 'demo-service',
     receipt('demo-primary-d1', 'v1', 'demo-person-01', 'servicemember', '2026-11-10T12:00:00Z')),
 ];
 
@@ -178,6 +178,14 @@ const vlk: Fixture[] = [
     issuer_ref: 'demo-commander',
     evidence_ref: PROOF,
   }),
+  fixture('s4', 'referral-facility', 'S4 · заклад лікування сам направив на ВЛК (без запиту командира)', 'referral.issued',
+    'demo-mis', {
+      document_ref: 'demo-referral-facility',
+      document_version: 'v1',
+      issuer_ref: 'demo-facility',
+      provider_ref: 'demo-provider-1',
+      evidence_ref: PROOF,
+    }, {episode_ref: 'demo-d1-episode-a'}),
   fixture('d1', 'vlk-received', 'D1.5 · ВЛК отримала пакет', 'vlk.package_received', 'demo-vlk', vlkPacket()),
   fixture('s4', 'vlk-returned', 'S4 · ВЛК адресувала зауваження автору', 'vlk.package_returned', 'demo-vlk', {
     ...vlkPacket(),

@@ -12,7 +12,7 @@ const ROUTES: readonly Route[] = ['vlk', 'reward', 'ogd'];
  * Первинний медичний запис (еПМК) від медичного джерела — основний тригер кейсу.
  * Підтверджує медичний факт, який адміністративний запит створити не може.
  *
- * Нова версія еПМК не зрушує вже підтверджену дату отримання, не знижує підтверджену
+ * Нова версія еПМК не зрушує вже підтверджену дату надходження, не знижує підтверджену
  * застосовність правила до «невідомо» і не пересуває орієнтир: ним лишається
  * найраніше внесення запису джерелом. Суперечність «так ↔ ні» йде на розбір.
  */
@@ -109,11 +109,28 @@ export function applyCareStartConfirmed(context: EventContext): void {
 }
 
 /** Початок лікування не може бути в майбутньому чи раніше за підтверджену дату поранення. */
-function assertPlausibleCareStart({caseRow, now}: EventContext, date: string | null): void {
+function assertPlausibleCareStart({caseRow, now}: EventContext, date: string | null, prefix = 'care_start'): void {
   if (!date) return;
-  if (date > kyivDate(isoTime(now))) throw new ReviewRequired('care_start_in_future');
+  if (date > kyivDate(isoTime(now))) throw new ReviewRequired(`${prefix}_in_future`);
   const injury = caseRow.injury_date_assurance === 'confirmed' ? caseRow.injury_date : null;
-  if (typeof injury === 'string' && date < injury) throw new ReviewRequired('care_start_before_injury');
+  if (typeof injury === 'string' && date < injury) throw new ReviewRequired(`${prefix}_before_injury`);
+}
+
+/**
+ * Перше підтверджене надходження на лікування — якір п’ятиденного строку довідки (ADR 0012).
+ * Переведення й повторне надходження його не змінюють. Надходження з ранішою датою, що
+ * прийшло після підтвердженого якоря, зрушило б строк — воно йде на розбір.
+ */
+function assertAdmissionAnchor({caseRow}: EventContext, date: string): boolean {
+  const confirmed = caseRow.admitted_on ? String(caseRow.admitted_on) : null;
+  if (confirmed && date < confirmed) throw new ReviewRequired('admission_would_move_confirmed_anchor');
+  return confirmed === null;
+}
+
+function anchorAdmission({store, caseId, caseEventId}: EventContext, date: string): void {
+  store.run('UPDATE wound_case SET admitted_on=? WHERE id=?', date, caseId);
+  refreshCertificateClock(store, caseId, caseEventId);
+  resolveTasks(store, caseId, 'confirm_admission_date', 'admission_confirmed');
 }
 
 /** Виписка закриває поточний епізод; наступний заклад не вигадується. */
@@ -142,6 +159,7 @@ export function applyCareArrival(context: EventContext): void {
     throw new ReviewRequired('transfer_predecessor_missing');
   }
   if (!transfer && current && current !== event.episode_ref) throw new ReviewRequired('admission_conflict');
+  const anchors = !transfer && date !== null && (assertPlausibleCareStart(context, date, 'admission'), assertAdmissionAnchor(context, date));
   if (current && current !== event.episode_ref) {
     store.run(
       'UPDATE treatment_episode SET end_date=? WHERE case_id=? AND source_episode_ref=? AND end_date IS NULL',
@@ -173,4 +191,5 @@ export function applyCareArrival(context: EventContext): void {
      WHERE id=?`,
     event.episode_ref, caseId,
   );
+  if (anchors && date) anchorAdmission(context, date);
 }

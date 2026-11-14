@@ -61,7 +61,7 @@ test('RCHK-02: новіше уточнення ВЛК забороняє дію 
 
 test('RCHK-03: підтверджена видача закриває нагадування; worker не створює його знову', () =>
   withHarness(async h => {
-    for (const id of ['primary', 'patient-receipt', 'certificate-prepared']) await h.accepted(id);
+    for (const id of ['primary', 'admit', 'certificate-prepared']) await h.accepted(id);
     reviewOverdueDeadlines(h.store, Date.parse('2026-11-20T12:00:00Z'));
     assert.equal(certificateReminders(h), 1);
     await h.login('commander');
@@ -72,27 +72,29 @@ test('RCHK-03: підтверджена видача закриває нагад
     assert.equal(certificateReminders(h), 0);
   }));
 
-test('RCHK-04: суперечлива квитанція не пересуває підтверджену дату отримання', () =>
+test('RCHK-04: суперечлива квитанція йде на розбір і не впливає на строк від надходження', () =>
   withHarness(async h => {
     await h.accepted('primary');
+    await h.accepted('admit');
     await h.accepted('patient-receipt');
     await h.pending(variant('patient-receipt', 'demo-changed-receipt', event => {
       event.payload.received_at = '2026-11-12T12:00:00Z';
     }));
     assert.deepEqual(h.reviewReasons(), ['receipt_date_conflict']);
-    assert.equal(due(h), '2026-11-15');
+    assert.equal(due(h), '2026-10-26');
   }));
 
-test('RCHK-04: нова версія еПМК не починає підтверджений строк заново', () =>
+test('RCHK-04: нова версія еПМК і її квитанція не починають підтверджений строк заново', () =>
   withHarness(async h => {
     await h.accepted('primary');
+    await h.accepted('admit');
     await h.accepted('patient-receipt');
     await h.accepted(nextVersion('primary', 'demo-primary-v2', 'v2', 'v1'));
     await h.accepted(variant('patient-receipt', 'demo-receipt-v2', event => {
       event.payload.document_version = 'v2';
       event.payload.received_at = '2026-11-12T12:00:00Z';
     }));
-    assert.equal(due(h), '2026-11-15');
+    assert.equal(due(h), '2026-10-26');
     assert.equal(h.store.row('SELECT calculation_revision FROM deadline WHERE case_id=? AND rule_version_id=?', CASE, 'demo-rule-certificate')?.calculation_revision, 3);
   }));
 
@@ -101,19 +103,19 @@ test('RCHK-04: нова версія еПМК не починає підтвер
 test('строк: нова версія еПМК з невідомою застосовністю не стирає підтверджений строк', () =>
   withHarness(async h => {
     await h.accepted('primary');
-    await h.accepted('patient-receipt');
-    assert.equal(due(h), '2026-11-15');
+    await h.accepted('admit');
+    assert.equal(due(h), '2026-10-26');
     const withoutApplicability = nextVersion('primary', 'demo-primary-v2-unknown', 'v2', 'v1');
     withoutApplicability.payload.enemy_action = 'unknown';
     delete withoutApplicability.payload.applicability_evidence_ref;
     await h.accepted(withoutApplicability);
-    assert.equal(due(h), '2026-11-15');
+    assert.equal(due(h), '2026-10-26');
     assert.equal(h.store.row('SELECT enemy_action FROM wound_case WHERE id=?', CASE)?.enemy_action, 'yes');
   }));
 
 test('строк: подія без фактів про застосовність і отримання не стирає вже підтверджений строк', () =>
   withHarness(async h => {
-    // Кейс 02 у seed має підтверджене отримання й строк 06.11.
+    // Кейс 02 у seed має підтверджене надходження й строк 06.11.
     assert.equal(due(h, 'demo-case-02'), '2026-11-06');
     await h.accepted(variant('primary', 'demo-primary-02-bare', event => {
       event.subject_ref = 'demo-person-02';
@@ -135,12 +137,12 @@ test('строк: подія без фактів про застосовніст
 test('строк: суперечлива застосовність «так → ні» йде на розбір, а не скасовує строк мовчки', () =>
   withHarness(async h => {
     await h.accepted('primary');
-    await h.accepted('patient-receipt');
+    await h.accepted('admit');
     const denied = nextVersion('primary', 'demo-primary-v2-no', 'v2', 'v1');
     denied.payload.enemy_action = 'no';
     await h.pending(denied);
     assert.deepEqual(h.reviewReasons(), ['applicability_change_unproven']);
-    assert.equal(due(h), '2026-11-15');
+    assert.equal(due(h), '2026-10-26');
     // Те саме для резервного документа: довідка про перебування не перекреслює еПМК.
     const hospital = variant('reserve-hospital', 'demo-hospital-contradiction', event => {
       event.subject_ref = 'demo-person-01';
@@ -148,7 +150,7 @@ test('строк: суперечлива застосовність «так →
       event.payload.enemy_action = 'no';
     });
     await h.pending(hospital);
-    assert.equal(due(h), '2026-11-15');
+    assert.equal(due(h), '2026-10-26');
     assert.equal(freshness(h), 'conflict');
   }));
 
@@ -163,22 +165,57 @@ test('строк: неможлива хронологія квитанції —
     }));
     assert.deepEqual(h.reviewReasons(), ['receipt_before_injury', 'receipt_in_future']);
     assert.equal(due(h), null);
-    assert.equal(h.store.row('SELECT patient_received_at FROM wound_case WHERE id=?', CASE)?.patient_received_at, null);
   }));
 
-test('строк: раніша квитанція іншої версії, що надійшла пізніше, не зрушує підтверджений якір мовчки', () =>
+test('строк (ADR 0012): неможлива дата надходження — на розбір; строк не з’являється', () =>
   withHarness(async h => {
     await h.accepted('primary');
-    await h.accepted(nextVersion('primary', 'demo-primary-v2', 'v2', 'v1'));
-    // Спершу надійшла квитанція v2 (12.11), потім — раніша квитанція v1 (10.11).
-    await h.accepted(variant('patient-receipt', 'demo-receipt-v2-first', event => {
-      event.payload.document_version = 'v2';
-      event.payload.received_at = '2026-11-12T12:00:00Z';
+    await h.pending(variant('admit', 'demo-admit-before-injury', event => {
+      event.payload.date = '2026-10-01';
     }));
-    assert.equal(due(h), '2026-11-17');
-    await h.pending('patient-receipt');
-    assert.deepEqual(h.reviewReasons(), ['receipt_would_move_confirmed_anchor']);
-    assert.equal(due(h), '2026-11-17');
+    await h.pending(variant('admit', 'demo-admit-future', event => {
+      event.payload.date = '2026-12-01';
+    }));
+    assert.deepEqual(h.reviewReasons(), ['admission_before_injury', 'admission_in_future']);
+    assert.equal(due(h), null);
+    assert.equal(h.store.row('SELECT admitted_on FROM wound_case WHERE id=?', CASE)?.admitted_on, null);
+  }));
+
+test('строк (ADR 0012): переведення й повторне надходження не зрушують якір; раніша дата — на розбір', () =>
+  withHarness(async h => {
+    await h.accepted('primary');
+    await h.accepted(variant('admit', 'demo-admit-first', event => {
+      event.payload.date = '2026-10-25';
+    }));
+    assert.equal(due(h), '2026-10-30');
+    await h.accepted('transfer');
+    assert.equal(due(h), '2026-10-30');
+    await h.accepted(variant('discharge', 'demo-discharge-b', event => {
+      event.episode_ref = 'demo-d1-episode-b';
+      event.source_record_ref = 'demo-record-discharge-b';
+      event.source_system = 'demo-mis';
+      event.payload.provider_ref = 'demo-provider-2';
+      delete event.payload.source_channel;
+    }));
+    await h.accepted(variant('admit', 'demo-readmit-later', event => {
+      event.episode_ref = 'demo-d1-episode-c';
+      event.payload.date = '2026-11-08';
+    }));
+    assert.equal(due(h), '2026-10-30');
+    await h.accepted(variant('discharge', 'demo-discharge-c', event => {
+      event.episode_ref = 'demo-d1-episode-c';
+      event.source_record_ref = 'demo-record-discharge-c';
+      event.payload.date = '2026-11-10';
+      event.source_system = 'demo-mis';
+      event.payload.provider_ref = 'demo-provider-1';
+      delete event.payload.source_channel;
+    }));
+    await h.pending(variant('admit', 'demo-readmit-earlier', event => {
+      event.episode_ref = 'demo-d1-episode-d';
+      event.payload.date = '2026-10-22';
+    }));
+    assert.deepEqual(h.reviewReasons(), ['admission_would_move_confirmed_anchor']);
+    assert.equal(due(h), '2026-10-30');
   }));
 
 test('строк: повторне внесення еПМК іншим потоком не пересуває орієнтир', () =>
@@ -191,13 +228,13 @@ test('строк: повторне внесення еПМК іншим пото
       event.recorded_at = '2026-11-12T10:00:00Z';
     }));
     assert.equal(followUp(), '2026-11-14');
-    assert.equal(openTasks(h, 'confirm_receipt_date'), 1);
+    assert.equal(openTasks(h, 'confirm_admission_date'), 1);
   }));
 
 test('строк: перерахунок без зміни дати не створює другого нагадування', () =>
   withHarness(async h => {
     await h.accepted('primary');
-    await h.accepted('patient-receipt');
+    await h.accepted('admit');
     reviewOverdueDeadlines(h.store, Date.parse('2026-11-20T12:00:00Z'));
     assert.equal(certificateReminders(h), 1);
     await h.accepted(nextVersion('primary', 'demo-primary-v2', 'v2', 'v1'));
@@ -207,7 +244,7 @@ test('строк: перерахунок без зміни дати не ств�
 
 test('нагадування: відкликання виданої довідки повертає нагадування; seed-перевірка закривається видачею', () =>
   withHarness(async h => {
-    for (const id of ['primary', 'patient-receipt', 'certificate-prepared']) await h.accepted(id);
+    for (const id of ['primary', 'admit', 'certificate-prepared']) await h.accepted(id);
     reviewOverdueDeadlines(h.store, Date.parse('2026-11-20T12:00:00Z'));
     await h.login('commander');
     assert.equal((await h.command('issue_certificate')).status, 200);

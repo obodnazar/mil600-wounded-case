@@ -56,7 +56,7 @@ test('чотири панелі, серверні межі й стійкий п�
 
   await openPanel(page, 'Мій кейс');
   await expect(page.getByRole('heading', {name: 'Мій кейс', exact: true})).toBeVisible();
-  await expect(page.getByText('Дату отримання підтвердити', {exact: true})).toBeVisible();
+  await expect(page.getByText('Дату надходження на лікування підтвердити', {exact: true})).toBeVisible();
   await expect(page.getByText(BANNER, {exact: true})).toBeVisible();
   // Кейс 01 на старті не має постанови ВЛК: ОГД ще не відстежується, видно лише пояснення (ADR 0011).
   const ogd = page.locator('.finance-route', {hasText: 'Одноразова грошова допомога'});

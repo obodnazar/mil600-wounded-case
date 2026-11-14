@@ -276,9 +276,8 @@ export function applyDocumentReceived(context: EventContext): void {
     const trigger = receiptTrigger(caseId, String(document.source_record_ref), String(document.document_version));
     resolveOpenTasksByTrigger(store, caseId, 'await_recipient_receipt', trigger, 'receipt_confirmed');
   }
-  if (toServicemember && startsCertificateClock(context, document)) {
-    anchorCertificateClock(context, receivedAt);
-  }
+  // Квитанція військовослужбовця лише фіксує доставку: строк довідки рахується від надходження
+  // на лікування (ADR 0012), а не від цієї квитанції.
 }
 
 const CLOCK_SKEW_MS = 5 * 60 * 1000;
@@ -292,31 +291,3 @@ function assertPlausibleReceipt({caseRow, now}: EventContext, receivedAt: string
   }
 }
 
-/**
- * Якір відліку — перше підтверджене отримання. Пізніша квитанція іншої версії його
- * не змінює. Квитанція з ранішою датою, що надійшла пізніше, зрушила б уже
- * підтверджений строк, тому вона йде на розбір, а не застосовується мовчки.
- */
-function anchorCertificateClock({store, caseRow, caseId, caseEventId}: EventContext, receivedAt: string): void {
-  const confirmed = caseRow.patient_received_at ? String(caseRow.patient_received_at) : null;
-  if (confirmed && Date.parse(receivedAt) < Date.parse(confirmed)) {
-    throw new ReviewRequired('receipt_would_move_confirmed_anchor');
-  }
-  if (confirmed) return;
-  store.run('UPDATE wound_case SET patient_received_at=? WHERE id=?', receivedAt, caseId);
-  refreshCertificateClock(store, caseId, caseEventId);
-  resolveTasks(store, caseId, 'confirm_receipt_date', 'receipt_confirmed');
-}
-
-/**
- * Якорем відліку є отримання еПМК; довідка про перебування в закладі — резерв,
- * що діє лише тоді, коли чинної еПМК у кейсі немає.
- */
-function startsCertificateClock({store, caseId}: EventContext, document: Row): boolean {
-  if (document.kind === 'primary_medical_card') return true;
-  if (document.kind !== 'hospital_stay_certificate') return false;
-  return !store.exists(
-    "SELECT id FROM document_ref WHERE case_id=? AND kind='primary_medical_card' AND active=1",
-    caseId,
-  );
-}

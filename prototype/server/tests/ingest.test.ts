@@ -273,7 +273,7 @@ test('шлюз: відмова домену не губить подію — в�
     assert.deepEqual([result.http, result.status, result.business_applied], [202, 'pending_review', false]);
     assert.deepEqual(h.reviewReasons(), ['unprocessable_event']);
     assert.equal(h.count("SELECT COUNT(*) AS n FROM inbox_event WHERE processing_state='pending_review'"), 1);
-    assert.equal(h.count("SELECT COUNT(*) AS n FROM case_event WHERE event_type='care.admitted'"), 0);
+    assert.equal(h.count("SELECT COUNT(*) AS n FROM case_event WHERE event_type='care.admitted' AND case_id='demo-case-01'"), 0);
     h.store.db.exec('DROP TRIGGER reject_episode');
     await h.accepted('admit');
     assert.deepEqual(h.reviewReasons(), []);
@@ -282,16 +282,16 @@ test('шлюз: відмова домену не губить подію — в�
 test('шлюз: нова доставка іншої події після рестарту не дублює і не губить попередні підтвердження', () =>
   withHarness(async h => {
     await h.accepted('primary');
-    await h.accepted('patient-receipt');
+    await h.accepted('admit');
     const reopened = new Store(h.path, h.auditKey);
     try {
-      assert.equal(reopened.row("SELECT due_date FROM deadline WHERE case_id='demo-case-01' AND rule_version_id='demo-rule-certificate'")?.due_date, '2026-11-15');
+      assert.equal(reopened.row("SELECT due_date FROM deadline WHERE case_id='demo-case-01' AND rule_version_id='demo-rule-certificate'")?.due_date, '2026-10-26');
       assert.equal(reopened.count('SELECT COUNT(*) AS n FROM inbox_event'), 2);
     } finally {
       reopened.close();
     }
-    const again = await h.ingest(variant('patient-receipt', 'demo-receipt-redelivered', event => {
-      event.source_stream = 'demo-stream-patient-receipt';
+    const again = await h.ingest(variant('admit', 'demo-admit-redelivered', event => {
+      event.source_stream = 'demo-stream-admit';
     }));
     assert.equal(again.status, 'duplicate');
   }, {file: true}));

@@ -54,7 +54,7 @@ export type TaskKind =
   | 'issue_certificate'
   | 'await_source_confirmation'
   | 'await_recipient_receipt'
-  | 'confirm_receipt_date'
+  | 'confirm_admission_date'
   | 'certificate_status_check'
   | 'review_deadline'
   | 'clarify_care_start'
@@ -243,7 +243,8 @@ export interface TimelineEntryView {
 export interface CaseMilestones {
   /** Довідка про обставини травми: складено медслужбою → запит командира → видачу підтвердило джерело. */
   certificate: 'none' | 'prepared' | 'requested' | 'issued';
-  referral: 'none' | 'requested' | 'issued';
+  /** `issued_by_facility` — направив заклад лікування без запиту командира (ADR 0013). */
+  referral: 'none' | 'requested' | 'issued' | 'issued_by_facility';
   vlkPacket: 'none' | 'received' | 'returned';
   /** Чинною є остання постанова: або запит на уточнення, або оформлена постанова. */
   vlkDecision: 'none' | 'clarification_needed' | 'recorded';

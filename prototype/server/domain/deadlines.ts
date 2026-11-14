@@ -77,19 +77,19 @@ function saveDeadline(store: Store, state: DeadlineState): void {
 /** Перераховує строк довідки з підтверджених фактів кейсу. */
 export function refreshCertificateClock(store: Store, caseId: string, anchorEventId: string): void {
   const facts = store.row(
-    'SELECT enemy_action,patient_received_at,source_recorded_at FROM wound_case WHERE id=?',
+    'SELECT enemy_action,admitted_on,source_recorded_at FROM wound_case WHERE id=?',
     caseId,
   );
   if (!facts) return;
   const clock = certificateClock({
     enemyAction: asEnemyAction(facts.enemy_action),
-    patientReceivedAt: facts.patient_received_at ? String(facts.patient_received_at) : null,
+    admittedOn: facts.admitted_on ? String(facts.admitted_on) : null,
     sourceRecordedAt: facts.source_recorded_at ? String(facts.source_recorded_at) : null,
   });
   saveDeadline(store, {caseId, rule: RULE.certificate, anchorEventId, ...clock});
   // Одна відкрита задача уточнення на кейс: повторна подія не множить її.
-  if (clock.needsReceiptConfirmation && !hasOpenTask(store, caseId, 'confirm_receipt_date')) {
-    openTask(store, caseId, 'confirm_receipt_date', 'support', `demo-certificate-anchor:${caseId}`, anchorEventId);
+  if (clock.needsAdmissionConfirmation && !hasOpenTask(store, caseId, 'confirm_admission_date')) {
+    openTask(store, caseId, 'confirm_admission_date', 'support', `demo-certificate-anchor:${caseId}`, anchorEventId);
   }
 }
 
