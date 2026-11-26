@@ -78,7 +78,7 @@ test('TR-02: у навчальних даних ОГД і стадії післ�
 test('TR-03: командир не бачить нагадування про строк лікування; супровід бачить', () =>
   withHarness(async h => {
     await h.accepted('care-start');
-    reviewOverdueDeadlines(h.store, Date.parse('2027-03-01T12:00:00Z'));
+    reviewOverdueDeadlines(h.store, Date.parse('2027-11-01T12:00:00Z'));
     await h.login('support');
     assert((await staffCase(h)).tasks.some(task => task.kind === 'review_deadline'));
     await h.login('commander');

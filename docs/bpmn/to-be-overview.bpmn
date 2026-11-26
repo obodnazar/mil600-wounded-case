@@ -1,0 +1,671 @@
+<?xml version='1.0' encoding='utf-8'?>
+<bpmn:definitions xmlns:bioc="http://bpmn.io/schema/bpmn/biocolor/1.0" xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:color="http://www.omg.org/spec/BPMN/non-normative/color/1.0" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="Definitions_ToBeOverview" targetNamespace="https://example.invalid/mil600/to-be-overview" exporter="MIL600 навчальна модель">
+  <bpmn:collaboration id="Collaboration_ToBeOverview">
+    <bpmn:participant id="Pool_ToBe" name="Кейс поранення — TO BE (огляд)" processRef="Process_ToBeOverview" />
+  </bpmn:collaboration>
+  <bpmn:process id="Process_ToBeOverview" name="Кейс поранення — TO BE (огляд)" isExecutable="false">
+    <bpmn:documentation>Огляд для кроку II, 2026-11-26. Деталі, винятки й повтори — у to-be.bpmn. Медичні факти й рішення лишаються в уповноважених джерелах; інтеграції в прототипі синтетичні.</bpmn:documentation>
+    <bpmn:laneSet id="LaneSet_ToBeOverview">
+      <bpmn:lane id="Lane_Soldier" name="Військовослужбовець">
+        <bpmn:flowNodeRef>Soldier_View</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_View</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_Medical" name="Медик / заклад">
+        <bpmn:flowNodeRef>Start_Injury</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Care_ePMK</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Care_Treat</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_System" name="Сервіс «Кейс поранення» в Армія+ (система)">
+        <bpmn:flowNodeRef>Sys_Open</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gw_Match</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Fork_Case</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Sys_Clock</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Sys_CertTask</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Sys_Remind</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_Remind</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Sys_CertSend</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Sys_Reward</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Sys_RewardShow</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_Reward</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Join_Docs</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Sys_Check</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gw_Gaps</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Sys_GapTask</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Merge_Gaps</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Sys_SendVLK</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Sys_ShowDecision</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Fork_After</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Sys_OGDCheck</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Sys_OGDShow</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_OGD</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_Unit" name="Частина: командир, медслужба, супровід">
+        <bpmn:flowNodeRef>Unit_Match</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Unit_CertPrep</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Unit_CertSign</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Unit_RewardOrder</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Unit_Refer</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Unit_Execute</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_Route</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Timer_Cert</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_VLK" name="ВЛК">
+        <bpmn:flowNodeRef>VLK_Exam</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>VLK_Decision</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_Finance" name="Фінслужба / орган ОГД">
+        <bpmn:flowNodeRef>Fin_RewardPay</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Fin_OGDConclusion</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Fin_OGDDecision</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="Start_Injury" name="Поранення">
+      <bpmn:outgoing>F_Start_Injury_Care_ePMK</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="Care_ePMK" name="Надати допомогу; внести еПМК у МІС ЗСУ">
+      <bpmn:incoming>F_Start_Injury_Care_ePMK</bpmn:incoming>
+      <bpmn:outgoing>F_Care_ePMK_Sys_Open</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:serviceTask id="Sys_Open" name="Отримати еПМК, звірити особу й випадок, відкрити кейс">
+      <bpmn:incoming>F_Care_ePMK_Sys_Open</bpmn:incoming>
+      <bpmn:incoming>F_Unit_Match_Sys_Open</bpmn:incoming>
+      <bpmn:outgoing>F_Sys_Open_Gw_Match</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="Gw_Match" name="Збіг підтверджено?" default="F_Gw_Match_Unit_Match">
+      <bpmn:incoming>F_Sys_Open_Gw_Match</bpmn:incoming>
+      <bpmn:outgoing>F_Gw_Match_Fork_Case</bpmn:outgoing>
+      <bpmn:outgoing>F_Gw_Match_Unit_Match</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="Unit_Match" name="Супровід: звірити особу й випадок вручну">
+      <bpmn:incoming>F_Gw_Match_Unit_Match</bpmn:incoming>
+      <bpmn:outgoing>F_Unit_Match_Sys_Open</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:parallelGateway id="Fork_Case" name="">
+      <bpmn:incoming>F_Gw_Match_Fork_Case</bpmn:incoming>
+      <bpmn:outgoing>F_Fork_Case_Soldier_View</bpmn:outgoing>
+      <bpmn:outgoing>F_Fork_Case_Care_Treat</bpmn:outgoing>
+      <bpmn:outgoing>F_Fork_Case_Sys_CertTask</bpmn:outgoing>
+      <bpmn:outgoing>F_Fork_Case_Sys_Reward</bpmn:outgoing>
+    </bpmn:parallelGateway>
+    <bpmn:userTask id="Soldier_View" name="Бачити перелік і стан документів та наступний крок">
+      <bpmn:incoming>F_Fork_Case_Soldier_View</bpmn:incoming>
+      <bpmn:outgoing>F_Soldier_View_End_View</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="End_View" name="Боєць знає, що далі">
+      <bpmn:incoming>F_Soldier_View_End_View</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:userTask id="Care_Treat" name="Лікувати; оформити виписки й переведення">
+      <bpmn:incoming>F_Fork_Case_Care_Treat</bpmn:incoming>
+      <bpmn:outgoing>F_Care_Treat_Sys_Clock</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:serviceTask id="Sys_Clock" name="Зафіксувати надходження; рахувати строки: довідка 5 днів, ВЛК до 12 міс.">
+      <bpmn:incoming>F_Care_Treat_Sys_Clock</bpmn:incoming>
+      <bpmn:outgoing>F_Sys_Clock_Join_Docs</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="Sys_CertTask" name="Поставити частині задачу: довідка про обставини травми">
+      <bpmn:incoming>F_Fork_Case_Sys_CertTask</bpmn:incoming>
+      <bpmn:outgoing>F_Sys_CertTask_Unit_CertPrep</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:userTask id="Unit_CertPrep" name="Начальник медслужби: скласти довідку">
+      <bpmn:incoming>F_Sys_CertTask_Unit_CertPrep</bpmn:incoming>
+      <bpmn:outgoing>F_Unit_CertPrep_Unit_CertSign</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="Unit_CertSign" name="Рішення командира: підписати довідку">
+      <bpmn:incoming>F_Unit_CertPrep_Unit_CertSign</bpmn:incoming>
+      <bpmn:outgoing>F_Unit_CertSign_Sys_CertSend</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:serviceTask id="Sys_Remind" name="Нагадати командиру й супроводу про строк">
+      <bpmn:incoming>F_Timer_Cert_Sys_Remind</bpmn:incoming>
+      <bpmn:outgoing>F_Sys_Remind_End_Remind</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="End_Remind" name="Нагадування надіслано">
+      <bpmn:incoming>F_Sys_Remind_End_Remind</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:serviceTask id="Sys_CertSend" name="Надіслати довідку закладу й бійцю; зафіксувати отримання">
+      <bpmn:incoming>F_Unit_CertSign_Sys_CertSend</bpmn:incoming>
+      <bpmn:outgoing>F_Sys_CertSend_Join_Docs</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="Sys_Reward" name="Зібрати підстави винагороди за стаціонарне лікування">
+      <bpmn:incoming>F_Fork_Case_Sys_Reward</bpmn:incoming>
+      <bpmn:outgoing>F_Sys_Reward_Unit_RewardOrder</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:userTask id="Unit_RewardOrder" name="Рішення командира: наказ про винагороду">
+      <bpmn:incoming>F_Sys_Reward_Unit_RewardOrder</bpmn:incoming>
+      <bpmn:outgoing>F_Unit_RewardOrder_Fin_RewardPay</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="Fin_RewardPay" name="Фінслужба: нарахувати й виплатити винагороду">
+      <bpmn:incoming>F_Unit_RewardOrder_Fin_RewardPay</bpmn:incoming>
+      <bpmn:outgoing>F_Fin_RewardPay_Sys_RewardShow</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:serviceTask id="Sys_RewardShow" name="Показати бійцю стан винагороди">
+      <bpmn:incoming>F_Fin_RewardPay_Sys_RewardShow</bpmn:incoming>
+      <bpmn:outgoing>F_Sys_RewardShow_End_Reward</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="End_Reward" name="Винагороду виплачено й показано">
+      <bpmn:incoming>F_Sys_RewardShow_End_Reward</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:parallelGateway id="Join_Docs" name="">
+      <bpmn:incoming>F_Sys_Clock_Join_Docs</bpmn:incoming>
+      <bpmn:incoming>F_Sys_CertSend_Join_Docs</bpmn:incoming>
+      <bpmn:outgoing>F_Join_Docs_Sys_Check</bpmn:outgoing>
+    </bpmn:parallelGateway>
+    <bpmn:serviceTask id="Sys_Check" name="Перевірити комплектність пакета ВЛК; показати прогалини й автора">
+      <bpmn:incoming>F_Join_Docs_Sys_Check</bpmn:incoming>
+      <bpmn:outgoing>F_Sys_Check_Gw_Gaps</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="Gw_Gaps" name="Є прогалини?" default="F_Gw_Gaps_Merge_Gaps">
+      <bpmn:incoming>F_Sys_Check_Gw_Gaps</bpmn:incoming>
+      <bpmn:outgoing>F_Gw_Gaps_Merge_Gaps</bpmn:outgoing>
+      <bpmn:outgoing>F_Gw_Gaps_Sys_GapTask</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="Sys_GapTask" name="Задача автору документа; направлення не блокує">
+      <bpmn:incoming>F_Gw_Gaps_Sys_GapTask</bpmn:incoming>
+      <bpmn:outgoing>F_Sys_GapTask_Merge_Gaps</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="Merge_Gaps" name="">
+      <bpmn:incoming>F_Gw_Gaps_Merge_Gaps</bpmn:incoming>
+      <bpmn:incoming>F_Sys_GapTask_Merge_Gaps</bpmn:incoming>
+      <bpmn:outgoing>F_Merge_Gaps_Unit_Refer</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="Unit_Refer" name="Рішення: направити на ВЛК (командир або заклад)">
+      <bpmn:incoming>F_Merge_Gaps_Unit_Refer</bpmn:incoming>
+      <bpmn:outgoing>F_Unit_Refer_Sys_SendVLK</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:serviceTask id="Sys_SendVLK" name="Передати пакет у ВЛК; зафіксувати отримання">
+      <bpmn:incoming>F_Unit_Refer_Sys_SendVLK</bpmn:incoming>
+      <bpmn:outgoing>F_Sys_SendVLK_VLK_Exam</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:userTask id="VLK_Exam" name="ВЛК: огляд, причинний зв’язок">
+      <bpmn:incoming>F_Sys_SendVLK_VLK_Exam</bpmn:incoming>
+      <bpmn:outgoing>F_VLK_Exam_VLK_Decision</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="VLK_Decision" name="Рішення ВЛК: постанова">
+      <bpmn:incoming>F_VLK_Exam_VLK_Decision</bpmn:incoming>
+      <bpmn:outgoing>F_VLK_Decision_Sys_ShowDecision</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:serviceTask id="Sys_ShowDecision" name="Показати постанову бійцю й частині; відкрити ОГД">
+      <bpmn:incoming>F_VLK_Decision_Sys_ShowDecision</bpmn:incoming>
+      <bpmn:outgoing>F_Sys_ShowDecision_Fork_After</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:parallelGateway id="Fork_After" name="">
+      <bpmn:incoming>F_Sys_ShowDecision_Fork_After</bpmn:incoming>
+      <bpmn:outgoing>F_Fork_After_Unit_Execute</bpmn:outgoing>
+      <bpmn:outgoing>F_Fork_After_Sys_OGDCheck</bpmn:outgoing>
+    </bpmn:parallelGateway>
+    <bpmn:userTask id="Unit_Execute" name="Частина: виконати дії за постановою">
+      <bpmn:incoming>F_Fork_After_Unit_Execute</bpmn:incoming>
+      <bpmn:outgoing>F_Unit_Execute_End_Route</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="End_Route" name="Подальший маршрут визначено">
+      <bpmn:incoming>F_Unit_Execute_End_Route</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:serviceTask id="Sys_OGDCheck" name="Перевірити пакет ОГД: довідка + постанова ВЛК">
+      <bpmn:incoming>F_Fork_After_Sys_OGDCheck</bpmn:incoming>
+      <bpmn:outgoing>F_Sys_OGDCheck_Fin_OGDConclusion</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:userTask id="Fin_OGDConclusion" name="Уповноважений орган: висновок">
+      <bpmn:incoming>F_Sys_OGDCheck_Fin_OGDConclusion</bpmn:incoming>
+      <bpmn:outgoing>F_Fin_OGDConclusion_Fin_OGDDecision</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="Fin_OGDDecision" name="Рішення розпорядника коштів: призначити або відмовити">
+      <bpmn:incoming>F_Fin_OGDConclusion_Fin_OGDDecision</bpmn:incoming>
+      <bpmn:outgoing>F_Fin_OGDDecision_Sys_OGDShow</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:serviceTask id="Sys_OGDShow" name="Показати рішення й підтвердження виплати">
+      <bpmn:incoming>F_Fin_OGDDecision_Sys_OGDShow</bpmn:incoming>
+      <bpmn:outgoing>F_Sys_OGDShow_End_OGD</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="End_OGD" name="Результат ОГД показано">
+      <bpmn:incoming>F_Sys_OGDShow_End_OGD</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:boundaryEvent id="Timer_Cert" name="Строк довідки сплив" attachedToRef="Unit_CertSign" cancelActivity="false">
+      <bpmn:outgoing>F_Timer_Cert_Sys_Remind</bpmn:outgoing>
+      <bpmn:timerEventDefinition id="TimerDef_Cert">
+        <bpmn:timeDate>надходження + 5 календарних днів (лише дії противника)</bpmn:timeDate>
+      </bpmn:timerEventDefinition>
+    </bpmn:boundaryEvent>
+    <bpmn:sequenceFlow id="F_Start_Injury_Care_ePMK" sourceRef="Start_Injury" targetRef="Care_ePMK" />
+    <bpmn:sequenceFlow id="F_Care_ePMK_Sys_Open" sourceRef="Care_ePMK" targetRef="Sys_Open" />
+    <bpmn:sequenceFlow id="F_Sys_Open_Gw_Match" sourceRef="Sys_Open" targetRef="Gw_Match" />
+    <bpmn:sequenceFlow id="F_Gw_Match_Fork_Case" sourceRef="Gw_Match" targetRef="Fork_Case" name="Так">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">identity_and_incident_confirmed</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="F_Gw_Match_Unit_Match" sourceRef="Gw_Match" targetRef="Unit_Match" name="Ні" />
+    <bpmn:sequenceFlow id="F_Unit_Match_Sys_Open" sourceRef="Unit_Match" targetRef="Sys_Open" />
+    <bpmn:sequenceFlow id="F_Fork_Case_Soldier_View" sourceRef="Fork_Case" targetRef="Soldier_View" />
+    <bpmn:sequenceFlow id="F_Fork_Case_Care_Treat" sourceRef="Fork_Case" targetRef="Care_Treat" />
+    <bpmn:sequenceFlow id="F_Fork_Case_Sys_CertTask" sourceRef="Fork_Case" targetRef="Sys_CertTask" />
+    <bpmn:sequenceFlow id="F_Fork_Case_Sys_Reward" sourceRef="Fork_Case" targetRef="Sys_Reward" />
+    <bpmn:sequenceFlow id="F_Soldier_View_End_View" sourceRef="Soldier_View" targetRef="End_View" />
+    <bpmn:sequenceFlow id="F_Care_Treat_Sys_Clock" sourceRef="Care_Treat" targetRef="Sys_Clock" />
+    <bpmn:sequenceFlow id="F_Sys_CertTask_Unit_CertPrep" sourceRef="Sys_CertTask" targetRef="Unit_CertPrep" />
+    <bpmn:sequenceFlow id="F_Unit_CertPrep_Unit_CertSign" sourceRef="Unit_CertPrep" targetRef="Unit_CertSign" />
+    <bpmn:sequenceFlow id="F_Unit_CertSign_Sys_CertSend" sourceRef="Unit_CertSign" targetRef="Sys_CertSend" />
+    <bpmn:sequenceFlow id="F_Timer_Cert_Sys_Remind" sourceRef="Timer_Cert" targetRef="Sys_Remind" />
+    <bpmn:sequenceFlow id="F_Sys_Remind_End_Remind" sourceRef="Sys_Remind" targetRef="End_Remind" />
+    <bpmn:sequenceFlow id="F_Sys_Clock_Join_Docs" sourceRef="Sys_Clock" targetRef="Join_Docs" />
+    <bpmn:sequenceFlow id="F_Sys_CertSend_Join_Docs" sourceRef="Sys_CertSend" targetRef="Join_Docs" />
+    <bpmn:sequenceFlow id="F_Sys_Reward_Unit_RewardOrder" sourceRef="Sys_Reward" targetRef="Unit_RewardOrder" />
+    <bpmn:sequenceFlow id="F_Unit_RewardOrder_Fin_RewardPay" sourceRef="Unit_RewardOrder" targetRef="Fin_RewardPay" />
+    <bpmn:sequenceFlow id="F_Fin_RewardPay_Sys_RewardShow" sourceRef="Fin_RewardPay" targetRef="Sys_RewardShow" />
+    <bpmn:sequenceFlow id="F_Sys_RewardShow_End_Reward" sourceRef="Sys_RewardShow" targetRef="End_Reward" />
+    <bpmn:sequenceFlow id="F_Join_Docs_Sys_Check" sourceRef="Join_Docs" targetRef="Sys_Check" />
+    <bpmn:sequenceFlow id="F_Sys_Check_Gw_Gaps" sourceRef="Sys_Check" targetRef="Gw_Gaps" />
+    <bpmn:sequenceFlow id="F_Gw_Gaps_Merge_Gaps" sourceRef="Gw_Gaps" targetRef="Merge_Gaps" name="Ні" />
+    <bpmn:sequenceFlow id="F_Gw_Gaps_Sys_GapTask" sourceRef="Gw_Gaps" targetRef="Sys_GapTask" name="Так">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">technical_gaps_found</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="F_Sys_GapTask_Merge_Gaps" sourceRef="Sys_GapTask" targetRef="Merge_Gaps" />
+    <bpmn:sequenceFlow id="F_Merge_Gaps_Unit_Refer" sourceRef="Merge_Gaps" targetRef="Unit_Refer" />
+    <bpmn:sequenceFlow id="F_Unit_Refer_Sys_SendVLK" sourceRef="Unit_Refer" targetRef="Sys_SendVLK" />
+    <bpmn:sequenceFlow id="F_Sys_SendVLK_VLK_Exam" sourceRef="Sys_SendVLK" targetRef="VLK_Exam" />
+    <bpmn:sequenceFlow id="F_VLK_Exam_VLK_Decision" sourceRef="VLK_Exam" targetRef="VLK_Decision" />
+    <bpmn:sequenceFlow id="F_VLK_Decision_Sys_ShowDecision" sourceRef="VLK_Decision" targetRef="Sys_ShowDecision" />
+    <bpmn:sequenceFlow id="F_Sys_ShowDecision_Fork_After" sourceRef="Sys_ShowDecision" targetRef="Fork_After" />
+    <bpmn:sequenceFlow id="F_Fork_After_Unit_Execute" sourceRef="Fork_After" targetRef="Unit_Execute" />
+    <bpmn:sequenceFlow id="F_Fork_After_Sys_OGDCheck" sourceRef="Fork_After" targetRef="Sys_OGDCheck" />
+    <bpmn:sequenceFlow id="F_Unit_Execute_End_Route" sourceRef="Unit_Execute" targetRef="End_Route" />
+    <bpmn:sequenceFlow id="F_Sys_OGDCheck_Fin_OGDConclusion" sourceRef="Sys_OGDCheck" targetRef="Fin_OGDConclusion" />
+    <bpmn:sequenceFlow id="F_Fin_OGDConclusion_Fin_OGDDecision" sourceRef="Fin_OGDConclusion" targetRef="Fin_OGDDecision" />
+    <bpmn:sequenceFlow id="F_Fin_OGDDecision_Sys_OGDShow" sourceRef="Fin_OGDDecision" targetRef="Sys_OGDShow" />
+    <bpmn:sequenceFlow id="F_Sys_OGDShow_End_OGD" sourceRef="Sys_OGDShow" targetRef="End_OGD" />
+    <bpmn:textAnnotation id="Note_Legend">
+      <bpmn:text>Іконка людини — дію виконує людина. Шестерня — дію виконує сервіс «Кейс поранення». Помаранчеве — рішення уповноваженої особи (командир, ВЛК, розпорядник коштів). Перевіряє система, вирішує людина.</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:textAnnotation id="Note_Scope">
+      <bpmn:text>Огляд. Деталі, повтори, конфлікти й винятки — у детальній моделі to-be.bpmn (вісім площин). Строк огляду ВЛК — п. 11 ст. 10-1 Закону №2011-XII у редакції з 24.11.2026.</bpmn:text>
+    </bpmn:textAnnotation>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="Diagram_ToBeOverview" name="TO BE огляд">
+    <bpmndi:BPMNPlane id="Plane_ToBeOverview" bpmnElement="Collaboration_ToBeOverview">
+      <bpmndi:BPMNShape id="Pool_ToBe_di" bpmnElement="Pool_ToBe" isHorizontal="true">
+        <dc:Bounds x="40" y="60" width="4420" height="1330" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Soldier_di" bpmnElement="Lane_Soldier" isHorizontal="true">
+        <dc:Bounds x="70" y="60" width="4390" height="150" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Medical_di" bpmnElement="Lane_Medical" isHorizontal="true">
+        <dc:Bounds x="70" y="210" width="4390" height="160" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_System_di" bpmnElement="Lane_System" isHorizontal="true">
+        <dc:Bounds x="70" y="370" width="4390" height="400" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Unit_di" bpmnElement="Lane_Unit" isHorizontal="true">
+        <dc:Bounds x="70" y="770" width="4390" height="300" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_VLK_di" bpmnElement="Lane_VLK" isHorizontal="true">
+        <dc:Bounds x="70" y="1070" width="4390" height="150" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Finance_di" bpmnElement="Lane_Finance" isHorizontal="true">
+        <dc:Bounds x="70" y="1220" width="4390" height="170" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Start_Injury_di" bpmnElement="Start_Injury">
+        <dc:Bounds x="242" y="272" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="207" y="312" width="106" height="30" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Care_ePMK_di" bpmnElement="Care_ePMK">
+        <dc:Bounds x="365" y="248" width="140" height="84" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Sys_Open_di" bpmnElement="Sys_Open" bioc:fill="#dce9f7" bioc:stroke="#1f4e79" color:background-color="#dce9f7" color:border-color="#1f4e79">
+        <dc:Bounds x="540" y="395" width="140" height="84" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gw_Match_di" bpmnElement="Gw_Match">
+        <dc:Bounds x="760" y="412" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="730" y="378" width="110" height="30" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Unit_Match_di" bpmnElement="Unit_Match">
+        <dc:Bounds x="715" y="810" width="140" height="84" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Fork_Case_di" bpmnElement="Fork_Case">
+        <dc:Bounds x="935" y="412" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Soldier_View_di" bpmnElement="Soldier_View">
+        <dc:Bounds x="1065" y="93" width="140" height="84" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_View_di" bpmnElement="End_View">
+        <dc:Bounds x="1292" y="117" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1257" y="157" width="106" height="30" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Care_Treat_di" bpmnElement="Care_Treat">
+        <dc:Bounds x="1065" y="248" width="140" height="84" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Sys_Clock_di" bpmnElement="Sys_Clock" bioc:fill="#dce9f7" bioc:stroke="#1f4e79" color:background-color="#dce9f7" color:border-color="#1f4e79">
+        <dc:Bounds x="1240" y="395" width="140" height="84" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Sys_CertTask_di" bpmnElement="Sys_CertTask" bioc:fill="#dce9f7" bioc:stroke="#1f4e79" color:background-color="#dce9f7" color:border-color="#1f4e79">
+        <dc:Bounds x="1065" y="520" width="140" height="84" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Unit_CertPrep_di" bpmnElement="Unit_CertPrep">
+        <dc:Bounds x="1240" y="810" width="140" height="84" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Unit_CertSign_di" bpmnElement="Unit_CertSign" bioc:fill="#fde3c4" bioc:stroke="#9a4a00" color:background-color="#fde3c4" color:border-color="#9a4a00">
+        <dc:Bounds x="1415" y="810" width="140" height="84" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Sys_Remind_di" bpmnElement="Sys_Remind" bioc:fill="#dce9f7" bioc:stroke="#1f4e79" color:background-color="#dce9f7" color:border-color="#1f4e79">
+        <dc:Bounds x="1415" y="395" width="140" height="84" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_Remind_di" bpmnElement="End_Remind">
+        <dc:Bounds x="1642" y="419" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1607" y="459" width="106" height="30" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Sys_CertSend_di" bpmnElement="Sys_CertSend" bioc:fill="#dce9f7" bioc:stroke="#1f4e79" color:background-color="#dce9f7" color:border-color="#1f4e79">
+        <dc:Bounds x="1590" y="520" width="140" height="84" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Sys_Reward_di" bpmnElement="Sys_Reward" bioc:fill="#dce9f7" bioc:stroke="#1f4e79" color:background-color="#dce9f7" color:border-color="#1f4e79">
+        <dc:Bounds x="1240" y="665" width="140" height="84" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Unit_RewardOrder_di" bpmnElement="Unit_RewardOrder" bioc:fill="#fde3c4" bioc:stroke="#9a4a00" color:background-color="#fde3c4" color:border-color="#9a4a00">
+        <dc:Bounds x="1415" y="955" width="140" height="84" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Fin_RewardPay_di" bpmnElement="Fin_RewardPay">
+        <dc:Bounds x="1590" y="1263" width="140" height="84" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Sys_RewardShow_di" bpmnElement="Sys_RewardShow" bioc:fill="#dce9f7" bioc:stroke="#1f4e79" color:background-color="#dce9f7" color:border-color="#1f4e79">
+        <dc:Bounds x="1765" y="665" width="140" height="84" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_Reward_di" bpmnElement="End_Reward">
+        <dc:Bounds x="1992" y="689" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1957" y="729" width="106" height="30" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Join_Docs_di" bpmnElement="Join_Docs">
+        <dc:Bounds x="1810" y="412" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Sys_Check_di" bpmnElement="Sys_Check" bioc:fill="#dce9f7" bioc:stroke="#1f4e79" color:background-color="#dce9f7" color:border-color="#1f4e79">
+        <dc:Bounds x="1940" y="395" width="140" height="84" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gw_Gaps_di" bpmnElement="Gw_Gaps">
+        <dc:Bounds x="2160" y="412" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2130" y="378" width="110" height="30" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Sys_GapTask_di" bpmnElement="Sys_GapTask" bioc:fill="#dce9f7" bioc:stroke="#1f4e79" color:background-color="#dce9f7" color:border-color="#1f4e79">
+        <dc:Bounds x="2115" y="520" width="140" height="84" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Merge_Gaps_di" bpmnElement="Merge_Gaps">
+        <dc:Bounds x="2335" y="412" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Unit_Refer_di" bpmnElement="Unit_Refer" bioc:fill="#fde3c4" bioc:stroke="#9a4a00" color:background-color="#fde3c4" color:border-color="#9a4a00">
+        <dc:Bounds x="2465" y="810" width="140" height="84" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Sys_SendVLK_di" bpmnElement="Sys_SendVLK" bioc:fill="#dce9f7" bioc:stroke="#1f4e79" color:background-color="#dce9f7" color:border-color="#1f4e79">
+        <dc:Bounds x="2640" y="395" width="140" height="84" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="VLK_Exam_di" bpmnElement="VLK_Exam">
+        <dc:Bounds x="2815" y="1103" width="140" height="84" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="VLK_Decision_di" bpmnElement="VLK_Decision" bioc:fill="#fde3c4" bioc:stroke="#9a4a00" color:background-color="#fde3c4" color:border-color="#9a4a00">
+        <dc:Bounds x="2990" y="1103" width="140" height="84" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Sys_ShowDecision_di" bpmnElement="Sys_ShowDecision" bioc:fill="#dce9f7" bioc:stroke="#1f4e79" color:background-color="#dce9f7" color:border-color="#1f4e79">
+        <dc:Bounds x="3165" y="395" width="140" height="84" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Fork_After_di" bpmnElement="Fork_After">
+        <dc:Bounds x="3385" y="412" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Unit_Execute_di" bpmnElement="Unit_Execute">
+        <dc:Bounds x="3515" y="810" width="140" height="84" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_Route_di" bpmnElement="End_Route">
+        <dc:Bounds x="3742" y="834" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3707" y="874" width="106" height="30" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Sys_OGDCheck_di" bpmnElement="Sys_OGDCheck" bioc:fill="#dce9f7" bioc:stroke="#1f4e79" color:background-color="#dce9f7" color:border-color="#1f4e79">
+        <dc:Bounds x="3515" y="395" width="140" height="84" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Fin_OGDConclusion_di" bpmnElement="Fin_OGDConclusion">
+        <dc:Bounds x="3690" y="1263" width="140" height="84" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Fin_OGDDecision_di" bpmnElement="Fin_OGDDecision" bioc:fill="#fde3c4" bioc:stroke="#9a4a00" color:background-color="#fde3c4" color:border-color="#9a4a00">
+        <dc:Bounds x="3865" y="1263" width="140" height="84" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Sys_OGDShow_di" bpmnElement="Sys_OGDShow" bioc:fill="#dce9f7" bioc:stroke="#1f4e79" color:background-color="#dce9f7" color:border-color="#1f4e79">
+        <dc:Bounds x="4040" y="395" width="140" height="84" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_OGD_di" bpmnElement="End_OGD">
+        <dc:Bounds x="4267" y="419" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4232" y="459" width="106" height="30" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Timer_Cert_di" bpmnElement="Timer_Cert">
+        <dc:Bounds x="1467" y="792" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1505" y="766" width="120" height="26" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="F_Start_Injury_Care_ePMK_di" bpmnElement="F_Start_Injury_Care_ePMK">
+        <di:waypoint x="278" y="290" />
+        <di:waypoint x="365" y="290" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_Care_ePMK_Sys_Open_di" bpmnElement="F_Care_ePMK_Sys_Open">
+        <di:waypoint x="505" y="290" />
+        <di:waypoint x="522" y="290" />
+        <di:waypoint x="522" y="437" />
+        <di:waypoint x="540" y="437" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_Sys_Open_Gw_Match_di" bpmnElement="F_Sys_Open_Gw_Match">
+        <di:waypoint x="680" y="437" />
+        <di:waypoint x="760" y="437" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_Gw_Match_Fork_Case_di" bpmnElement="F_Gw_Match_Fork_Case">
+        <di:waypoint x="810" y="437" />
+        <di:waypoint x="935" y="437" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="812" y="418" width="30" height="18" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_Gw_Match_Unit_Match_di" bpmnElement="F_Gw_Match_Unit_Match">
+        <di:waypoint x="785" y="462" />
+        <di:waypoint x="785" y="810" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="792" y="472" width="24" height="18" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_Unit_Match_Sys_Open_di" bpmnElement="F_Unit_Match_Sys_Open">
+        <di:waypoint x="715" y="852" />
+        <di:waypoint x="610" y="852" />
+        <di:waypoint x="610" y="479" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_Fork_Case_Soldier_View_di" bpmnElement="F_Fork_Case_Soldier_View">
+        <di:waypoint x="960" y="412" />
+        <di:waypoint x="960" y="135" />
+        <di:waypoint x="1065" y="135" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_Fork_Case_Care_Treat_di" bpmnElement="F_Fork_Case_Care_Treat">
+        <di:waypoint x="960" y="412" />
+        <di:waypoint x="960" y="290" />
+        <di:waypoint x="1065" y="290" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_Fork_Case_Sys_CertTask_di" bpmnElement="F_Fork_Case_Sys_CertTask">
+        <di:waypoint x="960" y="462" />
+        <di:waypoint x="960" y="562" />
+        <di:waypoint x="1065" y="562" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_Fork_Case_Sys_Reward_di" bpmnElement="F_Fork_Case_Sys_Reward">
+        <di:waypoint x="985" y="437" />
+        <di:waypoint x="1005" y="437" />
+        <di:waypoint x="1005" y="707" />
+        <di:waypoint x="1240" y="707" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_Soldier_View_End_View_di" bpmnElement="F_Soldier_View_End_View">
+        <di:waypoint x="1205" y="135" />
+        <di:waypoint x="1292" y="135" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_Care_Treat_Sys_Clock_di" bpmnElement="F_Care_Treat_Sys_Clock">
+        <di:waypoint x="1205" y="290" />
+        <di:waypoint x="1222" y="290" />
+        <di:waypoint x="1222" y="437" />
+        <di:waypoint x="1240" y="437" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_Sys_CertTask_Unit_CertPrep_di" bpmnElement="F_Sys_CertTask_Unit_CertPrep">
+        <di:waypoint x="1205" y="562" />
+        <di:waypoint x="1222" y="562" />
+        <di:waypoint x="1222" y="852" />
+        <di:waypoint x="1240" y="852" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_Unit_CertPrep_Unit_CertSign_di" bpmnElement="F_Unit_CertPrep_Unit_CertSign">
+        <di:waypoint x="1380" y="852" />
+        <di:waypoint x="1415" y="852" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_Unit_CertSign_Sys_CertSend_di" bpmnElement="F_Unit_CertSign_Sys_CertSend">
+        <di:waypoint x="1555" y="852" />
+        <di:waypoint x="1572" y="852" />
+        <di:waypoint x="1572" y="562" />
+        <di:waypoint x="1590" y="562" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_Timer_Cert_Sys_Remind_di" bpmnElement="F_Timer_Cert_Sys_Remind">
+        <di:waypoint x="1485" y="792" />
+        <di:waypoint x="1485" y="479" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_Sys_Remind_End_Remind_di" bpmnElement="F_Sys_Remind_End_Remind">
+        <di:waypoint x="1555" y="437" />
+        <di:waypoint x="1642" y="437" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_Sys_Clock_Join_Docs_di" bpmnElement="F_Sys_Clock_Join_Docs">
+        <di:waypoint x="1380" y="437" />
+        <di:waypoint x="1400" y="437" />
+        <di:waypoint x="1400" y="382" />
+        <di:waypoint x="1835" y="382" />
+        <di:waypoint x="1835" y="412" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_Sys_CertSend_Join_Docs_di" bpmnElement="F_Sys_CertSend_Join_Docs">
+        <di:waypoint x="1730" y="562" />
+        <di:waypoint x="1835" y="562" />
+        <di:waypoint x="1835" y="462" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_Sys_Reward_Unit_RewardOrder_di" bpmnElement="F_Sys_Reward_Unit_RewardOrder">
+        <di:waypoint x="1380" y="707" />
+        <di:waypoint x="1397" y="707" />
+        <di:waypoint x="1397" y="997" />
+        <di:waypoint x="1415" y="997" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_Unit_RewardOrder_Fin_RewardPay_di" bpmnElement="F_Unit_RewardOrder_Fin_RewardPay">
+        <di:waypoint x="1555" y="997" />
+        <di:waypoint x="1572" y="997" />
+        <di:waypoint x="1572" y="1305" />
+        <di:waypoint x="1590" y="1305" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_Fin_RewardPay_Sys_RewardShow_di" bpmnElement="F_Fin_RewardPay_Sys_RewardShow">
+        <di:waypoint x="1730" y="1305" />
+        <di:waypoint x="1747" y="1305" />
+        <di:waypoint x="1747" y="707" />
+        <di:waypoint x="1765" y="707" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_Sys_RewardShow_End_Reward_di" bpmnElement="F_Sys_RewardShow_End_Reward">
+        <di:waypoint x="1905" y="707" />
+        <di:waypoint x="1992" y="707" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_Join_Docs_Sys_Check_di" bpmnElement="F_Join_Docs_Sys_Check">
+        <di:waypoint x="1860" y="437" />
+        <di:waypoint x="1940" y="437" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_Sys_Check_Gw_Gaps_di" bpmnElement="F_Sys_Check_Gw_Gaps">
+        <di:waypoint x="2080" y="437" />
+        <di:waypoint x="2160" y="437" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_Gw_Gaps_Merge_Gaps_di" bpmnElement="F_Gw_Gaps_Merge_Gaps">
+        <di:waypoint x="2210" y="437" />
+        <di:waypoint x="2335" y="437" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2214" y="418" width="24" height="18" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_Gw_Gaps_Sys_GapTask_di" bpmnElement="F_Gw_Gaps_Sys_GapTask">
+        <di:waypoint x="2185" y="462" />
+        <di:waypoint x="2185" y="520" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2192" y="468" width="30" height="18" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_Sys_GapTask_Merge_Gaps_di" bpmnElement="F_Sys_GapTask_Merge_Gaps">
+        <di:waypoint x="2255" y="562" />
+        <di:waypoint x="2360" y="562" />
+        <di:waypoint x="2360" y="462" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_Merge_Gaps_Unit_Refer_di" bpmnElement="F_Merge_Gaps_Unit_Refer">
+        <di:waypoint x="2385" y="437" />
+        <di:waypoint x="2447" y="437" />
+        <di:waypoint x="2447" y="852" />
+        <di:waypoint x="2465" y="852" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_Unit_Refer_Sys_SendVLK_di" bpmnElement="F_Unit_Refer_Sys_SendVLK">
+        <di:waypoint x="2605" y="852" />
+        <di:waypoint x="2622" y="852" />
+        <di:waypoint x="2622" y="437" />
+        <di:waypoint x="2640" y="437" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_Sys_SendVLK_VLK_Exam_di" bpmnElement="F_Sys_SendVLK_VLK_Exam">
+        <di:waypoint x="2780" y="437" />
+        <di:waypoint x="2797" y="437" />
+        <di:waypoint x="2797" y="1145" />
+        <di:waypoint x="2815" y="1145" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_VLK_Exam_VLK_Decision_di" bpmnElement="F_VLK_Exam_VLK_Decision">
+        <di:waypoint x="2955" y="1145" />
+        <di:waypoint x="2990" y="1145" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_VLK_Decision_Sys_ShowDecision_di" bpmnElement="F_VLK_Decision_Sys_ShowDecision">
+        <di:waypoint x="3130" y="1145" />
+        <di:waypoint x="3147" y="1145" />
+        <di:waypoint x="3147" y="437" />
+        <di:waypoint x="3165" y="437" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_Sys_ShowDecision_Fork_After_di" bpmnElement="F_Sys_ShowDecision_Fork_After">
+        <di:waypoint x="3305" y="437" />
+        <di:waypoint x="3385" y="437" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_Fork_After_Unit_Execute_di" bpmnElement="F_Fork_After_Unit_Execute">
+        <di:waypoint x="3410" y="462" />
+        <di:waypoint x="3410" y="852" />
+        <di:waypoint x="3515" y="852" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_Fork_After_Sys_OGDCheck_di" bpmnElement="F_Fork_After_Sys_OGDCheck">
+        <di:waypoint x="3435" y="437" />
+        <di:waypoint x="3515" y="437" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_Unit_Execute_End_Route_di" bpmnElement="F_Unit_Execute_End_Route">
+        <di:waypoint x="3655" y="852" />
+        <di:waypoint x="3742" y="852" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_Sys_OGDCheck_Fin_OGDConclusion_di" bpmnElement="F_Sys_OGDCheck_Fin_OGDConclusion">
+        <di:waypoint x="3655" y="437" />
+        <di:waypoint x="3672" y="437" />
+        <di:waypoint x="3672" y="1305" />
+        <di:waypoint x="3690" y="1305" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_Fin_OGDConclusion_Fin_OGDDecision_di" bpmnElement="F_Fin_OGDConclusion_Fin_OGDDecision">
+        <di:waypoint x="3830" y="1305" />
+        <di:waypoint x="3865" y="1305" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_Fin_OGDDecision_Sys_OGDShow_di" bpmnElement="F_Fin_OGDDecision_Sys_OGDShow">
+        <di:waypoint x="4005" y="1305" />
+        <di:waypoint x="4022" y="1305" />
+        <di:waypoint x="4022" y="437" />
+        <di:waypoint x="4040" y="437" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_Sys_OGDShow_End_OGD_di" bpmnElement="F_Sys_OGDShow_End_OGD">
+        <di:waypoint x="4180" y="437" />
+        <di:waypoint x="4267" y="437" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="Note_Legend_di" bpmnElement="Note_Legend">
+        <dc:Bounds x="50" y="4" width="1500" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Note_Scope_di" bpmnElement="Note_Scope">
+        <dc:Bounds x="1600" y="4" width="1500" height="50" />
+      </bpmndi:BPMNShape>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

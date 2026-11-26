@@ -121,7 +121,7 @@ test('S2: цивільний заклад і виписка — після ви�
   const facility = page.locator('.facts__row', {hasText: 'Заклад лікування'});
   await expect(facility).toContainText('невідомо');
   // Переведення й виписка не перезапускають контроль лікування.
-  await expect(page.locator('main')).toContainText('21 лютого 2027');
+  await expect(page.locator('main')).toContainText('21 жовтня 2027');
 });
 
 test('S3: нова версія без успадкованої квитанції, відкликання з історією, копія ≠ оригінал', async ({page}) => {

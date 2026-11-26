@@ -539,22 +539,12 @@
         <bpmn:incoming>F_OGD_Clarify_OGD_AwaitStatus</bpmn:incoming>
         <bpmn:outgoing>OGD_StatusLoop</bpmn:outgoing>
       </bpmn:receiveTask>
-      <bpmn:receiveTask id="OGD_AwaitExecution" name="Очікувати належне підтвердження виконання за цим пакетом">
+      <bpmn:receiveTask id="OGD_AwaitExecution" name="Очікувати належне підтвердження виконання одноразової виплати">
         <bpmn:incoming>OGD_Approved</bpmn:incoming>
-        <bpmn:incoming>OGD_ExecutionLoop</bpmn:incoming>
-        <bpmn:outgoing>F_OGD_AwaitExecution_OGD_Enough</bpmn:outgoing>
+        <bpmn:outgoing>F_OGD_AwaitExecution_OGD_Confirmed</bpmn:outgoing>
       </bpmn:receiveTask>
-      <bpmn:exclusiveGateway id="OGD_Enough" name="Увесь обраний обсяг виконано?" default="OGD_PartExecuted">
-        <bpmn:incoming>F_OGD_AwaitExecution_OGD_Enough</bpmn:incoming>
-        <bpmn:outgoing>OGD_AllExecuted</bpmn:outgoing>
-        <bpmn:outgoing>OGD_PartExecuted</bpmn:outgoing>
-      </bpmn:exclusiveGateway>
-      <bpmn:serviceTask id="OGD_Partial" name="Зафіксувати частину; решту лишити відкритою">
-        <bpmn:incoming>OGD_PartExecuted</bpmn:incoming>
-        <bpmn:outgoing>OGD_ExecutionLoop</bpmn:outgoing>
-      </bpmn:serviceTask>
       <bpmn:serviceTask id="OGD_Confirmed" name="Зафіксувати виконання: джерело + пакет + час">
-        <bpmn:incoming>OGD_AllExecuted</bpmn:incoming>
+        <bpmn:incoming>F_OGD_AwaitExecution_OGD_Confirmed</bpmn:incoming>
         <bpmn:outgoing>F_OGD_Confirmed_OGD_End</bpmn:outgoing>
       </bpmn:serviceTask>
       <bpmn:endEvent id="OGD_End" name="Підтверджено лише обраний обсяг">
@@ -578,12 +568,7 @@
       <bpmn:sequenceFlow id="OGD_Approved" sourceRef="OGD_Outcome" targetRef="OGD_AwaitExecution" name="Призначено">
         <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">status == approved</bpmn:conditionExpression>
       </bpmn:sequenceFlow>
-      <bpmn:sequenceFlow id="F_OGD_AwaitExecution_OGD_Enough" sourceRef="OGD_AwaitExecution" targetRef="OGD_Enough" />
-      <bpmn:sequenceFlow id="OGD_AllExecuted" sourceRef="OGD_Enough" targetRef="OGD_Confirmed" name="Так">
-        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">execution_evidence_covers_selected_scope</bpmn:conditionExpression>
-      </bpmn:sequenceFlow>
-      <bpmn:sequenceFlow id="OGD_PartExecuted" sourceRef="OGD_Enough" targetRef="OGD_Partial" name="Ні / частина" />
-      <bpmn:sequenceFlow id="OGD_ExecutionLoop" sourceRef="OGD_Partial" targetRef="OGD_AwaitExecution" />
+      <bpmn:sequenceFlow id="F_OGD_AwaitExecution_OGD_Confirmed" sourceRef="OGD_AwaitExecution" targetRef="OGD_Confirmed" />
       <bpmn:sequenceFlow id="F_OGD_Confirmed_OGD_End" sourceRef="OGD_Confirmed" targetRef="OGD_End" />
       <bpmn:exclusiveGateway id="OGD_Applicable" name="Є підстава / звернення?" default="OGD_ApplicableUnknown">
         <bpmn:incoming>OGD_CheckApplicability</bpmn:incoming>
@@ -708,7 +693,7 @@
         <bpmn:text>Окремий непереривний прохід • нова подія / звірка / звернення • не клінічне рішення</bpmn:text>
       </bpmn:textAnnotation>
     </bpmn:subProcess>
-    <bpmn:boundaryEvent id="Timer_Long" name="Контроль до 4 календарних місяців" attachedToRef="Sub_Care" cancelActivity="false">
+    <bpmn:boundaryEvent id="Timer_Long" name="Огляд ВЛК: до 12 міс. від початку лікування (з 24.11.2026)" attachedToRef="Sub_Care" cancelActivity="false">
       <bpmn:outgoing>F_LongAlert</bpmn:outgoing>
       <bpmn:timerEventDefinition id="TimerDef_Long">
         <bpmn:timeDate>long_treatment_review_at</bpmn:timeDate>
@@ -1724,15 +1709,6 @@
       <bpmndi:BPMNShape id="DI_OGD_AwaitExecution" bpmnElement="OGD_AwaitExecution">
         <dc:Bounds x="1580" y="195" width="220" height="100" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="DI_OGD_Enough" bpmnElement="OGD_Enough" isMarkerVisible="true">
-        <dc:Bounds x="1860" y="220" width="50" height="50" />
-        <bpmndi:BPMNLabel>
-          <dc:Bounds x="1795" y="158" width="180" height="50" />
-        </bpmndi:BPMNLabel>
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="DI_OGD_Partial" bpmnElement="OGD_Partial">
-        <dc:Bounds x="2090" y="670" width="180" height="100" />
-      </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="DI_OGD_Confirmed" bpmnElement="OGD_Confirmed">
         <dc:Bounds x="2090" y="195" width="180" height="100" />
       </bpmndi:BPMNShape>
@@ -1845,32 +1821,9 @@
           <dc:Bounds x="1452" y="250" width="82" height="22" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="DI_F_OGD_AwaitExecution_OGD_Enough" bpmnElement="F_OGD_AwaitExecution_OGD_Enough">
+      <bpmndi:BPMNEdge id="DI_F_OGD_AwaitExecution_OGD_Confirmed" bpmnElement="F_OGD_AwaitExecution_OGD_Confirmed">
         <di:waypoint x="1800" y="245.0" />
-        <di:waypoint x="1860" y="245.0" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="DI_OGD_AllExecuted" bpmnElement="OGD_AllExecuted">
-        <di:waypoint x="1910" y="245.0" />
         <di:waypoint x="2090" y="245.0" />
-        <bpmndi:BPMNLabel>
-          <dc:Bounds x="1935.0" y="209.0" width="130" height="32" />
-        </bpmndi:BPMNLabel>
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="DI_OGD_PartExecuted" bpmnElement="OGD_PartExecuted">
-        <di:waypoint x="1885" y="270" />
-        <di:waypoint x="1885" y="720" />
-        <di:waypoint x="2090" y="720" />
-        <bpmndi:BPMNLabel>
-          <dc:Bounds x="1900" y="600" width="150" height="25" />
-        </bpmndi:BPMNLabel>
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="DI_OGD_ExecutionLoop" bpmnElement="OGD_ExecutionLoop">
-        <di:waypoint x="2270" y="720" />
-        <di:waypoint x="2310" y="720" />
-        <di:waypoint x="2310" y="870" />
-        <di:waypoint x="1560" y="870" />
-        <di:waypoint x="1560" y="245" />
-        <di:waypoint x="1580" y="245" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="DI_F_OGD_Confirmed_OGD_End" bpmnElement="F_OGD_Confirmed_OGD_End">
         <di:waypoint x="2270" y="245.0" />

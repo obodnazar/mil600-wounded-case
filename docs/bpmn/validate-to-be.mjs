@@ -140,8 +140,11 @@ for (const route of ['Reward_','OGD_']) {
   assert.equal(byId[route+'Outcome'].default.targetRef.id,route+'Clarify');
   assert.equal(byId[route+'AwaitExecution'].$type,'bpmn:ReceiveTask');
   assert(!reachable(route+'Start',route+'Confirmed',[route+'AwaitExecution']),'Без доказу виконання немає підтвердження');
-  assert.equal(byId[route+'Enough'].default.targetRef.id,route+'Partial');
 }
+assert.equal(byId.Reward_Enough.default.targetRef.id,'Reward_Partial');
+// ADR 0013: ОГД — одна виплата, без гілки часткового виконання.
+assert(!byId.OGD_Enough && !byId.OGD_Partial,'ОГД без часткового виконання');
+assert(byId.OGD_AwaitExecution.outgoing.some(f=>f.targetRef.id==='OGD_Confirmed'));
 assert.equal(byId.Control_Repeat.outgoing.find(f=>f.name==='Так').targetRef.id,'Control_Duplicate');
 assert.equal(byId.OGD_Applicable.default.targetRef.id,'OGD_ApplicabilityWait','Невідома застосовність не є відмовою / відсутністю права');
 assert.equal(byId.Intake_WaitFirst.$type,'bpmn:EventBasedGateway');

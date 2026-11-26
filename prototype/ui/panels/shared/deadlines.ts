@@ -90,7 +90,7 @@ export function summarizeCertificateDeadline(view: CertificateDeadlineView): Dea
 
 export function summarizeCareDeadline(view: CareDeadlineView): DeadlineSummary {
   if (view.applicability === 'not_applicable') {
-    return notApplicable('Контроль чотиримісячного строку до цього кейсу не застосовується.');
+    return notApplicable('Контроль строку огляду ВЛК під час лікування до цього кейсу не застосовується.');
   }
   if (!view.startDate) {
     return {

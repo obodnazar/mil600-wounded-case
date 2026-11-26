@@ -60,7 +60,7 @@ test('правило застосовності: підтверджене не �
 
 test('правило лікування: чотири календарні місяці лише за дати й застосовності', () => {
   assert.deepEqual(careControl('2026-10-21', true), {
-    applicability: 'applicable', startDate: '2026-10-21', dueDate: '2027-02-21', needsClarification: false,
+    applicability: 'applicable', startDate: '2026-10-21', dueDate: '2027-10-21', needsClarification: false,
   });
   assert.deepEqual([careControl(null, true).dueDate, careControl(null, true).needsClarification], [null, true]);
   assert.deepEqual([careControl('2026-10-21', undefined).dueDate, careControl('2026-10-21', undefined).needsClarification], [null, true]);
