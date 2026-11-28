@@ -70,17 +70,17 @@ test('FR-02: підтверджена застосовність контрол�
   withHarness(async h => {
     await h.accepted('care-start');
     const careDeadline = () => patientCaseView(h.store, CASE).care.deadline;
-    assert.deepEqual([careDeadline().applicability, careDeadline().dueDate], ['applicable', '2027-02-21']);
+    assert.deepEqual([careDeadline().applicability, careDeadline().dueDate], ['applicable', '2027-10-21']);
     await h.accepted(variant('care-start', 'demo-care-without-applicability', event => {
       delete event.payload.care_applicable;
     }));
-    assert.deepEqual([careDeadline().applicability, careDeadline().dueDate], ['applicable', '2027-02-21']);
+    assert.deepEqual([careDeadline().applicability, careDeadline().dueDate], ['applicable', '2027-10-21']);
     assert.equal(openTasks(h, 'clarify_care_start'), 0);
     await h.pending(variant('care-start', 'demo-care-not-applicable', event => {
       event.payload.care_applicable = false;
     }));
     assert.equal(lastReason(h), 'care_applicability_change_unproven');
-    assert.deepEqual([careDeadline().applicability, careDeadline().dueDate], ['applicable', '2027-02-21']);
+    assert.deepEqual([careDeadline().applicability, careDeadline().dueDate], ['applicable', '2027-10-21']);
   }));
 
 test('FR-03: чинна постанова — найпізніша за часом; затримана старіша постанова не стає чинною', () =>

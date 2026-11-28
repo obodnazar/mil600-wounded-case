@@ -110,7 +110,7 @@ event(main,'End_Reward','endEvent','Стан обраного періоду',12
 node(main,'Sub_OGD','subProcess','ОГД: лише після чинної постанови ВЛК; окремий пакет і виконання',1800,1140,230,100,'Finance')
 event(main,'End_OGD','endEvent','Стан окремого пакета',2150,1172,'Finance')
 node(main,'EventSub_Control','subProcess','Нова подія / погоджена звірка / звернення: окремий прохід',1360,365,290,110,'System',triggeredByEvent='true')
-event(main,'Timer_Long','boundaryEvent','Контроль до 4 календарних місяців',520,202,'Medical',attachedToRef='Sub_Care',cancelActivity='false')
+event(main,'Timer_Long','boundaryEvent','Огляд ВЛК: до 12 міс. від початку лікування (з 24.11.2026)',520,202,'Medical',attachedToRef='Sub_Care',cancelActivity='false')
 e=el(nodes['Timer_Long']['el'],'bpmn:timerEventDefinition',id='TimerDef_Long');el(e,'bpmn:timeDate','long_treatment_review_at')
 node(main,'Task_LongReview','userTask','Заклад: перевірити актуальність; направити на ВЛК щодо тривалого лікування (N01 II 6.5)',790,145,220,80,'Medical')
 event(main,'End_LongReview','endEvent','Без санкцій від таймера',1110,167,'Medical')
@@ -249,7 +249,7 @@ event(vlk,'VLK_Trigger','intermediateCatchEvent','Належне джерело:
 el(nodes['VLK_Trigger']['el'],'bpmn:messageEventDefinition',id='MessageDef_VLKTrigger')
 chain(vlk,['VLK_Start','VLK_Trigger','VLK_Referral'])
 
-def financial(key, sub, prefix, title, basis, names):
+def financial(key, sub, prefix, title, basis, names, partial=True):
     d=diagram(key,nodes[sub]['el'],title,2560,1100)
     def n(id,typ,name,x,y,w=180,h=80):return node(d,prefix+id,typ,name,x,y,w,h)
     def ev(id,name,x,y):return event(d,prefix+id,'endEvent',name,x,y)
@@ -266,8 +266,9 @@ def financial(key, sub, prefix, title, basis, names):
     n('Clarify','userTask','Супровід: уточнити невідомий стан; без обіцянки грошей',1150,680)
     n('AwaitStatus','receiveTask','Очікувати відповідь належного джерела',1360,680)
     n('AwaitExecution','receiveTask',names['AwaitExecution'],1580,205,220)
-    gate(d,prefix+'Enough','Увесь обраний обсяг виконано?',1860,220)
-    n('Partial','serviceTask','Зафіксувати частину; решту лишити відкритою',2090,680)
+    if partial:
+        gate(d,prefix+'Enough','Увесь обраний обсяг виконано?',1860,220)
+        n('Partial','serviceTask','Зафіксувати частину; решту лишити відкритою',2090,680)
     n('Confirmed','serviceTask',names['Confirmed'],2090,205)
     ev('End','Підтверджено лише обраний обсяг',2390,227)
     chain(d,[prefix+x for x in ['Start','Basis','Checklist','Send','Receipt','Decision','Outcome']])
@@ -279,10 +280,14 @@ def financial(key, sub, prefix, title, basis, names):
     chain(d,[prefix+'Clarify',prefix+'AwaitStatus'])
     flow(d,prefix+'StatusLoop',prefix+'AwaitStatus',prefix+'Outcome',points=[(1540,720),(1550,720),(1550,60),(1365,60),(1365,245),(1400,245)])
     flow(d,prefix+'Approved',prefix+'Outcome',prefix+'AwaitExecution','Призначено',condition='status == approved',label=(1452,250,82,22))
-    chain(d,[prefix+'AwaitExecution',prefix+'Enough'])
-    flow(d,prefix+'AllExecuted',prefix+'Enough',prefix+'Confirmed','Так',condition='execution_evidence_covers_selected_scope')
-    flow(d,prefix+'PartExecuted',prefix+'Enough',prefix+'Partial','Ні / частина',default=True,points=[(1885,270),(1885,720),(2090,720)],label=(1900,600,150,25))
-    flow(d,prefix+'ExecutionLoop',prefix+'Partial',prefix+'AwaitExecution',points=[(2270,720),(2310,720),(2310,870),(1560,870),(1560,245),(1580,245)])
+    if partial:
+        chain(d,[prefix+'AwaitExecution',prefix+'Enough'])
+        flow(d,prefix+'AllExecuted',prefix+'Enough',prefix+'Confirmed','Так',condition='execution_evidence_covers_selected_scope')
+        flow(d,prefix+'PartExecuted',prefix+'Enough',prefix+'Partial','Ні / частина',default=True,points=[(1885,270),(1885,720),(2090,720)],label=(1900,600,150,25))
+        flow(d,prefix+'ExecutionLoop',prefix+'Partial',prefix+'AwaitExecution',points=[(2270,720),(2310,720),(2310,870),(1560,870),(1560,245),(1580,245)])
+    else:
+        # ADR 0013: ОГД — одна одноразова виплата, часткового виконання немає.
+        chain(d,[prefix+'AwaitExecution',prefix+'Confirmed'])
     chain(d,[prefix+'Confirmed',prefix+'End'])
     note(d,prefix+'Note','Повернення ≠ відмова ≠ призначення ≠ виконання. Немає довіреного джерела виконання → очікування / невідоме, не «гроші отримано». Один прохід — обраний період або пакет; інші не закриваються. F06; ADR 0001, 0003–0004.',80,950,2320,100)
     return d
@@ -307,8 +312,9 @@ ogd=financial('ogd','Sub_OGD','OGD_','ОГД • лише після чинно�
            'Receipt':'Очікувати підтвердження: уповноважений орган зареєстрував документи',
            'Decision':'Уповноважений орган: висновок; розпорядник коштів: рішення',
            'Fix':'Заявник / автор документа: доопрацювати; повернення не є відмовою',
-           'AwaitExecution':'Очікувати належне підтвердження виконання за цим пакетом',
-           'Confirmed':'Зафіксувати виконання: джерело + пакет + час'})
+           'AwaitExecution':'Очікувати належне підтвердження виконання одноразової виплати',
+           'Confirmed':'Зафіксувати виконання: джерело + пакет + час'},
+          partial=False)
 # Не кожен кейс породжує ОГД. Відсутність потреби / застосовності — явна людська розвилка.
 gate(ogd,'OGD_Applicable','Є підстава / звернення?',350,385)
 event(ogd,'OGD_NotApplicable','endEvent','ОГД не запитується / не застосовується; без відмови сервісом',70,427)

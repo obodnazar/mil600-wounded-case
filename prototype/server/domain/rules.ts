@@ -7,7 +7,8 @@ import {calendarDays, calendarMonths, kyivDate} from './calendar.js';
  */
 
 export const CERTIFICATE_DAYS = 5;
-export const CARE_MONTHS = 4;
+/** Закон №2011-XII ст.10-1 п.11 у редакції Закону №4954-IX (з 24.11.2026): до 12 місяців від початку лікування. */
+export const CARE_MONTHS = 12;
 
 /* ───────────── Строк довідки про обставини травми ───────────── */
 
@@ -99,7 +100,7 @@ export interface CareControl {
   needsClarification: boolean;
 }
 
-/** Чотири календарні місяці від підтвердженого початку безперервного лікування. */
+/** Дванадцять календарних місяців від підтвердженого початку безперервного лікування (редакція з 24.11.2026). */
 export function careControl(startDate: string | null, careApplicable: unknown): CareControl {
   const applicability: Applicability =
     careApplicable === true ? 'applicable' : careApplicable === false ? 'not_applicable' : 'unknown';

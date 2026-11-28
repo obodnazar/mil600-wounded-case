@@ -59,7 +59,7 @@ test('D1: повний шлях — винагорода до ВЛК, ОГД п�
     assert.deepEqual(h.sizes(), before);
 
     // Чотири календарні місяці від підтвердженого початку; переведення відлік не скинуло.
-    assert.equal(h.store.row("SELECT due_date FROM deadline WHERE case_id=? AND rule_version_id='demo-rule-care'", CASE)?.due_date, '2027-02-21');
+    assert.equal(h.store.row("SELECT due_date FROM deadline WHERE case_id=? AND rule_version_id='demo-rule-care'", CASE)?.due_date, '2027-10-21');
 
     await h.login('patient');
     const view = (await (await h.get('/api/patient')).json()) as PatientCaseView;
@@ -204,7 +204,7 @@ test('AC04: без дати немає строку; переведення не
     assert.equal(h.count("SELECT COUNT(*) AS n FROM task WHERE case_id='demo-case-03' AND kind='clarify_care_start' AND status='open'"), 1);
 
     await acceptAll(h, ['primary', 'admit', 'care-start', 'transfer', 'civil', 'civil-summary', 'discharge']);
-    assert.equal(patient(h).care.deadline.dueDate, '2027-02-21');
+    assert.equal(patient(h).care.deadline.dueDate, '2027-10-21');
     // Після виписки поточний заклад не вигадується.
     assert.equal(patient(h).care.facility, null);
 
@@ -212,7 +212,7 @@ test('AC04: без дати немає строку; переведення не
       item.payload.date = '2026-11-12';
     }));
     assert.equal(patient(h).care.deadline.startDate, '2026-10-21');
-    assert.equal(patient(h).care.deadline.dueDate, '2027-02-21');
+    assert.equal(patient(h).care.deadline.dueDate, '2027-10-21');
   }));
 
 test('AC04 (ADR 0012): без еПМК строк і далі рахується від надходження; довідка про перебування його не зрушує', () =>
@@ -239,7 +239,7 @@ test('AC04: календарний worker створює лише задачу �
     await acceptAll(h, ['primary', 'admit', 'care-start']);
     const finances = h.store.rows('SELECT payment_kind,current_status FROM financial_track WHERE case_id=?', CASE);
     const stage = h.store.row('SELECT lifecycle_state FROM wound_case WHERE id=?', CASE)?.lifecycle_state;
-    const later = Date.parse('2027-03-01T12:00:00Z');
+    const later = Date.parse('2027-11-01T12:00:00Z');
     reviewOverdueDeadlines(h.store, later);
     const reminders = h.count("SELECT COUNT(*) AS n FROM task WHERE kind='review_deadline'");
     assert(reminders > 0);
