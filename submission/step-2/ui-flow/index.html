@@ -1,0 +1,327 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Кейс поранення · клікабельний сценарій</title>
+<style>
+  :root {
+    --bg: #2a2c25; --bar: #1f211c; --card: #e7e8dd; --card2: #f4f4ec; --ink: #1d1f1a; --muted: #5b5f55;
+    --line: #c9cbbd; --accent: #f07a2a; --accent-ink: #8a3a00; --ok: #2f6b3a; --ok-bg: #d8ead6; --warn: #8a5a00;
+    --warn-bg: #fbe7c4; --bad: #8a1f1f; --bad-bg: #f6d5d0; --sys: #1f4e79; --sys-bg: #dce9f7;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--ink); font-family: -apple-system, "Helvetica Neue", Arial, sans-serif; }
+  .phone { max-width: 420px; min-height: 100vh; margin: 0 auto; background: var(--bg); display: flex; flex-direction: column; }
+  .banner { background: #fdf3e6; color: #3b2a14; font-size: 12px; font-weight: 600; text-align: center; padding: 6px 10px; border-bottom: 3px solid var(--accent); }
+  .top { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: var(--bar); color: #f2f2ea; }
+  .top b { font-size: 15px; }
+  .roles { display: flex; background: #3a3d33; border-radius: 999px; padding: 3px; }
+  .roles button { border: 0; background: transparent; color: #e9e9df; font: inherit; font-size: 13px; font-weight: 600; padding: 7px 12px; border-radius: 999px; cursor: pointer; min-height: 36px; }
+  .roles button[aria-pressed="true"] { background: #f2f2ea; color: var(--ink); }
+  main { flex: 1; padding: 14px; color: #f2f2ea; }
+  h1 { font-size: 26px; line-height: 1.15; margin: 4px 0 8px; }
+  h2 { font-size: 18px; margin: 0 0 8px; }
+  .eyebrow { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: #c9cbbd; font-weight: 700; }
+  p { margin: 0 0 10px; line-height: 1.45; }
+  .lead { color: #dcdccf; font-size: 15px; }
+  .card { background: var(--card); color: var(--ink); border-radius: 16px; padding: 14px; margin: 12px 0; }
+  .card.next { border-top: 5px solid var(--accent); }
+  .card .eyebrow { color: var(--muted); }
+  .muted { color: var(--muted); }
+  .small { font-size: 13px; }
+  .btn { display: block; width: 100%; border: 0; border-radius: 14px; padding: 15px 16px; font: inherit; font-size: 16px; font-weight: 700; cursor: pointer; margin-top: 10px; min-height: 52px; }
+  .btn.primary { background: var(--accent); color: #1d1206; }
+  .btn.ghost { background: transparent; color: var(--ink); border: 2px solid var(--ink); }
+  .btn.ghost.light { color: #f2f2ea; border-color: #f2f2ea; }
+  .btn:focus-visible, .roles button:focus-visible, .tab:focus-visible, .row:focus-visible, .check:focus-visible { outline: 3px solid #ffd27a; outline-offset: 2px; }
+  .steps { list-style: none; padding: 0; margin: 4px 0 0; }
+  .steps li { display: grid; grid-template-columns: 28px 1fr; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--line); }
+  .steps li:last-child { border-bottom: 0; }
+  .dot { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font-size: 14px; font-weight: 800; border: 2px solid var(--muted); color: var(--muted); background: #fff; }
+  .done .dot { background: var(--ok); border-color: var(--ok); color: #fff; }
+  .now .dot { background: var(--accent); border-color: var(--accent); color: #1d1206; }
+  .bad .dot { background: var(--bad); border-color: var(--bad); color: #fff; }
+  .steps strong { display: block; font-size: 15px; }
+  .steps span { font-size: 13px; color: var(--muted); }
+  .pill { display: inline-block; font-size: 12px; font-weight: 700; padding: 3px 9px; border-radius: 999px; margin: 2px 4px 2px 0; }
+  .pill.ok { background: var(--ok-bg); color: var(--ok); }
+  .pill.warn { background: var(--warn-bg); color: var(--warn); }
+  .pill.bad { background: var(--bad-bg); color: var(--bad); }
+  .pill.sys { background: var(--sys-bg); color: var(--sys); }
+  .who { display: flex; gap: 10px; align-items: center; margin-top: 8px; }
+  .who i { width: 34px; height: 34px; border-radius: 10px; background: #c8d3b3; display: grid; place-items: center; font-style: normal; font-weight: 800; }
+  .tabs { display: flex; gap: 6px; margin: 12px 0 4px; }
+  .tab { flex: 1; border: 2px solid #f2f2ea; background: transparent; color: #f2f2ea; font: inherit; font-weight: 700; font-size: 14px; border-radius: 12px; padding: 10px; cursor: pointer; min-height: 46px; }
+  .tab[aria-selected="true"] { background: #f2f2ea; color: var(--ink); }
+  .item { display: grid; grid-template-columns: 34px 1fr; gap: 10px; align-items: start; padding: 12px 0; border-bottom: 1px solid var(--line); }
+  .item:last-child { border-bottom: 0; }
+  .check { width: 30px; height: 30px; border-radius: 8px; border: 2px solid var(--ink); background: #fff; cursor: pointer; font-size: 17px; font-weight: 800; display: grid; place-items: center; }
+  .check[disabled] { border-style: dashed; border-color: var(--muted); cursor: default; color: var(--sys); background: var(--sys-bg); }
+  .item.closed .check { background: var(--ok); border-color: var(--ok); color: #fff; border-style: solid; }
+  .item strong { display: block; font-size: 15px; }
+  .row { display: flex; justify-content: space-between; align-items: center; width: 100%; text-align: left; background: var(--card); color: var(--ink); border: 0; border-radius: 14px; padding: 14px; margin: 8px 0; font: inherit; cursor: pointer; min-height: 60px; }
+  .row b { font-size: 15px; display: block; }
+  .row .muted { font-size: 13px; }
+  .badge { background: var(--accent); color: #1d1206; font-size: 12px; font-weight: 800; padding: 4px 9px; border-radius: 999px; white-space: nowrap; }
+  dl { margin: 6px 0 0; display: grid; grid-template-columns: 42% 1fr; gap: 6px 10px; font-size: 14px; }
+  dt { color: var(--muted); }
+  dd { margin: 0; font-weight: 600; }
+  .notice { background: var(--sys-bg); color: var(--sys); border-radius: 12px; padding: 10px 12px; font-size: 13px; margin-top: 10px; }
+  .error { background: var(--bad-bg); color: var(--bad); border-radius: 12px; padding: 10px 12px; font-size: 14px; margin-top: 10px; font-weight: 600; }
+  .sheet { position: fixed; inset: 0; background: rgba(0,0,0,.55); display: flex; align-items: flex-end; justify-content: center; }
+  .sheet > div { background: var(--card2); color: var(--ink); width: 100%; max-width: 420px; border-radius: 20px 20px 0 0; padding: 18px 16px 22px; }
+  label.opt { display: flex; gap: 10px; align-items: center; padding: 10px 0; font-size: 15px; border-bottom: 1px solid var(--line); }
+  label.opt input { width: 22px; height: 22px; }
+  .demo { padding: 10px 14px 18px; color: #c9cbbd; font-size: 12px; border-top: 1px dashed #55594d; }
+  .demo button { background: transparent; color: #e9e9df; border: 1px solid #77796c; border-radius: 10px; padding: 7px 10px; font: inherit; font-size: 12px; margin: 4px 6px 0 0; cursor: pointer; }
+  .back { background: none; border: 0; color: #f2f2ea; font: inherit; font-size: 14px; text-decoration: underline; padding: 6px 0; cursor: pointer; }
+  @media (prefers-reduced-motion: no-preference) { .card, .row { transition: transform .12s ease-out; } .row:active, .btn:active { transform: scale(.98); } }
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="banner">Навчальний прототип KSE. Не офіційний сервіс Міноборони. Дані вигадані</div>
+  <div class="top">
+    <b>Поранення</b>
+    <div class="roles" role="group" aria-label="Роль">
+      <button type="button" data-role="soldier" aria-pressed="true">Боєць</button>
+      <button type="button" data-role="commander" aria-pressed="false">Командир</button>
+    </div>
+  </div>
+  <main id="app" aria-live="polite"></main>
+  <div class="demo">
+    <div>Демо-керування (у справжньому сервісі цього немає):</div>
+    <button type="button" id="demo-referral">Заклад видав направлення на ВЛК</button>
+    <button type="button" id="demo-summary">Виписка надійшла у ВЛК</button>
+    <button type="button" id="demo-net">Вимкнути зв’язок</button>
+    <button type="button" id="demo-reset">Почати спочатку</button>
+  </div>
+</div>
+<script>
+const KEY = 'kejs-poranennia-ui-flow';
+const initial = () => ({
+  role: 'soldier', seenIntro: false, cert: 'review', returnReason: null, signedAt: null,
+  view: { soldier: 'auto', commander: 'list' }, tab: 'todo', net: true, signError: false,
+  docs: { referral: false, summary: false }, actions: { exam: false, copy: false, leave: false },
+});
+let s;
+try { s = Object.assign(initial(), JSON.parse(localStorage.getItem(KEY) || '{}')); } catch { s = initial(); }
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(s)); } catch {} };
+const app = document.getElementById('app');
+const now = () => new Date().toLocaleTimeString('uk-UA', {hour: '2-digit', minute: '2-digit'});
+const esc = t => String(t).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+const CERT_STATUS = {
+  review: ['На розгляді у командира', 'warn', 'на розгляді у командира'],
+  returned: ['Повернуто на доопрацювання', 'bad', 'повернуто на доопрацювання'],
+  sent: ['Затверджено й надіслано у ВЛК', 'ok', 'затверджено командиром'],
+};
+const plural = n => n % 10 === 1 && n % 100 !== 11 ? 'пункт' : [2, 3, 4].includes(n % 10) && ![12, 13, 14].includes(n % 100) ? 'пункти' : 'пунктів';
+const REASONS = ['Обставини описано неточно', 'Немає підстави — наказу командира', 'Помилка в даних бійця'];
+
+function step(cls, mark, title, note) {
+  return `<li class="${cls}"><div class="dot" aria-hidden="true">${mark}</div><div><strong>${esc(title)}</strong><span>${esc(note)}</span></div></li>`;
+}
+
+function soldierTrack() {
+  const c = s.cert;
+  return `<ol class="steps">
+    ${step('done', '✓', 'еПМК сформовано', 'Медик вніс картку в МІС ЗСУ · 21.11, 10:42')}
+    ${step('done', '✓', 'Справу відкрито', 'Сервіс отримав еПМК і відкрив кейс сам · 21.11, 10:43')}
+    ${step(c === 'review' ? 'now' : c === 'returned' ? 'bad' : 'done', c === 'returned' ? '!' : c === 'review' ? '3' : '✓',
+      'Довідка про обставини травми: ' + CERT_STATUS[c][2],
+      c === 'review' ? 'Начальник медслужби склав проєкт, командир перевіряє. Строк — до 26.11'
+      : c === 'returned' ? 'Причина: ' + (s.returnReason || '—') + '. Виправляє начальник медслужби'
+      : 'Командир підписав КЕП · ' + (s.signedAt || ''))}
+    ${step(c === 'sent' ? 'done' : '', c === 'sent' ? '✓' : '4', 'Надіслано у ВЛК і заклад', c === 'sent' ? 'ВЛК і заклад підтвердили отримання' : 'Відбудеться автоматично після підпису')}
+    ${step(c === 'sent' ? 'now' : '', '5', 'Етап ВЛК', c === 'sent' ? 'Відкрито ваш чек-ліст' : 'Відкриється після передачі довідки')}
+  </ol>`;
+}
+
+function nextCard() {
+  const c = s.cert;
+  if (c === 'review') return card('next', 'Наступний крок', 'Командир перевіряє довідку', 'Від вас зараз нічого не потрібно. Ми повідомимо, коли довідку підпишуть.', 'Командир частини');
+  if (c === 'returned') return card('next', 'Наступний крок', 'Довідку виправляють', 'Від вас нічого не потрібно. Якщо обставини описано неточно, напишіть супроводу.', 'Начальник медслужби');
+  const left = todoItems().length;
+  return card('next', 'Наступний крок', left ? 'Пройдіть кроки етапу ВЛК' : 'Усі пункти етапу ВЛК виконано',
+    left ? `У чек-листі ${left} ${plural(left)}. Документи закриваються самі, свої дії позначайте ви.` : 'Кейс рухається далі: постанова ВЛК і виплати.',
+    left ? 'Ви і заклад' : 'ВЛК');
+}
+function card(cls, eyebrow, title, text, who) {
+  return `<section class="card ${cls}"><div class="eyebrow">${esc(eyebrow)}</div><h2>${esc(title)}</h2><p class="small">${esc(text)}</p>
+    <div class="who"><i aria-hidden="true">${esc(who[0])}</i><div><div class="eyebrow">Відповідає</div><b>${esc(who)}</b></div></div></section>`;
+}
+
+const ITEMS = [
+  {id: 'cert', kind: 'doc', title: 'Довідка про обставини травми у ВЛК', note: 'Закриється сама, коли ВЛК підтвердить отримання', done: () => s.cert === 'sent'},
+  {id: 'referral', kind: 'doc', title: 'Направлення на ВЛК', note: 'Видає заклад, що лікує, або командир за рекомендацією лікаря', done: () => s.docs.referral},
+  {id: 'summary', kind: 'doc', title: 'Виписка із закладу у ВЛК', note: 'Заклад надсилає сам', done: () => s.docs.summary},
+  {id: 'exam', kind: 'act', title: 'Прийти на огляд ВЛК', note: 'Дату й час повідомить ВЛК у цьому кейсі', done: () => s.actions.exam},
+  {id: 'copy', kind: 'act', title: 'Отримати на руки копію постанови ВЛК', note: 'Після огляду', done: () => s.actions.copy},
+  {id: 'leave', kind: 'act', title: 'Якщо ВЛК призначила відпустку для лікування — подати рапорт в Армія+', note: 'Рапорт на відпустку для лікування вже є в Армія+', done: () => s.actions.leave},
+];
+const todoItems = () => ITEMS.filter(i => !i.done());
+const doneItems = () => ITEMS.filter(i => i.done());
+
+function itemRow(i) {
+  const closed = i.done();
+  const btn = i.kind === 'doc'
+    ? `<button class="check" disabled aria-label="Закривається автоматично">${closed ? '✓' : '⚙'}</button>`
+    : `<button class="check" data-act="${i.id}" aria-pressed="${closed}" aria-label="${closed ? 'Повернути в «Потрібно зробити»' : 'Позначити виконаним'}">${closed ? '✓' : ''}</button>`;
+  const tag = i.kind === 'doc' ? `<span class="pill sys">${closed ? 'Підтверджено джерелом' : 'Закриється сам'}</span>` : `<span class="pill ${closed ? 'ok' : 'warn'}">${closed ? 'Ви позначили' : 'Ваша дія'}</span>`;
+  return `<div class="item ${closed ? 'closed' : ''}">${btn}<div><strong>${esc(i.title)}</strong><span class="small muted">${esc(i.note)}</span><div>${tag}</div></div></div>`;
+}
+
+function renderSoldier() {
+  if (!s.seenIntro) {
+    app.innerHTML = `<div class="eyebrow">Розділ «Поранення»</div>
+      <h1>Ваш шлях після поранення — в одному місці</h1>
+      <p class="lead">Тут видно, які документи потрібні, де кожен із них і хто зараз має діяти. Документи між собою пересилають медики, частина й ВЛК — вам не треба їх носити.</p>
+      <section class="card"><ol class="steps">
+        ${step('', '1', 'Медик вносить еПМК', 'Справа відкривається сама')}
+        ${step('', '2', 'Частина оформлює довідку', 'Командир перевіряє й підписує')}
+        ${step('', '3', 'Довідка йде у ВЛК', 'Ви бачите кожен статус')}
+        ${step('', '4', 'Етап ВЛК', 'Чек-лист: що зробити і що вже є')}
+      </ol></section>
+      <button class="btn primary" id="intro-next">Далі</button>`;
+    document.getElementById('intro-next').onclick = () => { s.seenIntro = true; save(); render(); };
+    return;
+  }
+  const showChecklist = s.cert === 'sent' && s.view.soldier === 'vlk';
+  if (showChecklist) {
+    const list = s.tab === 'todo' ? todoItems() : doneItems();
+    app.innerHTML = `<button class="back" id="to-track">← До статусу справи</button>
+      <div class="eyebrow">Етап ВЛК</div><h1>Ваш чек-лист</h1>
+      <p class="lead">Документи закриваються самі, коли їх підтвердить джерело. Свої дії позначаєте ви.</p>
+      <div class="tabs" role="tablist">
+        <button class="tab" role="tab" data-tab="todo" aria-selected="${s.tab === 'todo'}">Потрібно зробити · ${todoItems().length}</button>
+        <button class="tab" role="tab" data-tab="done" aria-selected="${s.tab === 'done'}">Виконано · ${doneItems().length}</button>
+      </div>
+      <section class="card">${list.length ? list.map(itemRow).join('') : `<p class="small muted">${s.tab === 'todo' ? 'Усе виконано.' : 'Поки нічого не виконано.'}</p>`}</section>`;
+    document.getElementById('to-track').onclick = () => { s.view.soldier = 'track'; save(); render(); };
+    app.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => { s.tab = b.dataset.tab; save(); render(); });
+    app.querySelectorAll('[data-act]').forEach(b => b.onclick = () => { s.actions[b.dataset.act] = !s.actions[b.dataset.act]; save(); render(); });
+    return;
+  }
+  const [label, tone] = CERT_STATUS[s.cert];
+  app.innerHTML = `<div class="eyebrow">Моя справа</div><h1>Статус документів</h1>
+    <p><span class="pill ${tone}">${esc(label)}</span><span class="small" style="color:#c9cbbd">Оновлено о ${now()}</span></p>
+    ${nextCard()}
+    <section class="card"><div class="eyebrow">Рух документів</div>${soldierTrack()}</section>
+    ${s.cert === 'sent' ? '<button class="btn primary" id="to-vlk">Перейти до етапу ВЛК</button>' : ''}`;
+  const b = document.getElementById('to-vlk');
+  if (b) b.onclick = () => { s.view.soldier = 'vlk'; save(); render(); };
+}
+
+const PEOPLE = [
+  ['Навчальний учасник 01', 'Лікування · умовний заклад 03', true],
+  ['Навчальний учасник 02', 'Оформлення документів', false],
+  ['Навчальний учасник 03', 'Етап ВЛК', false],
+  ['Навчальний учасник 04', 'Виплати', false],
+  ['Навчальний учасник 05', 'Лікування', false],
+];
+
+function renderCommander() {
+  if (s.view.commander === 'list') {
+    app.innerHTML = `<div class="eyebrow">Особовий склад · умовна група А</div><h1>Поранені</h1>
+      <p class="lead">Нові документи на підпис позначено помаранчевим.</p>
+      ${PEOPLE.map(([n, st, isMain], i) => `<button class="row" data-person="${i}"><div><b>${n}</b><span class="muted">${st}</span></div>
+        ${isMain && s.cert === 'review' ? '<span class="badge">Довідка на підпис</span>' : isMain && s.cert === 'returned' ? '<span class="pill bad">Повернуто</span>' : isMain ? '<span class="pill ok">Підписано</span>' : ''}</button>`).join('')}`;
+    app.querySelectorAll('[data-person]').forEach(b => b.onclick = () => {
+      if (b.dataset.person === '0') { s.view.commander = 'card'; save(); render(); }
+      else alert('У прототипі відкривається лише картка учасника 01.');
+    });
+    return;
+  }
+  const c = s.cert;
+  let body;
+  if (c === 'review') {
+    body = `<section class="card next"><div class="eyebrow">Документ по пораненню · новий</div>
+      <h2>Довідка про обставини травми</h2>
+      <p class="small muted">Проєкт склав начальник медслужби 22.11. Ви перевіряєте й підписуєте.</p>
+      <dl>
+        <dt>Військовослужбовець</dt><dd>Навчальний учасник 01</dd>
+        <dt>Дата травми</dt><dd>20.11.2026</dd>
+        <dt>Обставини</dt><dd>Внаслідок дій противника</dd>
+        <dt>Підстава</dt><dd>Наказ командира № 12 (умовний)</dd>
+        <dt>Строк видачі</dt><dd>до 26.11.2026</dd>
+      </dl>
+      <div class="notice">Діагнозів і медичних записів тут немає: їх бачать лише медики й ВЛК. Ви підписуєте лише службовий документ.</div>
+      ${s.signError ? '<div class="error">Немає зв’язку. Підпис не надіслано, довідка лишилась на розгляді. Спробуйте ще раз, коли з’явиться зв’язок.</div>' : ''}
+      <button class="btn primary" id="approve">Затвердити й підписати</button>
+      <button class="btn ghost" id="return">Не затверджувати — повернути</button></section>`;
+  } else if (c === 'returned') {
+    body = `<section class="card"><div class="eyebrow">Довідка про обставини травми</div><h2>Повернуто на доопрацювання</h2>
+      <p class="small">Причина: ${esc(s.returnReason)}. Задачу отримав начальник медслужби; боєць бачить, що довідку виправляють.</p>
+      <button class="btn ghost" id="fixed">Імітувати: надійшла виправлена версія</button></section>`;
+  } else {
+    body = `<section class="card"><div class="eyebrow">Довідка про обставини травми</div><h2>Підписано й надіслано</h2>
+      <p class="small muted">Підписано КЕП о ${esc(s.signedAt)}. Сервіс сам передав документ далі:</p>
+      <ol class="steps">
+        ${step('done', '✓', 'ВЛК', 'Отримання підтверджено')}
+        ${step('done', '✓', 'Заклад охорони здоров’я', 'Отримання підтверджено')}
+        ${step('done', '✓', 'Військовослужбовець', 'Бачить статус і копію в кейсі')}
+      </ol>
+      <div class="notice">До постанови ВЛК ваша участь не потрібна. Якщо ВЛК поверне документ частини, задача з’явиться тут.</div></section>`;
+  }
+  app.innerHTML = `<button class="back" id="to-list">← До списку</button>
+    <div class="eyebrow">Картка бійця</div><h1>Навчальний учасник 01</h1>
+    <p class="lead">Умовна група А · на лікуванні з 21.11 · умовний заклад 03</p>${body}`;
+  document.getElementById('to-list').onclick = () => { s.view.commander = 'list'; save(); render(); };
+  const a = document.getElementById('approve'); if (a) a.onclick = signSheet;
+  const r = document.getElementById('return'); if (r) r.onclick = returnSheet;
+  const f = document.getElementById('fixed'); if (f) f.onclick = () => { s.cert = 'review'; s.returnReason = null; save(); render(); };
+}
+
+function sheet(html, onReady) {
+  const el = document.createElement('div');
+  el.className = 'sheet'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true');
+  el.innerHTML = `<div>${html}</div>`;
+  document.body.appendChild(el);
+  const close = () => el.remove();
+  el.addEventListener('click', e => { if (e.target === el) close(); });
+  onReady(el, close);
+  el.querySelector('button')?.focus();
+}
+function signSheet() {
+  sheet(`<div class="eyebrow">Підпис</div><h2>Підписати довідку КЕП</h2>
+    <p class="small">Після підпису сервіс сам надішле довідку у ВЛК, заклад і бійцю. У прототипі підпис імітується.</p>
+    <button class="btn primary" id="do-sign">Підписати (КЕП / Дія.Підпис)</button>
+    <button class="btn ghost" id="cancel">Скасувати</button>`, (el, close) => {
+    el.querySelector('#cancel').onclick = close;
+    el.querySelector('#do-sign').onclick = () => {
+      close();
+      if (!s.net) { s.signError = true; save(); render(); return; }
+      s.signError = false; s.cert = 'sent'; s.signedAt = now() + ', 28.11'; save(); render();
+    };
+  });
+}
+function returnSheet() {
+  sheet(`<div class="eyebrow">Не затверджувати</div><h2>Чому повертаєте?</h2>
+    ${REASONS.map((r, i) => `<label class="opt"><input type="radio" name="reason" value="${i}" ${i === 0 ? 'checked' : ''}>${esc(r)}</label>`).join('')}
+    <button class="btn primary" id="do-return">Повернути начальнику медслужби</button>
+    <button class="btn ghost" id="cancel">Скасувати</button>`, (el, close) => {
+    el.querySelector('#cancel').onclick = close;
+    el.querySelector('#do-return').onclick = () => {
+      const v = el.querySelector('input[name=reason]:checked').value;
+      s.cert = 'returned'; s.returnReason = REASONS[v]; close(); save(); render();
+    };
+  });
+}
+
+function render() {
+  document.querySelectorAll('[data-role]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.role === s.role)));
+  document.getElementById('demo-net').textContent = s.net ? 'Вимкнути зв’язок' : 'Увімкнути зв’язок';
+  (s.role === 'soldier' ? renderSoldier : renderCommander)();
+  window.scrollTo(0, 0);
+}
+document.querySelectorAll('[data-role]').forEach(b => b.onclick = () => { s.role = b.dataset.role; save(); render(); });
+document.getElementById('demo-referral').onclick = () => { s.docs.referral = true; save(); render(); };
+document.getElementById('demo-summary').onclick = () => { s.docs.summary = true; save(); render(); };
+document.getElementById('demo-net').onclick = () => { s.net = !s.net; save(); render(); };
+document.getElementById('demo-reset').onclick = () => { s = initial(); save(); render(); };
+render();
+</script>
+</body>
+</html>
